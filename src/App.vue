@@ -6,9 +6,8 @@ useAuth();
 </script>
 
 <template>
-    <Header/>
-    <RouterView/>
+  <Header />
+  <RouterView />
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>
