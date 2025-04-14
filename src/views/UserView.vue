@@ -1,13 +1,11 @@
 <script setup>
 import useAuth from "@/composables/useAuth.js";
 
-const {user} = useAuth()
+const { user } = useAuth();
 </script>
 
 <template>
-{{user}}
+  {{ user }}
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
