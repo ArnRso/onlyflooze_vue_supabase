@@ -1,9 +1,10 @@
-import { ref, onMounted, watchEffect, Ref } from "vue";
+import { ref, onMounted, Ref } from "vue";
 import { supabase } from "@/supabase";
 import type { User } from "@supabase/supabase-js";
 
+const user: Ref<User | null> = ref(null);
+
 export default function useAuth() {
-  const user: Ref<User | null> = ref(null);
   const loading = ref(true);
 
   // Fonction pour se connecter
@@ -43,23 +44,18 @@ export default function useAuth() {
     return data.user;
   };
 
-  // Vérifie l'état de l'utilisateur au montage du composant
-  onMounted(async () => {
+  const checkSession = async () => {
     const {
-      data: { user: authenticatedUser },
-    } = await supabase.auth.getUser();
-    user.value = authenticatedUser;
-    loading.value = false;
-  });
+      data: { session },
+    } = await supabase.auth.getSession();
+    user.value = session?.user ?? null;
+  };
 
-  // Met à jour l'utilisateur sur chaque changement d'authentification
-  onMounted(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      user.value = session?.user || null;
+  const listenToAuthChanges = () => {
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      user.value = session?.user ?? null;
     });
-  });
+  };
 
   return {
     user,
@@ -67,5 +63,7 @@ export default function useAuth() {
     signIn,
     signOut,
     signUp,
+    checkSession,
+    listenToAuthChanges,
   };
 }

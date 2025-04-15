@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import useCategory from "@/composables/useCategory";
-import useAuth from "@/composables/useAuth";
 import type { Category } from "@/composables/useCategory";
 
 const {

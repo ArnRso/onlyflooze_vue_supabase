@@ -4,8 +4,6 @@ import useAuth from "@/composables/useAuth";
 const { user } = useAuth();
 </script>
 
-<template>
-  {{ user }}
-</template>
+<template></template>
 
 <style scoped></style>
