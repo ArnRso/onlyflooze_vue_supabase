@@ -110,7 +110,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
 import { supabase } from "@/supabase";
 
@@ -123,7 +123,7 @@ const register = async () => {
   errorMessage.value = "";
   successMessage.value = "";
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email: email.value,
     password: password.value,
   });

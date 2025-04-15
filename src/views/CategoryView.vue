@@ -1,7 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
-import useCategory from "@/composables/useCategory.js";
-import useAuth from "@/composables/useAuth.js";
+import useCategory from "@/composables/useCategory";
+import useAuth from "@/composables/useAuth";
+import type { Category } from "@/composables/useCategory";
 
 const {
   categories,
@@ -14,7 +15,7 @@ const {
 } = useCategory();
 
 const newLabel = ref("");
-const editId = ref(null);
+const editId = ref<string | null>(null);
 const editLabel = ref("");
 
 onMounted(() => {
@@ -27,19 +28,21 @@ const handleAdd = async () => {
   newLabel.value = "";
 };
 
-const startEdit = (cat) => {
+const startEdit = (cat: Category) => {
   editId.value = cat.id;
   editLabel.value = cat.label;
 };
 
 const handleEdit = async () => {
   if (!editLabel.value.trim()) return;
-  await updateCategory(editId.value, { label: editLabel.value });
-  editId.value = null;
-  editLabel.value = "";
+  if (editId.value) {
+    await updateCategory(editId.value, { label: editLabel.value });
+    editId.value = null;
+    editLabel.value = "";
+  }
 };
 
-const handleDelete = async (id) => {
+const handleDelete = async (id: string) => {
   if (confirm("Supprimer cette catégorie ?")) {
     await deleteCategory(id);
   }
