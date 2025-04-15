@@ -31,6 +31,12 @@ const router = createRouter({
       component: UserView,
       meta: { requireAuth: true },
     },
+    {
+      path: "/categories",
+      name: "categories",
+      component: () => import("@/views/CategoryView.vue"),
+      meta: { requireAuth: true },
+    },
   ],
 });
 
