@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import useAuth from "@/composables/useAuth";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const { user, signOut } = useAuth();
 const isMobileMenuOpen = ref(false);
+const router = useRouter();
+
+const handleSignOut = async () => {
+  await signOut();
+  await router.push("/");
+};
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -62,7 +69,7 @@ const toggleMobileMenu = () => {
               Catégories
             </RouterLink>
             <button
-              @click="signOut"
+              @click="handleSignOut"
               class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition duration-300"
             >
               Déconnexion
@@ -138,7 +145,7 @@ const toggleMobileMenu = () => {
             Catégories
           </RouterLink>
           <button
-            @click="signOut"
+            @click="handleSignOut"
             class="block w-full text-left hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Déconnexion

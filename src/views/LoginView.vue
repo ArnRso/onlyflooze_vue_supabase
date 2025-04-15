@@ -136,12 +136,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import useAuth from "@/composables/useAuth";
+import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 
 const { signIn, signOut, user } = useAuth();
+const router = useRouter();
 
 const handleLogin = async () => {
   const result = await signIn(email.value, password.value);
@@ -149,6 +151,7 @@ const handleLogin = async () => {
     errorMessage.value = "Identifiants invalides.";
   } else {
     errorMessage.value = "";
+    await router.push("/"); // Redirection vers l'accueil
   }
 };
 
