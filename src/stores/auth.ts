@@ -1,11 +1,35 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { supabase } from "@/supabase";
 import type { User } from "@supabase/supabase-js";
+import type { Tables } from "@/types/supabase";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const loading = ref(true);
+  const profile = ref<Tables<"profiles"> | null>(null);
+
+  const fetchProfile = async () => {
+    if (!user.value) {
+      profile.value = null;
+      return;
+    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.value.id)
+      .single();
+    if (error) {
+      console.error("Erreur lors de la récupération du profil:", error.message);
+      profile.value = null;
+    } else {
+      profile.value = data;
+    }
+  };
+
+  watch(user, () => {
+    fetchProfile();
+  });
 
   const signIn = async (
     email: string,
@@ -70,10 +94,12 @@ export const useAuthStore = defineStore("auth", () => {
   return {
     user,
     loading,
+    profile,
     signIn,
     signOut,
     signUp,
     checkSession,
     listenToAuthChanges,
+    fetchProfile,
   };
 });
