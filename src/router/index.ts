@@ -4,7 +4,7 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import CategoryView from "@/views/CategoryView.vue";
 import UserView from "@/views/UserView.vue";
-import useAuth from "@/composables/useAuth";
+import { useAuthStore } from "@/stores/auth";
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", name: "home", component: HomeView, meta: { public: true } },
@@ -30,15 +30,26 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
-  const { user } = useAuth();
+  const auth = useAuthStore();
+
+  // Attendre la fin du chargement de la session utilisateur
+  if (auth.loading) {
+    await new Promise((resolve) => {
+      const stop = auth.$subscribe(() => {
+        if (!auth.loading) {
+          stop();
+          resolve(null);
+        }
+      });
+    });
+  }
 
   // Autoriser l'accès libre aux routes publiques
   if (to.meta.public || to.matched.some((r) => r.meta.public)) {
     return true;
   }
   // Vérifier la présence d'un utilisateur connecté
-
-  if (user) {
+  if (auth.user) {
     return true;
   } else {
     return { name: "login" };

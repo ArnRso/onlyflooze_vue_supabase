@@ -1,13 +1,12 @@
-import { ref, onMounted, Ref } from "vue";
+import { defineStore } from "pinia";
+import { ref } from "vue";
 import { supabase } from "@/supabase";
 import type { User } from "@supabase/supabase-js";
 
-const user: Ref<User | null> = ref(null);
-
-export default function useAuth() {
+export const useAuthStore = defineStore("auth", () => {
+  const user = ref<User | null>(null);
   const loading = ref(true);
 
-  // Fonction pour se connecter
   const signIn = async (
     email: string,
     password: string
@@ -24,13 +23,11 @@ export default function useAuth() {
     return data.user;
   };
 
-  // Fonction pour se déconnecter
   const signOut = async (): Promise<void> => {
     await supabase.auth.signOut();
     user.value = null;
   };
 
-  // Fonction pour s'inscrire
   const signUp = async (
     email: string,
     password: string
@@ -57,6 +54,19 @@ export default function useAuth() {
     });
   };
 
+  async function doneInit() {
+    try {
+      await checkSession();
+    } catch (error) {
+      console.error("Error during session check:", error);
+    } finally {
+      listenToAuthChanges();
+      loading.value = false;
+    }
+  }
+
+  doneInit();
+
   return {
     user,
     loading,
@@ -66,4 +76,4 @@ export default function useAuth() {
     checkSession,
     listenToAuthChanges,
   };
-}
+});
