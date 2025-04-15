@@ -85,7 +85,7 @@
           {{ errorMessage }}
         </p>
         <div
-          v-if="user"
+          v-if="auth.user"
           class="bg-green-50 border border-green-200 rounded-md p-4 mt-4"
         >
           <div class="flex">
@@ -106,7 +106,7 @@
             </div>
             <div class="ml-3">
               <p class="text-sm font-medium text-green-800">
-                Connecté en tant que {{ user.email }}
+                Connecté en tant que {{ auth.user.email }}
               </p>
             </div>
           </div>
@@ -135,27 +135,27 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import useAuth from "@/composables/useAuth";
+import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 
-const { signIn, signOut, user } = useAuth();
+const auth = useAuthStore();
 const router = useRouter();
 
 const handleLogin = async () => {
-  const result = await signIn(email.value, password.value);
+  const result = await auth.signIn(email.value, password.value);
   if (!result) {
     errorMessage.value = "Identifiants invalides.";
   } else {
     errorMessage.value = "";
-    await router.push("/"); // Redirection vers l'accueil
+    await router.push("/");
   }
 };
 
 const handleLogout = () => {
-  signOut();
+  auth.signOut();
 };
 </script>

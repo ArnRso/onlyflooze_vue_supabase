@@ -1,13 +1,13 @@
 <script setup>
 import Header from "@/components/Header.vue";
-import useAuth from "@/composables/useAuth";
+import { useAuthStore } from "@/stores/auth";
 import { onMounted } from "vue";
 
-const { checkSession, listenToAuthChanges } = useAuth();
+const auth = useAuthStore();
 
 onMounted(() => {
-  checkSession();
-  listenToAuthChanges();
+  auth.checkSession();
+  auth.listenToAuthChanges();
 });
 </script>
 
