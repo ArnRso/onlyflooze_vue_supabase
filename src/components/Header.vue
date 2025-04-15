@@ -1,5 +1,5 @@
-<script setup>
-import useAuth from "@/composables/useAuth.js";
+<script setup lang="ts">
+import useAuth from "@/composables/useAuth";
 import { ref } from "vue";
 
 const { user, signOut } = useAuth();

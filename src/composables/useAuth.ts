@@ -1,12 +1,16 @@
-import { ref, onMounted, watchEffect } from "vue";
-import { supabase } from "@/supabase.js";
+import { ref, onMounted, watchEffect, Ref } from "vue";
+import { supabase } from "@/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export default function useAuth() {
-  const user = ref(null);
+  const user: Ref<User | null> = ref(null);
   const loading = ref(true);
 
   // Fonction pour se connecter
-  const signIn = async (email, password) => {
+  const signIn = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -20,13 +24,16 @@ export default function useAuth() {
   };
 
   // Fonction pour se déconnecter
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     await supabase.auth.signOut();
     user.value = null;
   };
 
   // Fonction pour s'inscrire
-  const signUp = async (email, password) => {
+  const signUp = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       console.error("Error signing up:", error.message);
@@ -46,15 +53,12 @@ export default function useAuth() {
   });
 
   // Met à jour l'utilisateur sur chaque changement d'authentification
-  watchEffect(() => {
-    const { data, error } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (error) {
-          console.error("Error in auth state change:", error.message);
-        }
-        user.value = session?.user || null;
-      }
-    );
+  onMounted(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      user.value = session?.user || null;
+    });
   });
 
   return {

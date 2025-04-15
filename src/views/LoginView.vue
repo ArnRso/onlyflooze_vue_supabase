@@ -133,9 +133,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
-import useAuth from "@/composables/useAuth.js";
+import useAuth from "@/composables/useAuth";
 
 const email = ref("");
 const password = ref("");
@@ -143,8 +143,13 @@ const errorMessage = ref("");
 
 const { signIn, signOut, user } = useAuth();
 
-const handleLogin = () => {
-  signIn(email.value, password.value);
+const handleLogin = async () => {
+  const result = await signIn(email.value, password.value);
+  if (!result) {
+    errorMessage.value = "Identifiants invalides.";
+  } else {
+    errorMessage.value = "";
+  }
 };
 
 const handleLogout = () => {
