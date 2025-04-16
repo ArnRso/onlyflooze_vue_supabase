@@ -1,35 +1,21 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { storeToRefs } from "pinia";
-import { useTransactionStore } from "@/stores/transaction";
-import { useCategoryStore } from "@/stores/category";
 import { useRouter } from "vue-router";
-
-const transactionStore = useTransactionStore();
-
-const categoryStore = useCategoryStore();
+import { useTransactionsQuery } from "@/queries/useTransactions";
+import { useCategoriesQuery } from "@/queries/useCategories";
 
 const router = useRouter();
-
-onMounted(() => {
-  categoryStore.fetchCategories();
-});
+const { data: transactions, isLoading, error } = useTransactionsQuery();
+const { data: categories } = useCategoriesQuery();
 
 function getCategoryLabel(categoryId: string | null) {
-  const cat = categoryStore.categories.find((c) => c.id === categoryId);
+  const cat = categories?.value?.find((c) => c.id === categoryId);
   return cat ? cat.label : "-";
 }
 
 async function handleEdit(txId: string) {
-  const tx = await transactionStore.fetchTransactionById(txId);
-  if (tx) {
-    router.push({
-      path: `/transactions/${txId}/edit`,
-      state: { transaction: tx },
-    });
-  } else {
-    alert("Erreur lors du chargement de la transaction.");
-  }
+  router.push({
+    path: `/transactions/${txId}/edit`,
+  });
 }
 </script>
 
@@ -49,15 +35,13 @@ async function handleEdit(txId: string) {
           Créer une transaction
         </button>
       </div>
-      <div v-if="transactionStore.error" class="text-red-600 mb-4 text-center">
-        {{ transactionStore.error }}
+      <div v-if="error" class="text-red-600 mb-4 text-center">
+        {{ error.message }}
       </div>
-      <div v-if="transactionStore.loading" class="text-center">
-        Chargement...
-      </div>
+      <div v-if="isLoading" class="text-center">Chargement...</div>
       <ul>
         <li
-          v-for="tx in transactionStore.transactions"
+          v-for="tx in transactions"
           :key="tx.id"
           class="flex items-center justify-between py-2 border-b last:border-b-0"
         >

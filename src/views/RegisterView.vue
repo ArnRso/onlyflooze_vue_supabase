@@ -1,27 +1,23 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { supabase } from "@/supabase";
+import { useRegisterMutation } from "@/queries/useAuth";
 
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const successMessage = ref("");
 
+const { mutateAsync: registerUser, isPending } = useRegisterMutation();
+
 const register = async () => {
   errorMessage.value = "";
   successMessage.value = "";
-
-  const { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value,
-  });
-
-  if (error) {
-    console.error("Erreur d'inscription:", error);
-    errorMessage.value = error.message;
-  } else {
+  try {
+    await registerUser({ email: email.value, password: password.value });
     successMessage.value =
       "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription.";
+  } catch (e: any) {
+    errorMessage.value = e.message || "Erreur lors de l'inscription";
   }
 };
 </script>

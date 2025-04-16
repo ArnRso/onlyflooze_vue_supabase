@@ -1,21 +1,35 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useCategoryStore } from "@/stores/category";
-import type { Category } from "@/stores/category";
+import { ref } from "vue";
+import type { Category } from "@/queries/useCategories";
+import {
+  useCategoriesQuery,
+  useAddCategoryMutation,
+  useDeleteCategoryMutation,
+  useUpdateCategoryMutation,
+} from "@/queries/useCategories";
+import { useSessionQuery } from "@/queries/useAuth";
 
-const categoryStore = useCategoryStore();
+const { data: categories, isLoading, error } = useCategoriesQuery();
+const { mutateAsync: addCategory, isPending: isAdding } =
+  useAddCategoryMutation();
+const { mutateAsync: deleteCategory, isPending: isDeleting } =
+  useDeleteCategoryMutation();
+const { mutateAsync: updateCategory, isPending: isUpdating } =
+  useUpdateCategoryMutation();
+const { data: user } = useSessionQuery();
+
+const userId =
+  user && typeof user === "object" && "id" in user
+    ? (user as any).id
+    : (user as any)?.value?.id;
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);
 const editLabel = ref("");
 
-onMounted(() => {
-  categoryStore.fetchCategories();
-});
-
 const handleAdd = async () => {
-  if (!newLabel.value.trim()) return;
-  await categoryStore.addCategory(newLabel.value);
+  if (!newLabel.value.trim() || !userId) return;
+  await addCategory({ label: newLabel.value, user_id: userId });
   newLabel.value = "";
 };
 
@@ -27,8 +41,9 @@ const startEdit = (cat: Category) => {
 const handleEdit = async () => {
   if (!editLabel.value.trim()) return;
   if (editId.value) {
-    await categoryStore.updateCategory(editId.value, {
-      label: editLabel.value,
+    await updateCategory({
+      id: editId.value,
+      updates: { label: editLabel.value },
     });
     editId.value = null;
     editLabel.value = "";
@@ -37,7 +52,7 @@ const handleEdit = async () => {
 
 const handleDelete = async (id: string) => {
   if (confirm("Supprimer cette catégorie ?")) {
-    await categoryStore.deleteCategory(id);
+    await deleteCategory(id);
   }
 };
 </script>
@@ -56,23 +71,23 @@ const handleDelete = async (id: string) => {
           type="text"
           placeholder="Nouvelle catégorie"
           class="flex-1 border rounded px-3 py-2"
-          :disabled="categoryStore.loading"
+          :disabled="isAdding"
         />
         <button
           type="submit"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
-          :disabled="categoryStore.loading || !newLabel.trim()"
+          :disabled="isAdding || !newLabel.trim()"
         >
           Ajouter
         </button>
       </form>
-      <div v-if="categoryStore.error" class="text-red-600 mb-4 text-center">
-        {{ categoryStore.error }}
+      <div v-if="error" class="text-red-600 mb-4 text-center">
+        {{ error }}
       </div>
-      <div v-if="categoryStore.loading" class="text-center">Chargement...</div>
+      <div v-if="isLoading" class="text-center">Chargement...</div>
       <ul>
         <li
-          v-for="cat in categoryStore.categories"
+          v-for="cat in categories"
           :key="cat.id"
           class="flex items-center justify-between py-2 border-b last:border-b-0"
         >
