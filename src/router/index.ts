@@ -4,7 +4,12 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import CategoryView from "@/views/CategoryView.vue";
 import UserView from "@/views/UserView.vue";
+import TransactionView from "@/views/TransactionView.vue";
+import TransactionCreateView from "@/views/TransactionCreateView.vue";
+import TransactionEditView from "@/views/TransactionEditView.vue";
 import { useAuthStore } from "@/stores/auth";
+import { useTransactionStore } from "@/stores/transaction";
+import { useCategoryStore } from "@/stores/category";
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", name: "home", component: HomeView, meta: { public: true } },
@@ -22,6 +27,43 @@ const routes: Array<RouteRecordRaw> = [
   },
   { path: "/categories", name: "categories", component: CategoryView },
   { path: "/user", name: "user", component: UserView },
+  {
+    path: "/transactions",
+    name: "transactions",
+    component: TransactionView,
+    beforeEnter: async (to, from, next) => {
+      const transactionStore = useTransactionStore();
+      const categoryStore = useCategoryStore();
+      await Promise.all([
+        transactionStore.fetchTransactions(),
+        categoryStore.fetchCategories(),
+      ]);
+      next();
+    },
+  },
+  {
+    path: "/transactions/new",
+    name: "transaction-create",
+    component: TransactionCreateView,
+  },
+  {
+    path: "/transactions/:id/edit",
+    name: "transaction-edit",
+    component: TransactionEditView,
+    props: true,
+    beforeEnter: async (to, from, next) => {
+      const transactionStore = useTransactionStore();
+      const transaction = await transactionStore.fetchTransactionById(
+        to.params.id as string
+      );
+      if (transaction) {
+        transactionStore.currentTransaction = transaction;
+        next();
+      } else {
+        next("/transactions");
+      }
+    },
+  },
 ];
 
 const router = createRouter({
