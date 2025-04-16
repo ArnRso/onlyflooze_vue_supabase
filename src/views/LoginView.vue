@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import { useLoginMutation, useSessionQuery, signOut } from "@/queries/useAuth";
 
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 
-const auth = useAuthStore();
+const { mutateAsync: login, isPending } = useLoginMutation();
+const { data: user } = useSessionQuery();
 const router = useRouter();
 
 const handleLogin = async () => {
-  const result = await auth.signIn(email.value, password.value);
-  if (!result) {
-    errorMessage.value = "Identifiants invalides.";
-  } else {
+  try {
+    await login({ email: email.value, password: password.value });
     errorMessage.value = "";
     await router.push("/");
+  } catch (e: any) {
+    errorMessage.value = e.message || "Identifiants invalides.";
   }
 };
 
-const handleLogout = () => {
-  auth.signOut();
+const handleLogout = async () => {
+  await signOut();
+  await router.push("/");
 };
 </script>
 <template>
@@ -111,7 +113,7 @@ const handleLogout = () => {
           {{ errorMessage }}
         </p>
         <div
-          v-if="auth.user"
+          v-if="user"
           class="bg-green-50 border border-green-200 rounded-md p-4 mt-4"
         >
           <div class="flex">
@@ -132,7 +134,7 @@ const handleLogout = () => {
             </div>
             <div class="ml-3">
               <p class="text-sm font-medium text-green-800">
-                Connecté en tant que {{ auth.user.email }}
+                Connecté en tant que {{ user.email }}
               </p>
             </div>
           </div>

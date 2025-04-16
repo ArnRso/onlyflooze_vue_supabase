@@ -7,9 +7,7 @@ import UserView from "@/views/UserView.vue";
 import TransactionView from "@/views/TransactionView.vue";
 import TransactionCreateView from "@/views/TransactionCreateView.vue";
 import TransactionEditView from "@/views/TransactionEditView.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useTransactionStore } from "@/stores/transaction";
-import { useCategoryStore } from "@/stores/category";
+import { useSessionQuery } from "@/queries/useAuth";
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", name: "home", component: HomeView, meta: { public: true } },
@@ -31,15 +29,6 @@ const routes: Array<RouteRecordRaw> = [
     path: "/transactions",
     name: "transactions",
     component: TransactionView,
-    beforeEnter: async (to, from, next) => {
-      const transactionStore = useTransactionStore();
-      const categoryStore = useCategoryStore();
-      await Promise.all([
-        transactionStore.fetchTransactions(),
-        categoryStore.fetchCategories(),
-      ]);
-      next();
-    },
   },
   {
     path: "/transactions/new",
@@ -51,18 +40,6 @@ const routes: Array<RouteRecordRaw> = [
     name: "transaction-edit",
     component: TransactionEditView,
     props: true,
-    beforeEnter: async (to, from, next) => {
-      const transactionStore = useTransactionStore();
-      const transaction = await transactionStore.fetchTransactionById(
-        to.params.id as string
-      );
-      if (transaction) {
-        transactionStore.currentTransaction = transaction;
-        next();
-      } else {
-        next("/transactions");
-      }
-    },
   },
 ];
 
@@ -72,26 +49,13 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
-  const auth = useAuthStore();
-
-  // Attendre la fin du chargement de la session utilisateur
-  if (auth.loading) {
-    await new Promise((resolve) => {
-      const stop = auth.$subscribe(() => {
-        if (!auth.loading) {
-          stop();
-          resolve(null);
-        }
-      });
-    });
-  }
-
   // Autoriser l'accès libre aux routes publiques
   if (to.meta.public || to.matched.some((r) => r.meta.public)) {
     return true;
   }
-  // Vérifier la présence d'un utilisateur connecté
-  if (auth.user) {
+  // Vérifier la présence d'un utilisateur connecté via Supabase
+  const { data: user } = await useSessionQuery().refetch();
+  if (user) {
     return true;
   } else {
     return { name: "login" };

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-
-const auth = useAuthStore();
+import { useSessionQuery, signOut } from "@/queries/useAuth";
 
 const isMobileMenuOpen = ref(false);
 const router = useRouter();
 
+const { data: user } = useSessionQuery();
+
 const handleSignOut = async () => {
-  await auth.signOut();
+  await signOut();
   await router.push("/");
 };
 
@@ -42,7 +42,7 @@ const toggleMobileMenu = () => {
           >
             Accueil
           </RouterLink>
-          <div v-if="!auth.user" class="flex space-x-4">
+          <div v-if="!user" class="flex space-x-4">
             <RouterLink
               to="login"
               class="hover:text-indigo-200 transition duration-300 py-2"
@@ -56,7 +56,7 @@ const toggleMobileMenu = () => {
               S'inscrire
             </RouterLink>
           </div>
-          <div v-if="auth.user" class="flex space-x-4 items-center">
+          <div v-if="user" class="flex space-x-4 items-center">
             <RouterLink
               to="user"
               class="hover:text-indigo-200 transition duration-300 py-2"
@@ -124,7 +124,7 @@ const toggleMobileMenu = () => {
         >
           Accueil
         </RouterLink>
-        <template v-if="!auth.user">
+        <template v-if="!user">
           <RouterLink
             to="login"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"

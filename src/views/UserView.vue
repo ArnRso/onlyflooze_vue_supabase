@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { useAuthStore } from "@/stores/auth";
-const auth = useAuthStore();
+import { useSessionQuery, useProfileQuery } from "@/queries/useAuth";
+
+const { data: user } = useSessionQuery();
+const { data: profile } = useProfileQuery(user.value?.id ?? null);
 </script>
 
 <template>
@@ -14,38 +16,36 @@ const auth = useAuthStore();
         </h2>
         <p class="text-gray-600">Informations de votre compte</p>
       </div>
-      <div v-if="auth.user">
+      <div v-if="user">
         <ul class="space-y-4">
           <li>
             <span class="block text-sm font-medium text-gray-700">Email</span>
-            <span class="block text-lg text-gray-900">{{
-              auth.user.email
-            }}</span>
+            <span class="block text-lg text-gray-900">{{ user.email }}</span>
           </li>
           <li>
             <span class="block text-sm font-medium text-gray-700">Id</span>
-            <span class="block text-lg text-gray-900">{{ auth.user.id }}</span>
+            <span class="block text-lg text-gray-900">{{ user?.id }}</span>
           </li>
           <li>
             <span class="block text-sm font-medium text-gray-700">Nom</span>
             <span class="block text-lg text-gray-900">{{
-              auth.profile?.full_name || "Non renseigné"
+              profile?.full_name || "Non renseigné"
             }}</span>
           </li>
-          <li v-if="auth.profile?.username">
+          <li v-if="profile?.username">
             <span class="block text-sm font-medium text-gray-700"
               >Nom d'utilisateur</span
             >
             <span class="block text-lg text-gray-900">{{
-              auth.profile.username
+              profile.username
             }}</span>
           </li>
-          <li v-if="auth.profile?.website">
+          <li v-if="profile?.website">
             <span class="block text-sm font-medium text-gray-700"
               >Site web</span
             >
             <span class="block text-lg text-indigo-600 underline">{{
-              auth.profile.website
+              profile.website
             }}</span>
           </li>
         </ul>

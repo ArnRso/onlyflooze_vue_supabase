@@ -1,38 +1,31 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useTransactionStore } from "@/stores/transaction";
-import { useCategoryStore } from "@/stores/category";
-import { storeToRefs } from "pinia";
+import { useAddTransactionMutation } from "@/queries/useTransactions";
+import { useCategoriesQuery } from "@/queries/useCategories";
 
 const router = useRouter();
-const transactionStore = useTransactionStore();
-const categoryStore = useCategoryStore();
+const { data: categories } = useCategoriesQuery();
 
 const label = ref("");
 const amount = ref(0);
 const transaction_date = ref("");
 const category_id = ref("");
 const error = ref("");
-const loading = ref(false);
-
-categoryStore.fetchCategories();
+const { mutateAsync, isPending } = useAddTransactionMutation();
 
 async function submit() {
-  loading.value = true;
   error.value = "";
   try {
-    await transactionStore.addTransaction({
+    await mutateAsync({
       label: label.value,
       amount: amount.value,
       transaction_date: transaction_date.value,
-      category_id: category_id.value || null,
+      category_id: category_id.value || null
     });
     router.push("/transactions");
   } catch (e: any) {
     error.value = e.message || "Erreur lors de la création";
-  } finally {
-    loading.value = false;
   }
 }
 </script>
@@ -74,11 +67,7 @@ async function submit() {
           <label class="block mb-1">Catégorie</label>
           <select v-model="category_id" class="w-full border rounded px-3 py-2">
             <option value="">Aucune</option>
-            <option
-              v-for="cat in categoryStore.categories"
-              :key="cat.id"
-              :value="cat.id"
-            >
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.label }}
             </option>
           </select>
@@ -94,7 +83,7 @@ async function submit() {
           </button>
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="isPending"
             class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
           >
             Créer
