@@ -2,9 +2,19 @@
 import { useRouter } from "vue-router";
 import { useTransactionsQuery } from "@/queries/useTransactions";
 import { useCategoriesQuery } from "@/queries/useCategories";
+import { ref, computed } from "vue";
 
 const router = useRouter();
-const { data: transactions, isLoading, error } = useTransactionsQuery();
+const page = ref(1);
+const pageSize = 3;
+const {
+  data: transactionsResponse,
+  isLoading,
+  error,
+} = useTransactionsQuery(page, pageSize);
+const transactions = computed(() => transactionsResponse.value?.data ?? []);
+const total = computed(() => transactionsResponse.value?.count ?? 0);
+const totalPages = computed(() => Math.ceil(total.value / pageSize));
 const { data: categories } = useCategoriesQuery();
 
 function getCategoryLabel(categoryId: string | null) {
@@ -16,6 +26,12 @@ async function handleEdit(txId: string) {
   router.push({
     path: `/transactions/${txId}/edit`,
   });
+}
+
+function goToPage(p: number) {
+  if (p >= 1 && p <= totalPages.value) {
+    page.value = p;
+  }
 }
 </script>
 
@@ -64,6 +80,23 @@ async function handleEdit(txId: string) {
           </div>
         </li>
       </ul>
+      <div class="mt-6 flex justify-between">
+        <button
+          @click="() => goToPage(page - 1)"
+          :disabled="page === 1"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded shadow disabled:opacity-50"
+        >
+          Précédent
+        </button>
+        <span>Page {{ page }} sur {{ totalPages }}</span>
+        <button
+          @click="() => goToPage(page + 1)"
+          :disabled="page === totalPages"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded shadow disabled:opacity-50"
+        >
+          Suivant
+        </button>
+      </div>
     </div>
   </div>
 </template>
