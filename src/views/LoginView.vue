@@ -1,3 +1,29 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+
+const email = ref("");
+const password = ref("");
+const errorMessage = ref("");
+
+const auth = useAuthStore();
+const router = useRouter();
+
+const handleLogin = async () => {
+  const result = await auth.signIn(email.value, password.value);
+  if (!result) {
+    errorMessage.value = "Identifiants invalides.";
+  } else {
+    errorMessage.value = "";
+    await router.push("/");
+  }
+};
+
+const handleLogout = () => {
+  auth.signOut();
+};
+</script>
 <template>
   <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
     <div
@@ -132,30 +158,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
-
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
-
-const auth = useAuthStore();
-const router = useRouter();
-
-const handleLogin = async () => {
-  const result = await auth.signIn(email.value, password.value);
-  if (!result) {
-    errorMessage.value = "Identifiants invalides.";
-  } else {
-    errorMessage.value = "";
-    await router.push("/");
-  }
-};
-
-const handleLogout = () => {
-  auth.signOut();
-};
-</script>

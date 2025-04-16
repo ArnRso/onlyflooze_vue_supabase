@@ -1,3 +1,30 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { supabase } from "@/supabase";
+
+const email = ref("");
+const password = ref("");
+const errorMessage = ref("");
+const successMessage = ref("");
+
+const register = async () => {
+  errorMessage.value = "";
+  successMessage.value = "";
+
+  const { error } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value,
+  });
+
+  if (error) {
+    console.error("Erreur d'inscription:", error);
+    errorMessage.value = error.message;
+  } else {
+    successMessage.value =
+      "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription.";
+  }
+};
+</script>
 <template>
   <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
     <div
@@ -109,31 +136,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-import { supabase } from "@/supabase";
-
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
-const successMessage = ref("");
-
-const register = async () => {
-  errorMessage.value = "";
-  successMessage.value = "";
-
-  const { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value,
-  });
-
-  if (error) {
-    console.error("Erreur d'inscription:", error);
-    errorMessage.value = error.message;
-  } else {
-    successMessage.value =
-      "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription.";
-  }
-};
-</script>
