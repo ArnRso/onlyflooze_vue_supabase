@@ -7,7 +7,7 @@ import UserView from "@/views/UserView.vue";
 import TransactionView from "@/views/TransactionView.vue";
 import TransactionCreateView from "@/views/TransactionCreateView.vue";
 import TransactionEditView from "@/views/TransactionEditView.vue";
-import { useSessionQuery } from "@/queries/useAuth";
+import { supabase } from "@/supabase";
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", name: "home", component: HomeView, meta: { public: true } },
@@ -53,9 +53,11 @@ router.beforeEach(async (to, from) => {
   if (to.meta.public || to.matched.some((r) => r.meta.public)) {
     return true;
   }
-  // Vérifier la présence d'un utilisateur connecté via Supabase
-  const { data: user } = await useSessionQuery().refetch();
-  if (user) {
+  // Vérifier la présence d'un utilisateur connecté via Supabase sans hook
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session?.user) {
     return true;
   } else {
     return { name: "login" };

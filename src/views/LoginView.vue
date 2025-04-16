@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useLoginMutation, useSessionQuery, signOut } from "@/queries/useAuth";
+import { useQueryClient } from "@tanstack/vue-query";
 
 const email = ref("");
 const password = ref("");
@@ -10,11 +11,13 @@ const errorMessage = ref("");
 const { mutateAsync: login, isPending } = useLoginMutation();
 const { data: user } = useSessionQuery();
 const router = useRouter();
+const queryClient = useQueryClient();
 
 const handleLogin = async () => {
   try {
     await login({ email: email.value, password: password.value });
     errorMessage.value = "";
+    await queryClient.invalidateQueries({ queryKey: ["session"] });
     await router.push("/");
   } catch (e: any) {
     errorMessage.value = e.message || "Identifiants invalides.";
@@ -23,6 +26,7 @@ const handleLogin = async () => {
 
 const handleLogout = async () => {
   await signOut();
+  await queryClient.invalidateQueries({ queryKey: ["session"] });
   await router.push("/");
 };
 </script>
