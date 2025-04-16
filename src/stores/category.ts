@@ -1,4 +1,6 @@
-import { ref, Ref } from "vue";
+// Ce fichier a été déplacé depuis src/composables/useCategory.ts
+import { defineStore } from "pinia";
+import { ref } from "vue";
 import { supabase } from "@/supabase";
 
 export interface Category {
@@ -8,8 +10,8 @@ export interface Category {
   created_at: string;
 }
 
-export default function useCategory() {
-  const categories: Ref<Category[]> = ref([]);
+export const useCategoryStore = defineStore("category", () => {
+  const categories = ref<Category[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -91,4 +93,4 @@ export default function useCategory() {
     updateCategory,
     deleteCategory,
   };
-}
+});

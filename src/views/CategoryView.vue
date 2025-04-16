@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import useCategory from "@/composables/useCategory";
-import type { Category } from "@/composables/useCategory";
+import { storeToRefs } from "pinia";
+import { useCategoryStore } from "@/stores/category";
+import type { Category } from "@/stores/category";
 
-const {
-  categories,
-  loading,
-  error,
-  fetchCategories,
-  addCategory,
-  updateCategory,
-  deleteCategory,
-} = useCategory();
+const categoryStore = useCategoryStore();
+const { categories, loading, error } = storeToRefs(categoryStore);
+const { fetchCategories, addCategory, updateCategory, deleteCategory } =
+  categoryStore;
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);
