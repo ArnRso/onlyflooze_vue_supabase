@@ -8,10 +8,16 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const loading = ref(true);
   const profile = ref<Tables<"profiles"> | null>(null);
+  let lastProfileUserId: string | null = null;
 
   const fetchProfile = async () => {
     if (!user.value) {
       profile.value = null;
+      lastProfileUserId = null;
+      return;
+    }
+    // N'appelle Supabase que si l'utilisateur a changé
+    if (lastProfileUserId === user.value.id && profile.value) {
       return;
     }
     const { data, error } = await supabase
@@ -22,8 +28,10 @@ export const useAuthStore = defineStore("auth", () => {
     if (error) {
       console.error("Erreur lors de la récupération du profil:", error.message);
       profile.value = null;
+      lastProfileUserId = null;
     } else {
       profile.value = data;
+      lastProfileUserId = user.value.id;
     }
   };
 
@@ -44,12 +52,14 @@ export const useAuthStore = defineStore("auth", () => {
       return null;
     }
     user.value = data.user;
+    await fetchProfile();
     return data.user;
   };
 
   const signOut = async (): Promise<void> => {
     await supabase.auth.signOut();
     user.value = null;
+    profile.value = null;
   };
 
   const signUp = async (
@@ -62,6 +72,7 @@ export const useAuthStore = defineStore("auth", () => {
       return null;
     }
     user.value = data.user;
+    await fetchProfile();
     return data.user;
   };
 
