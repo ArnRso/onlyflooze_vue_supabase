@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { useTransactionsQuery } from "@/queries/useTransactions";
+import {
+  useTransactionsQuery,
+  useDeleteTransactionMutation,
+} from "@/queries/useTransactions";
 import { useCategoriesQuery } from "@/queries/useCategories";
 import { ref, computed } from "vue";
 
@@ -16,6 +19,9 @@ const transactions = computed(() => transactionsResponse.value?.data ?? []);
 const total = computed(() => transactionsResponse.value?.count ?? 0);
 const totalPages = computed(() => Math.ceil(total.value / pageSize));
 const { data: categories } = useCategoriesQuery();
+const { mutateAsync: deleteTransaction, isPending: isDeleting } =
+  useDeleteTransactionMutation();
+const deleteError = ref("");
 
 function getCategoryLabel(categoryId: string | null) {
   const cat = categories?.value?.find((c) => c.id === categoryId);
@@ -26,6 +32,17 @@ async function handleEdit(txId: string) {
   router.push({
     path: `/transactions/${txId}/edit`,
   });
+}
+
+async function handleDelete(txId: string) {
+  deleteError.value = "";
+  if (confirm("Supprimer cette transaction ?")) {
+    try {
+      await deleteTransaction(txId);
+    } catch (e: any) {
+      deleteError.value = e.message || "Erreur lors de la suppression";
+    }
+  }
 }
 
 function goToPage(p: number) {
@@ -54,6 +71,9 @@ function goToPage(p: number) {
       <div v-if="error" class="text-red-600 mb-4 text-center">
         {{ error.message }}
       </div>
+      <div v-if="deleteError" class="text-red-600 mb-4 text-center">
+        {{ deleteError }}
+      </div>
       <div v-if="isLoading" class="text-center">Chargement...</div>
       <ul>
         <li
@@ -76,6 +96,13 @@ function goToPage(p: number) {
               class="text-blue-600 hover:underline"
             >
               Modifier
+            </button>
+            <button
+              @click="() => handleDelete(tx.id)"
+              :disabled="isDeleting"
+              class="text-red-600 hover:underline disabled:opacity-50"
+            >
+              Supprimer
             </button>
           </div>
         </li>
