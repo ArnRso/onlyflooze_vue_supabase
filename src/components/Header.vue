@@ -2,14 +2,17 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useSessionQuery, signOut } from "@/queries/useAuth";
+import { useQueryClient } from "@tanstack/vue-query";
 
 const isMobileMenuOpen = ref(false);
 const router = useRouter();
+const queryClient = useQueryClient();
 
 const { data: user } = useSessionQuery();
 
 const handleSignOut = async () => {
   await signOut();
+  await queryClient.invalidateQueries({ queryKey: ["session"] });
   await router.push("/");
 };
 
