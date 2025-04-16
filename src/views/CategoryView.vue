@@ -1,25 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { storeToRefs } from "pinia";
 import { useCategoryStore } from "@/stores/category";
 import type { Category } from "@/stores/category";
 
 const categoryStore = useCategoryStore();
-const { categories, loading, error } = storeToRefs(categoryStore);
-const { fetchCategories, addCategory, updateCategory, deleteCategory } =
-  categoryStore;
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);
 const editLabel = ref("");
 
 onMounted(() => {
-  fetchCategories();
+  categoryStore.fetchCategories();
 });
 
 const handleAdd = async () => {
   if (!newLabel.value.trim()) return;
-  await addCategory(newLabel.value);
+  await categoryStore.addCategory(newLabel.value);
   newLabel.value = "";
 };
 
@@ -31,7 +27,9 @@ const startEdit = (cat: Category) => {
 const handleEdit = async () => {
   if (!editLabel.value.trim()) return;
   if (editId.value) {
-    await updateCategory(editId.value, { label: editLabel.value });
+    await categoryStore.updateCategory(editId.value, {
+      label: editLabel.value,
+    });
     editId.value = null;
     editLabel.value = "";
   }
@@ -39,7 +37,7 @@ const handleEdit = async () => {
 
 const handleDelete = async (id: string) => {
   if (confirm("Supprimer cette catégorie ?")) {
-    await deleteCategory(id);
+    await categoryStore.deleteCategory(id);
   }
 };
 </script>
@@ -58,21 +56,23 @@ const handleDelete = async (id: string) => {
           type="text"
           placeholder="Nouvelle catégorie"
           class="flex-1 border rounded px-3 py-2"
-          :disabled="loading"
+          :disabled="categoryStore.loading"
         />
         <button
           type="submit"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
-          :disabled="loading || !newLabel.trim()"
+          :disabled="categoryStore.loading || !newLabel.trim()"
         >
           Ajouter
         </button>
       </form>
-      <div v-if="error" class="text-red-600 mb-4 text-center">{{ error }}</div>
-      <div v-if="loading" class="text-center">Chargement...</div>
+      <div v-if="categoryStore.error" class="text-red-600 mb-4 text-center">
+        {{ categoryStore.error }}
+      </div>
+      <div v-if="categoryStore.loading" class="text-center">Chargement...</div>
       <ul>
         <li
-          v-for="cat in categories"
+          v-for="cat in categoryStore.categories"
           :key="cat.id"
           class="flex items-center justify-between py-2 border-b last:border-b-0"
         >
