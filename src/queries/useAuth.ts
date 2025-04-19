@@ -78,7 +78,6 @@ export function useSessionQuery() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      console.log(session);
       return session?.user ?? null;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
