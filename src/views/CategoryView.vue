@@ -58,9 +58,11 @@ const handleDelete = async (id: string) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div
+    class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
+  >
     <div
-      class="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
+      class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
     >
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Catégories

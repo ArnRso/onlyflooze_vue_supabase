@@ -25,7 +25,7 @@ const toggleMobileMenu = () => {
   <header
     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
   >
-    <div class="container mx-auto px-4 py-3">
+    <div class="max-w-7xl w-full mx-auto px-4 py-3">
       <div class="flex justify-between items-center">
         <!-- Logo / Home -->
         <div class="flex items-center">
