@@ -3,6 +3,9 @@ import { supabase } from "@/supabase";
 import type { Tables } from "@/types/supabase";
 import type { User } from "@supabase/supabase-js";
 
+// Variable globale pour éviter plusieurs souscriptions
+let hasSubscribedToAuthStateChange = false;
+
 export function useLoginMutation() {
   return useMutation({
     mutationFn: async ({
@@ -61,12 +64,21 @@ export async function signOut() {
 }
 
 export function useSessionQuery() {
+  const queryClient = useQueryClient();
+  // Souscription unique aux changements d'état d'authentification
+  if (typeof window !== "undefined" && !hasSubscribedToAuthStateChange) {
+    supabase.auth.onAuthStateChange((_event, _session) => {
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+    });
+    hasSubscribedToAuthStateChange = true;
+  }
   return useQuery<User | null>({
     queryKey: ["session"],
     queryFn: async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      console.log(session);
       return session?.user ?? null;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

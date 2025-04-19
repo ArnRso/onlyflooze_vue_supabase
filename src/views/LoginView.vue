@@ -89,16 +89,7 @@ const handleLogout = async () => {
               Se souvenir de moi
             </label>
           </div>
-          <div class="text-sm">
-            <a
-              href="#"
-              class="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              Mot de passe oublié?
-            </a>
-          </div>
         </div>
-
         <div>
           <button
             type="submit"
