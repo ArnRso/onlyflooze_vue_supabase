@@ -4,7 +4,7 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import CategoryView from "@/views/CategoryView.vue";
 import UserView from "@/views/UserView.vue";
-import TransactionView from "@/views/TransactionView.vue";
+import TransactionsView from "@/views/TransactionsView.vue";
 import TransactionCreateView from "@/views/TransactionCreateView.vue";
 import TransactionEditView from "@/views/TransactionEditView.vue";
 import { supabase } from "@/supabase";
@@ -28,7 +28,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/transactions",
     name: "transactions",
-    component: TransactionView,
+    component: TransactionsView,
   },
   {
     path: "/transactions/new",
