@@ -86,6 +86,30 @@ export function useDeleteTransactionMutation() {
   });
 }
 
+export function useAddBulkTransactionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactions: TablesInsert<"transaction">[]) => {
+      if (transactions.length === 0) return [];
+
+      // Utilisation de la méthode upsert qui ignore les entrées existantes
+      const { data, error } = await supabase
+        .from("transaction")
+        .upsert(transactions, {
+          onConflict: "label,amount,transaction_date,user_id", // Définit les colonnes qui forment la clé d'unicité
+          ignoreDuplicates: true, // Ignorer les doublons au lieu de les mettre à jour
+        })
+        .select();
+
+      if (error) throw new Error(error.message);
+      return data as Transaction[];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+  });
+}
+
 export function useTransactionByIdQuery(id: string) {
   return useQuery<Transaction | null>({
     queryKey: ["transaction", id],
