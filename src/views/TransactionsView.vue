@@ -8,6 +8,14 @@ import {
 } from "@/queries/useTransactions";
 import { useCategoriesQuery } from "@/queries/useCategories";
 import { ref, computed } from "vue";
+import Multiselect from "vue-multiselect";
+import { useTagsQuery, useAddTagMutation } from "@/queries/useTags";
+import { useSessionQuery } from "@/queries/useAuth";
+import {
+  useAddTransactionTagMutation,
+  useDeleteTransactionTagMutation,
+} from "@/queries/useTransactionTags";
+import type { Transaction, Tag } from "@/queries/useTransactions";
 
 const router = useRouter();
 const page = ref(1);
@@ -40,7 +48,7 @@ const editCategoryId = ref("");
 const editDate = ref("");
 const editError = ref("");
 
-function startEdit(tx: any) {
+function startEdit(tx: Transaction & { tags: Tag[] }) {
   editId.value = tx.id;
   editLabel.value = tx.label;
   editAmount.value = tx.amount;
@@ -58,7 +66,7 @@ function cancelEdit() {
   editError.value = "";
 }
 
-async function saveEdit(tx: any) {
+async function saveEdit(tx: Transaction & { tags: Tag[] }) {
   editError.value = "";
   try {
     await updateTransaction({
@@ -279,6 +287,43 @@ async function handleFileUpload(event: Event) {
     }
   }
 }
+
+const { data: allTags } = useTagsQuery();
+const { mutateAsync: addTagToTransaction } = useAddTransactionTagMutation();
+const { mutateAsync: removeTagFromTransaction } =
+  useDeleteTransactionTagMutation();
+const { mutateAsync: addTag } = useAddTagMutation();
+const { data: user } = useSessionQuery();
+
+function getTransactionTags(tx: Transaction & { tags: Tag[] }) {
+  return tx.tags || [];
+}
+
+function handleTagAdd(tag: Tag, tx: Transaction & { tags: Tag[] }) {
+  addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id }).then(() => {
+    refetchPaginatedTransactions();
+  });
+}
+
+function handleTagRemove(tag: Tag, tx: Transaction & { tags: Tag[] }) {
+  removeTagFromTransaction({ transaction_id: tx.id, tag_id: tag.id }).then(
+    () => {
+      refetchPaginatedTransactions();
+    }
+  );
+}
+
+async function handleTagCreate(
+  newLabel: string,
+  tx: Transaction & { tags: Tag[] }
+) {
+  if (!user.value?.id) return;
+  // Créer le tag
+  const tag = await addTag({ label: newLabel, user_id: user.value.id });
+  // Lier le tag à la transaction
+  await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id });
+  refetchPaginatedTransactions();
+}
 </script>
 
 <template>
@@ -372,27 +417,32 @@ async function handleFileUpload(event: Event) {
           <thead class="bg-gray-50">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
               >
                 Libellé
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
               >
                 Montant (€)
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
               >
                 Date
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
               >
                 Catégorie
               </th>
               <th
-                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+              >
+                Tags
+              </th>
+              <th
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
               >
                 Actions
               </th>
@@ -436,6 +486,10 @@ async function handleFileUpload(event: Event) {
                     </option>
                   </select>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <!-- Tags non éditables en mode édition inline -->
+                  <span class="text-gray-400 italic">(non modifiable ici)</span>
+                </td>
                 <td
                   class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
                 >
@@ -468,19 +522,67 @@ async function handleFileUpload(event: Event) {
                 <td class="px-6 py-4 whitespace-nowrap">
                   {{ getCategoryLabel(tx.category_id) }}
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <Multiselect
+                    v-if="allTags"
+                    :model-value="getTransactionTags(tx)"
+                    :options="allTags"
+                    :multiple="true"
+                    :close-on-select="false"
+                    :clear-on-select="true"
+                    :preserve-search="true"
+                    label="label"
+                    track-by="id"
+                    placeholder="Ajouter des tags"
+                    :taggable="true"
+                    @select="(tag: Tag) => handleTagAdd(tag, tx)"
+                    @remove="(tag: Tag) => handleTagRemove(tag, tx)"
+                    @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
+                    class="w-48 max-w-xs multiselect-tags-wrap"
+                  />
+                  <span v-else class="text-gray-400">-</span>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                   <button
                     @click="() => startEdit(tx)"
-                    class="text-blue-600 hover:underline mr-2"
+                    class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
+                    title="Modifier"
                   >
-                    Modifier
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12.004 6.879l4.243 4.243m-2.121-6.364a2.121 2.121 0 113 3L7.5 20.5H4v-3.5l10.126-10.126z"
+                      />
+                    </svg>
                   </button>
                   <button
                     @click="() => handleDelete(tx.id)"
                     :disabled="isDeleting"
-                    class="text-red-600 hover:underline disabled:opacity-50"
+                    class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 focus:outline-none disabled:opacity-50"
+                    title="Supprimer"
                   >
-                    Supprimer
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
+                      />
+                    </svg>
                   </button>
                 </td>
               </template>
@@ -538,5 +640,11 @@ input[type="file"].hidden {
 
 label[for="csv-upload"]:disabled {
   cursor: not-allowed;
+}
+
+.multiselect-tags-wrap {
+  max-width: 320px;
+  white-space: normal;
+  word-break: break-word;
 }
 </style>

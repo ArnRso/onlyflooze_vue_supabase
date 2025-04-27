@@ -239,7 +239,12 @@ function closeDropdown() {
             Tags
           </RouterLink>
           <button
-            @click="() => { handleSignOut(); isMobileMenuOpen = false; }"
+            @click="
+              () => {
+                handleSignOut();
+                isMobileMenuOpen = false;
+              }
+            "
             class="block w-full text-left hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Déconnexion
