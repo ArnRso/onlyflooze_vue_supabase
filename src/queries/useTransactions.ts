@@ -4,23 +4,31 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 import { Ref, unref, computed } from "vue";
 
 export type Transaction = Tables<"transaction">;
+export type Tag = Tables<"tag">;
 
 export function useTransactionsQuery(
   page: number | Ref<number> = 1,
   pageSize: number | Ref<number> = 10
 ) {
-  return useQuery<{ data: Transaction[]; count: number }>({
+  return useQuery<{ data: (Transaction & { tags: Tag[] })[]; count: number }>({
     queryKey: computed(() => ["transactions", unref(page), unref(pageSize)]),
     queryFn: async () => {
       const from = (unref(page) - 1) * unref(pageSize);
       const to = from + unref(pageSize) - 1;
       const { data, error, count } = await supabase
         .from("transaction")
-        .select("*", { count: "exact" })
+        .select("*, transaction_tag(tag:tag_id(*))", { count: "exact" })
         .order("transaction_date", { ascending: false })
         .range(from, to);
       if (error) throw new Error(error.message);
-      return { data: data as Transaction[], count: count ?? 0 };
+      // Ajoute un champ tags à chaque transaction
+      const transactionsWithTags = (data as any[]).map((tx) => ({
+        ...tx,
+        tags: (tx.transaction_tag ?? [])
+          .map((tt: any) => tt.tag)
+          .filter(Boolean),
+      }));
+      return { data: transactionsWithTags, count: count ?? 0 };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
