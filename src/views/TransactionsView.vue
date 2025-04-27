@@ -6,7 +6,11 @@ import {
   useUpdateTransactionMutation,
   useAddBulkTransactionsMutation,
 } from "@/queries/useTransactions";
-import { useCategoriesQuery } from "@/queries/useCategories";
+import {
+  useCategoriesQuery,
+  useAddCategoryMutation,
+  type Category,
+} from "@/queries/useCategories";
 import { ref, computed } from "vue";
 import Multiselect from "vue-multiselect";
 import { useTagsQuery, useAddTagMutation } from "@/queries/useTags";
@@ -31,6 +35,7 @@ const transactions = computed(() => transactionsResponse.value?.data ?? []);
 const total = computed(() => transactionsResponse.value?.count ?? 0);
 const totalPages = computed(() => Math.ceil(total.value / pageSize));
 const { data: categories } = useCategoriesQuery();
+const { mutateAsync: addCategory } = useAddCategoryMutation();
 
 const { mutateAsync: deleteTransaction, isPending: isDeleting } =
   useDeleteTransactionMutation();
@@ -82,11 +87,6 @@ async function saveEdit(tx: Transaction & { tags: Tag[] }) {
   } catch (e: any) {
     editError.value = e.message || "Erreur lors de la modification";
   }
-}
-
-function getCategoryLabel(categoryId: string | null) {
-  const cat = categories?.value?.find((c) => c.id === categoryId);
-  return cat ? cat.label : "-";
 }
 
 const formatAmount = (amount: number) => {
@@ -324,6 +324,35 @@ async function handleTagCreate(
   await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id });
   refetchPaginatedTransactions();
 }
+
+function getTransactionCategory(tx: Transaction) {
+  if (!categories?.value) return null;
+  return categories.value.find((c) => c.id === tx.category_id) || null;
+}
+
+async function handleCategorySelect(
+  cat: Category | null,
+  tx: Transaction & { tags: Tag[] }
+) {
+  await updateTransaction({
+    id: tx.id,
+    updates: { category_id: cat ? cat.id : null },
+  });
+  refetchPaginatedTransactions();
+}
+
+async function handleCategoryCreateForTx(
+  newLabel: string,
+  tx: Transaction & { tags: Tag[] }
+) {
+  if (!user.value?.id) return;
+  const cat = await addCategory({ label: newLabel, user_id: user.value.id });
+  await updateTransaction({
+    id: tx.id,
+    updates: { category_id: cat.id },
+  });
+  refetchPaginatedTransactions();
+}
 </script>
 
 <template>
@@ -490,7 +519,21 @@ async function handleTagCreate(
               </td>
               <!-- Catégorie -->
               <td class="px-6 py-4 whitespace-nowrap">
-                {{ getCategoryLabel(tx.category_id) }}
+                <Multiselect
+                  v-if="categories"
+                  :model-value="getTransactionCategory(tx)"
+                  :options="categories"
+                  label="label"
+                  track-by="id"
+                  placeholder="Choisir une catégorie"
+                  :allow-empty="true"
+                  :taggable="true"
+                  @select="(cat: Category | null) => handleCategorySelect(cat, tx)"
+                  @remove="() => handleCategorySelect(null, tx)"
+                  @tag="(newLabel: string) => handleCategoryCreateForTx(newLabel, tx)"
+                  class="w-40 max-w-xs"
+                />
+                <span v-else class="text-gray-400">-</span>
               </td>
               <!-- Tags -->
               <td class="px-6 py-4 whitespace-nowrap">
