@@ -319,7 +319,7 @@ async function handleTagCreate(
 ) {
   if (!user.value?.id) return;
   // Créer le tag
-  const tag = await addTag({ label: newLabel, user_id: user.value.id });
+  const tag = await addTag({ label: newLabel });
   // Lier le tag à la transaction
   await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id });
   refetchPaginatedTransactions();
@@ -346,7 +346,7 @@ async function handleCategoryCreateForTx(
   tx: Transaction & { tags: Tag[] }
 ) {
   if (!user.value?.id) return;
-  const cat = await addCategory({ label: newLabel, user_id: user.value.id });
+  const cat = await addCategory({ label: newLabel });
   await updateTransaction({
     id: tx.id,
     updates: { category_id: cat.id },
