@@ -7,6 +7,7 @@ import {
   useUpdateTagMutation,
 } from "@/queries/useTags";
 import { useSessionQuery } from "@/queries/useAuth";
+import { Tag } from "@/queries/useTransactions";
 
 const { data: tags, isLoading, error } = useTagsQuery();
 const { mutateAsync: addTag, isPending: isAdding } = useAddTagMutation();
@@ -17,21 +18,19 @@ const { mutateAsync: updateTag, isPending: isUpdating } =
 const { data: user } = useSessionQuery();
 
 const userId =
-  user && typeof user === "object" && "id" in user
-    ? (user as any).id
-    : (user as any)?.value?.id;
+  user && typeof user === "object" && "id" in user ? user.id : user?.value?.id;
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);
 const editLabel = ref("");
 
 const handleAdd = async () => {
-  if (!newLabel.value.trim() || !userId) return;
-  await addTag({ label: newLabel.value, user_id: userId });
+  if (!newLabel.value.trim()) return;
+  await addTag({ label: newLabel.value });
   newLabel.value = "";
 };
 
-const startEdit = (tag: any) => {
+const startEdit = (tag: Tag) => {
   editId.value = tag.id;
   editLabel.value = tag.label;
 };

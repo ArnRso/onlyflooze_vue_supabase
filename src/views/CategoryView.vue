@@ -19,9 +19,7 @@ const { mutateAsync: updateCategory, isPending: isUpdating } =
 const { data: user } = useSessionQuery();
 
 const userId =
-  user && typeof user === "object" && "id" in user
-    ? (user as any).id
-    : (user as any)?.value?.id;
+  user && typeof user === "object" && "id" in user ? user.id : user?.value?.id;
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);
@@ -29,7 +27,7 @@ const editLabel = ref("");
 
 const handleAdd = async () => {
   if (!newLabel.value.trim() || !userId) return;
-  await addCategory({ label: newLabel.value, user_id: userId });
+  await addCategory({ label: newLabel.value });
   newLabel.value = "";
 };
 
