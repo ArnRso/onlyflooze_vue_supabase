@@ -78,6 +78,12 @@ const toggleMobileMenu = () => {
             >
               Transactions
             </RouterLink>
+            <RouterLink
+              to="/tags"
+              class="hover:text-indigo-200 transition duration-300 py-2"
+            >
+              Tags
+            </RouterLink>
             <button
               @click="handleSignOut"
               class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition duration-300"
@@ -159,6 +165,12 @@ const toggleMobileMenu = () => {
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Transactions
+          </RouterLink>
+          <RouterLink
+            to="/tags"
+            class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+          >
+            Tags
           </RouterLink>
           <button
             @click="handleSignOut"
