@@ -5,6 +5,7 @@ import { useSessionQuery, signOut } from "@/queries/useAuth";
 import { useQueryClient } from "@tanstack/vue-query";
 
 const isMobileMenuOpen = ref(false);
+const isDropdownOpen = ref(false);
 const router = useRouter();
 const queryClient = useQueryClient();
 
@@ -19,6 +20,14 @@ const handleSignOut = async () => {
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
+
+function toggleDropdown() {
+  isDropdownOpen.value = !isDropdownOpen.value;
+}
+
+function closeDropdown() {
+  isDropdownOpen.value = false;
+}
 </script>
 
 <template>
@@ -61,12 +70,6 @@ const toggleMobileMenu = () => {
           </div>
           <div v-if="user" class="flex space-x-4 items-center">
             <RouterLink
-              to="user"
-              class="hover:text-indigo-200 transition duration-300 py-2"
-            >
-              Profil
-            </RouterLink>
-            <RouterLink
               to="/categories"
               class="hover:text-indigo-200 transition duration-300 py-2"
             >
@@ -84,12 +87,68 @@ const toggleMobileMenu = () => {
             >
               Tags
             </RouterLink>
-            <button
-              @click="handleSignOut"
-              class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition duration-300"
-            >
-              Déconnexion
-            </button>
+            <!-- Dropdown utilisateur -->
+            <div class="relative">
+              <button
+                @click="toggleDropdown"
+                class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition duration-300 focus:outline-none"
+                aria-haspopup="true"
+                :aria-expanded="isDropdownOpen"
+                type="button"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span class="hidden sm:inline">Mon compte</span>
+                <svg
+                  class="w-4 h-4 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                v-if="isDropdownOpen"
+                class="absolute right-0 mt-2 w-40 bg-white text-gray-800 rounded shadow-lg z-50 overflow-hidden border border-indigo-200"
+                @mousedown.self="closeDropdown"
+              >
+                <RouterLink
+                  to="/user"
+                  class="block px-4 py-2 hover:bg-indigo-50 transition rounded-none"
+                  @click="closeDropdown"
+                >
+                  Profil
+                </RouterLink>
+                <button
+                  @click="
+                    () => {
+                      handleSignOut();
+                      closeDropdown();
+                    }
+                  "
+                  class="block w-full text-left px-4 py-2 hover:bg-indigo-50 transition rounded-none"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            </div>
           </div>
         </nav>
 
@@ -130,6 +189,7 @@ const toggleMobileMenu = () => {
         <RouterLink
           to="/"
           class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+          @click="isMobileMenuOpen = false"
         >
           Accueil
         </RouterLink>
@@ -137,12 +197,14 @@ const toggleMobileMenu = () => {
           <RouterLink
             to="login"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             Connexion
           </RouterLink>
           <RouterLink
             to="register"
             class="block bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             S'inscrire
           </RouterLink>
@@ -151,29 +213,33 @@ const toggleMobileMenu = () => {
           <RouterLink
             to="user"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             Profil
           </RouterLink>
           <RouterLink
             to="/categories"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             Catégories
           </RouterLink>
           <RouterLink
             to="/transactions"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             Transactions
           </RouterLink>
           <RouterLink
             to="/tags"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
           >
             Tags
           </RouterLink>
           <button
-            @click="handleSignOut"
+            @click="() => { handleSignOut(); isMobileMenuOpen = false; }"
             class="block w-full text-left hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Déconnexion
