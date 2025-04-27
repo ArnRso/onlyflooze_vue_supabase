@@ -450,49 +450,74 @@ async function handleTagCreate(
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="tx in transactions" :key="tx.id">
-              <template v-if="editId === tx.id">
-                <td class="px-6 py-4 whitespace-nowrap">
+              <!-- Libellé -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <template v-if="editId === tx.id">
                   <input
                     v-model="editLabel"
                     class="border rounded px-2 py-1 w-full"
                   />
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                </template>
+                <template v-else>
+                  {{ tx.label }}
+                </template>
+              </td>
+              <!-- Montant -->
+              <td
+                class="px-6 py-4 whitespace-nowrap"
+                :class="
+                  editId === tx.id
+                    ? ''
+                    : tx.amount < 0
+                    ? 'text-red-600'
+                    : 'text-green-600'
+                "
+              >
+                <template v-if="editId === tx.id">
                   <input
                     v-model.number="editAmount"
                     type="number"
                     class="border rounded px-2 py-1 w-full"
                   />
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input
-                    v-model="editDate"
-                    type="date"
-                    class="border rounded px-2 py-1 w-full"
-                  />
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <select
-                    v-model="editCategoryId"
-                    class="border rounded px-2 py-1 w-full"
-                  >
-                    <option value="">Aucune</option>
-                    <option
-                      v-for="cat in categories"
-                      :key="cat.id"
-                      :value="cat.id"
-                    >
-                      {{ cat.label }}
-                    </option>
-                  </select>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <!-- Tags non éditables en mode édition inline -->
-                  <span class="text-gray-400 italic">(non modifiable ici)</span>
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
-                >
+                </template>
+                <template v-else>
+                  {{ formatAmount(tx.amount) }}
+                </template>
+              </td>
+              <!-- Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                {{ formatDate(tx.transaction_date) }}
+              </td>
+              <!-- Catégorie -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                {{ getCategoryLabel(tx.category_id) }}
+              </td>
+              <!-- Tags -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <Multiselect
+                  v-if="allTags"
+                  :model-value="getTransactionTags(tx)"
+                  :options="allTags"
+                  :multiple="true"
+                  :close-on-select="false"
+                  :clear-on-select="true"
+                  :preserve-search="true"
+                  label="label"
+                  track-by="id"
+                  placeholder="Ajouter des tags"
+                  :taggable="true"
+                  @select="(tag: Tag) => handleTagAdd(tag, tx)"
+                  @remove="(tag: Tag) => handleTagRemove(tag, tx)"
+                  @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
+                  class="w-48 max-w-xs multiselect-tags-wrap"
+                />
+                <span v-else class="text-gray-400">-</span>
+              </td>
+              <!-- Actions -->
+              <td
+                class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
+              >
+                <template v-if="editId === tx.id">
                   <button
                     @click="() => saveEdit(tx)"
                     :disabled="isUpdating"
@@ -506,43 +531,8 @@ async function handleTagCreate(
                   >
                     Annuler
                   </button>
-                </td>
-              </template>
-              <template v-else>
-                <td class="px-6 py-4 whitespace-nowrap">{{ tx.label }}</td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap"
-                  :class="tx.amount < 0 ? 'text-red-600' : 'text-green-600'"
-                >
-                  {{ formatAmount(tx.amount) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ formatDate(tx.transaction_date) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ getCategoryLabel(tx.category_id) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <Multiselect
-                    v-if="allTags"
-                    :model-value="getTransactionTags(tx)"
-                    :options="allTags"
-                    :multiple="true"
-                    :close-on-select="false"
-                    :clear-on-select="true"
-                    :preserve-search="true"
-                    label="label"
-                    track-by="id"
-                    placeholder="Ajouter des tags"
-                    :taggable="true"
-                    @select="(tag: Tag) => handleTagAdd(tag, tx)"
-                    @remove="(tag: Tag) => handleTagRemove(tag, tx)"
-                    @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
-                    class="w-48 max-w-xs multiselect-tags-wrap"
-                  />
-                  <span v-else class="text-gray-400">-</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right">
+                </template>
+                <template v-else>
                   <button
                     @click="() => startEdit(tx)"
                     class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
@@ -584,8 +574,8 @@ async function handleTagCreate(
                       />
                     </svg>
                   </button>
-                </td>
-              </template>
+                </template>
+              </td>
             </tr>
           </tbody>
         </table>
