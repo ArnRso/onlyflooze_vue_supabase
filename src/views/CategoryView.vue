@@ -22,18 +22,22 @@ const userId =
   user && typeof user === "object" && "id" in user ? user.id : user?.value?.id;
 
 const newLabel = ref("");
+const newIsRecurring = ref(false);
 const editId = ref<string | null>(null);
 const editLabel = ref("");
+const editIsRecurring = ref(false);
 
 const handleAdd = async () => {
   if (!newLabel.value.trim() || !userId) return;
-  await addCategory({ label: newLabel.value });
+  await addCategory({ label: newLabel.value, is_recurring: newIsRecurring.value });
   newLabel.value = "";
+  newIsRecurring.value = false;
 };
 
 const startEdit = (cat: Category) => {
   editId.value = cat.id;
   editLabel.value = cat.label;
+  editIsRecurring.value = cat.is_recurring;
 };
 
 const handleEdit = async () => {
@@ -41,10 +45,11 @@ const handleEdit = async () => {
   if (editId.value) {
     await updateCategory({
       id: editId.value,
-      updates: { label: editLabel.value },
+      updates: { label: editLabel.value, is_recurring: editIsRecurring.value },
     });
     editId.value = null;
     editLabel.value = "";
+    editIsRecurring.value = false;
   }
 };
 
@@ -65,7 +70,7 @@ const handleDelete = async (id: string) => {
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Catégories
       </h1>
-      <form @submit.prevent="handleAdd" class="flex gap-2 mb-6">
+      <form @submit.prevent="handleAdd" class="flex gap-2 mb-6 items-center">
         <input
           v-model="newLabel"
           type="text"
@@ -73,6 +78,21 @@ const handleDelete = async (id: string) => {
           class="flex-1 border rounded px-3 py-2"
           :disabled="isAdding"
         />
+        <label
+          class="flex items-center cursor-pointer select-none"
+          @click="newIsRecurring = !newIsRecurring"
+        >
+          <span
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+            :class="newIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
+          >
+            <span
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+              :class="newIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+            />
+          </span>
+          <span class="ml-1">Récurrente</span>
+        </label>
         <button
           type="submit"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
@@ -91,13 +111,32 @@ const handleDelete = async (id: string) => {
           :key="cat.id"
           class="flex items-center justify-between py-2 border-b last:border-b-0"
         >
-          <div v-if="editId !== cat.id">{{ cat.label }}</div>
-          <div v-else class="flex gap-2 flex-1">
+          <div v-if="editId !== cat.id" class="flex items-center gap-4">
+            <span>{{ cat.label }}</span>
+            <span v-if="cat.is_recurring" class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Récurrente</span>
+            <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Ponctuelle</span>
+          </div>
+          <div v-else class="flex gap-2 flex-1 items-center">
             <input
               v-model="editLabel"
               type="text"
               class="flex-1 border rounded px-2 py-1"
             />
+            <label
+              class="flex items-center cursor-pointer select-none"
+              @click="editIsRecurring = !editIsRecurring"
+            >
+              <span
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
+              >
+                <span
+                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                  :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+                />
+              </span>
+              <span class="ml-1">Récurrente</span>
+            </label>
             <button
               @click="handleEdit"
               class="bg-green-600 text-white px-2 py-1 rounded shadow"
@@ -105,12 +144,7 @@ const handleDelete = async (id: string) => {
               Valider
             </button>
             <button
-              @click="
-                () => {
-                  editId = null;
-                  editLabel = '';
-                }
-              "
+              @click="() => { editId = null; editLabel = ''; editIsRecurring = false; }"
               class="bg-gray-300 px-2 py-1 rounded"
             >
               Annuler
