@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAddTransactionMutation } from "@/queries/useTransactions";
-import { useCategoriesQuery } from "@/queries/useCategories";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAddTransactionMutation } from '@/queries/useTransactions'
+import { useCategoriesQuery } from '@/queries/useCategories'
 
-const router = useRouter();
-const { data: categories } = useCategoriesQuery();
+const router = useRouter()
+const { data: categories } = useCategoriesQuery()
 
-const label = ref("");
-const amount = ref(0);
-const transaction_date = ref("");
-const category_id = ref("");
-const error = ref("");
-const { mutateAsync, isPending } = useAddTransactionMutation();
+const label = ref('')
+const amount = ref(0)
+const transaction_date = ref('')
+const category_id = ref('')
+const error = ref('')
+const { mutateAsync, isPending } = useAddTransactionMutation()
 
 const submit = async () => {
-  error.value = "";
+  error.value = ''
   try {
     await mutateAsync({
       label: label.value,
       amount: amount.value,
       transaction_date: transaction_date.value,
       category_id: category_id.value || null,
-    });
-    router.push("/transactions");
+    })
+    router.push('/transactions')
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : "Erreur lors de la création";
+    error.value = e instanceof Error ? e.message : 'Erreur lors de la création'
   }
-};
+}
 </script>
 
 <template>

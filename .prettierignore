@@ -1,0 +1,8 @@
+# Ignorer les fichiers de build, dépendances et fichiers générés
+node_modules
+/dist
+/build
+coverage
+*.log
+.env*
+.supabase

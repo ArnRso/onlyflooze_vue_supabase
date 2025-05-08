@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useSessionQuery, useProfileQuery } from "@/queries/useAuth";
+import { useSessionQuery, useProfileQuery } from '@/queries/useAuth'
 
-const { data: user } = useSessionQuery();
-const { data: profile } = useProfileQuery(user.value?.id ?? null);
+const { data: user } = useSessionQuery()
+const { data: profile } = useProfileQuery(user.value?.id ?? null)
 </script>
 
 <template>
@@ -31,7 +31,7 @@ const { data: profile } = useProfileQuery(user.value?.id ?? null);
           <li>
             <span class="block text-sm font-medium text-gray-700">Nom</span>
             <span class="block text-lg text-gray-900">{{
-              profile?.full_name || "Non renseigné"
+              profile?.full_name || 'Non renseigné'
             }}</span>
           </li>
           <li v-if="profile?.username">
