@@ -16,6 +16,20 @@
           placeholder="Rechercher des transactions..."
           class="flex-1 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10"
         />
+        <input
+          v-model.number="montantMin"
+          type="number"
+          step="0.01"
+          placeholder="Montant min"
+          class="w-32 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+        <input
+          v-model.number="montantMax"
+          type="number"
+          step="0.01"
+          placeholder="Montant max"
+          class="w-32 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
         <button
           v-if="search"
           @click="clearSearch"
@@ -169,6 +183,8 @@ const pendingCategoryId = ref<string | null>(null)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 const showWithoutCategory = ref(false)
+const montantMin = ref<number | null>(null)
+const montantMax = ref<number | null>(null)
 
 // Récupération des catégories
 const { data: categories = [], refetch: refetchCategories } =
@@ -205,7 +221,14 @@ const filteredTransactions = computed(() => {
     allTransactions && 'value' in allTransactions
       ? (allTransactions.value?.data ?? [])
       : (allTransactions?.data ?? [])
-  return data as Tables<'transaction'>[]
+  let txs = data as Tables<'transaction'>[]
+  if (montantMin.value !== null && montantMin.value !== undefined) {
+    txs = txs.filter((tx) => tx.amount >= montantMin.value!)
+  }
+  if (montantMax.value !== null && montantMax.value !== undefined) {
+    txs = txs.filter((tx) => tx.amount <= montantMax.value!)
+  }
+  return txs
 })
 
 const canAssign = computed(
