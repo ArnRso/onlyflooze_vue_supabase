@@ -8,6 +8,9 @@ import {
   useUpdateCategoryMutation,
 } from "@/queries/useCategories";
 import { useSessionQuery } from "@/queries/useAuth";
+import MdiMagnify from "@/components/icons/MdiMagnify.vue";
+import MdiPencil from "@/components/icons/MdiPencil.vue";
+import MdiTrashCan from "@/components/icons/MdiTrashCan.vue";
 
 const { data: categories, isLoading, error } = useCategoriesQuery();
 const { mutateAsync: addCategory, isPending: isAdding } =
@@ -154,21 +157,26 @@ const handleDelete = async (id: string) => {
               <template v-if="editId !== cat.id">
                 <router-link
                   :to="{ name: 'category-detail', params: { id: cat.id } }"
-                  class="text-indigo-600 hover:underline mr-2"
+                  class="inline-block text-indigo-600 hover:text-indigo-800 mr-2"
+                  title="Détail"
                 >
-                  Détail
+                  <MdiMagnify class="w-5 h-5 align-middle" />
                 </router-link>
                 <button
                   @click="() => startEdit(cat)"
-                  class="text-blue-600 hover:underline mr-2"
+                  class="inline-block text-blue-600 hover:text-blue-800 mr-2"
+                  title="Modifier"
+                  type="button"
                 >
-                  Modifier
+                  <MdiPencil class="w-5 h-5 align-middle" />
                 </button>
                 <button
                   @click="() => handleDelete(cat.id)"
-                  class="text-red-600 hover:underline"
+                  class="inline-block text-red-600 hover:text-red-800"
+                  title="Supprimer"
+                  type="button"
                 >
-                  Supprimer
+                  <MdiTrashCan class="w-5 h-5 align-middle" />
                 </button>
               </template>
               <template v-else>
