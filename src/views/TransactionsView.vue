@@ -442,186 +442,205 @@ async function handleCategoryCreateForTx(
       <div v-else style="height: 24px"></div>
       <div v-if="isLoading" class="text-center">Chargement...</div>
       <div v-else>
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Libellé
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Montant (€)
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Date
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Catégorie
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Tags
-              </th>
-              <th
-                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="tx in transactions" :key="tx.id">
-              <!-- Libellé -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <template v-if="editId === tx.id">
-                  <input
-                    v-model="editLabel"
-                    class="border rounded px-2 py-1 w-full"
-                  />
-                </template>
-                <template v-else>
-                  {{ tx.label }}
-                </template>
-              </td>
-              <!-- Montant -->
-              <td
-                class="px-6 py-4 whitespace-nowrap"
-                :class="
-                  editId === tx.id
-                    ? ''
-                    : tx.amount < 0
-                    ? 'text-red-600'
-                    : 'text-green-600'
-                "
-              >
-                <template v-if="editId === tx.id">
-                  <input
-                    v-model.number="editAmount"
-                    type="number"
-                    class="border rounded px-2 py-1 w-full"
-                  />
-                </template>
-                <template v-else>
-                  {{ formatAmount(tx.amount) }}
-                </template>
-              </td>
-              <!-- Date -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                {{ formatDate(tx.transaction_date) }}
-              </td>
-              <!-- Catégorie -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <Multiselect
-                  v-if="categories"
-                  :model-value="getTransactionCategory(tx)"
-                  :options="categories"
-                  label="label"
-                  track-by="id"
-                  placeholder="Choisir une catégorie"
-                  :allow-empty="true"
-                  :taggable="true"
-                  @select="(cat: Category | null) => handleCategorySelect(cat, tx)"
-                  @remove="() => handleCategorySelect(null, tx)"
-                  @tag="(newLabel: string) => handleCategoryCreateForTx(newLabel, tx)"
-                  class="w-40 max-w-xs"
-                />
-                <span v-else class="text-gray-400">-</span>
-              </td>
-              <!-- Tags -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <Multiselect
-                  v-if="allTags"
-                  :model-value="getTransactionTags(tx)"
-                  :options="allTags"
-                  :multiple="true"
-                  :close-on-select="false"
-                  :clear-on-select="true"
-                  :preserve-search="true"
-                  label="label"
-                  track-by="id"
-                  placeholder="Ajouter des tags"
-                  :taggable="true"
-                  @select="(tag: Tag) => handleTagAdd(tag, tx)"
-                  @remove="(tag: Tag) => handleTagRemove(tag, tx)"
-                  @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
-                  class="w-48 max-w-xs multiselect-tags-wrap"
-                />
-                <span v-else class="text-gray-400">-</span>
-              </td>
-              <!-- Actions -->
-              <td
-                class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
-              >
-                <template v-if="editId === tx.id">
-                  <button
-                    @click="() => saveEdit(tx)"
-                    :disabled="isUpdating"
-                    class="bg-green-600 text-white px-2 py-1 rounded shadow"
-                  >
-                    Valider
-                  </button>
-                  <button
-                    @click="cancelEdit"
-                    class="bg-gray-300 px-2 py-1 rounded"
-                  >
-                    Annuler
-                  </button>
-                </template>
-                <template v-else>
-                  <button
-                    @click="() => startEdit(tx)"
-                    class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
-                    title="Modifier"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Libellé
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Montant (€)
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Date
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Catégorie
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Tags
+                </th>
+                <th
+                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="tx in transactions" :key="tx.id">
+                <!-- Libellé -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <template v-if="editId === tx.id">
+                    <input
+                      v-model="editLabel"
+                      class="border rounded px-2 py-1 w-full"
+                    />
+                  </template>
+                  <template v-else>
+                    {{ tx.label }}
+                  </template>
+                </td>
+                <!-- Montant -->
+                <td
+                  class="px-6 py-4 whitespace-nowrap"
+                  :class="
+                    editId === tx.id
+                      ? ''
+                      : tx.amount < 0
+                      ? 'text-red-600'
+                      : 'text-green-600'
+                  "
+                >
+                  <template v-if="editId === tx.id">
+                    <input
+                      v-model.number="editAmount"
+                      type="number"
+                      class="border rounded px-2 py-1 w-full"
+                    />
+                  </template>
+                  <template v-else>
+                    {{ formatAmount(tx.amount) }}
+                  </template>
+                </td>
+                <!-- Date -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ formatDate(tx.transaction_date) }}
+                </td>
+                <!-- Catégorie -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <template v-if="editId === tx.id">
+                    <Multiselect
+                      v-if="categories"
+                      :model-value="getTransactionCategory(tx)"
+                      :options="categories"
+                      label="label"
+                      track-by="id"
+                      placeholder="Choisir une catégorie"
+                      :allow-empty="true"
+                      :taggable="true"
+                      @select="(cat: Category | null) => handleCategorySelect(cat, tx)"
+                      @remove="() => handleCategorySelect(null, tx)"
+                      @tag="(newLabel: string) => handleCategoryCreateForTx(newLabel, tx)"
+                      class="w-40 max-w-xs"
+                    />
+                    <span v-else class="text-gray-400">-</span>
+                  </template>
+                  <template v-else>
+                    <span>
+                      {{ getTransactionCategory(tx)?.label || '-' }}
+                    </span>
+                  </template>
+                </td>
+                <!-- Tags -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <template v-if="editId === tx.id">
+                    <Multiselect
+                      v-if="allTags"
+                      :model-value="getTransactionTags(tx)"
+                      :options="allTags"
+                      :multiple="true"
+                      :close-on-select="false"
+                      :clear-on-select="true"
+                      :preserve-search="true"
+                      label="label"
+                      track-by="id"
+                      placeholder="Ajouter des tags"
+                      :taggable="true"
+                      @select="(tag: Tag) => handleTagAdd(tag, tx)"
+                      @remove="(tag: Tag) => handleTagRemove(tag, tx)"
+                      @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
+                      class="w-48 max-w-xs multiselect-tags-wrap"
+                    />
+                    <span v-else class="text-gray-400">-</span>
+                  </template>
+                  <template v-else>
+                    <span v-if="getTransactionTags(tx).length > 0">
+                      <span v-for="tag in getTransactionTags(tx)" :key="tag.id" class="inline-block bg-indigo-100 text-indigo-700 rounded px-2 py-0.5 mr-1 text-xs">
+                        {{ tag.label }}
+                      </span>
+                    </span>
+                    <span v-else class="text-gray-400">-</span>
+                  </template>
+                </td>
+                <!-- Actions -->
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
+                >
+                  <template v-if="editId === tx.id">
+                    <button
+                      @click="() => saveEdit(tx)"
+                      :disabled="isUpdating"
+                      class="bg-green-600 text-white px-2 py-1 rounded shadow"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12.004 6.879l4.243 4.243m-2.121-6.364a2.121 2.121 0 113 3L7.5 20.5H4v-3.5l10.126-10.126z"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    @click="() => handleDelete(tx.id)"
-                    :disabled="isDeleting"
-                    class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 focus:outline-none disabled:opacity-50"
-                    title="Supprimer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      Valider
+                    </button>
+                    <button
+                      @click="cancelEdit"
+                      class="bg-gray-300 px-2 py-1 rounded"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
-                      />
-                    </svg>
-                  </button>
-                </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                      Annuler
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      @click="() => startEdit(tx)"
+                      class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
+                      title="Modifier"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12.004 6.879l4.243 4.243m-2.121-6.364a2.121 2.121 0 113 3L7.5 20.5H4v-3.5l10.126-10.126z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      @click="() => handleDelete(tx.id)"
+                      :disabled="isDeleting"
+                      class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 focus:outline-none disabled:opacity-50"
+                      title="Supprimer"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
+                        />
+                      </svg>
+                    </button>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div v-if="editError" class="text-red-600 text-center mt-2">
           {{ editError }}
         </div>
