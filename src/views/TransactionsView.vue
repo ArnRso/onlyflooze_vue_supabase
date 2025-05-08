@@ -49,7 +49,7 @@ const deleteError = ref("");
 const editId = ref<string | null>(null);
 const editLabel = ref("");
 const editAmount = ref(0);
-const editCategoryId = ref("");
+const editCategory = ref<Category | null>(null);
 const editDate = ref("");
 const editError = ref("");
 
@@ -57,7 +57,8 @@ function startEdit(tx: Transaction & { tags: Tag[] }) {
   editId.value = tx.id;
   editLabel.value = tx.label;
   editAmount.value = tx.amount;
-  editCategoryId.value = tx.category_id || "";
+  editCategory.value =
+    categories?.value?.find((c) => c.id === tx.category_id) || null;
   editDate.value = tx.transaction_date || "";
   editError.value = "";
 }
@@ -66,7 +67,7 @@ function cancelEdit() {
   editId.value = null;
   editLabel.value = "";
   editAmount.value = 0;
-  editCategoryId.value = "";
+  editCategory.value = null;
   editDate.value = "";
   editError.value = "";
 }
@@ -79,7 +80,7 @@ async function saveEdit(tx: Transaction & { tags: Tag[] }) {
       updates: {
         label: editLabel.value,
         amount: editAmount.value,
-        category_id: editCategoryId.value || null,
+        category_id: editCategory.value?.id || null,
         transaction_date: editDate.value,
       },
     });
@@ -523,15 +524,13 @@ async function handleCategoryCreateForTx(
                   <template v-if="editId === tx.id">
                     <Multiselect
                       v-if="categories"
-                      :model-value="getTransactionCategory(tx)"
+                      v-model="editCategory"
                       :options="categories"
                       label="label"
                       track-by="id"
                       placeholder="Choisir une catégorie"
                       :allow-empty="true"
                       :taggable="true"
-                      @select="(cat: Category | null) => handleCategorySelect(cat, tx)"
-                      @remove="() => handleCategorySelect(null, tx)"
                       @tag="(newLabel: string) => handleCategoryCreateForTx(newLabel, tx)"
                       class="w-40 max-w-xs"
                     />
