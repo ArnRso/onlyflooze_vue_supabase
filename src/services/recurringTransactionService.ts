@@ -34,8 +34,13 @@ export function estimateNextRecurringTransaction(transactions: TransactionLike[]
     return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
   });
 
-  // Somme des montants du mois précédent
-  const nextAmount = prevMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+  // Si aucune transaction le mois précédent, on prend le montant de la dernière transaction connue
+  let nextAmount: number;
+  if (prevMonthTransactions.length > 0) {
+    nextAmount = prevMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+  } else {
+    nextAmount = sorted[sorted.length - 1].amount;
+  }
 
   return { estimatedDay, nextAmount };
 }

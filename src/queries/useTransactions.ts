@@ -10,10 +10,18 @@ export function useTransactionsQuery(
   page: number | Ref<number> = 1,
   pageSize: number | Ref<number> = 10,
   search: Ref<string> | string = '',
-  showWithoutCategory: Ref<boolean> | boolean = false
+  showWithoutCategory: Ref<boolean> | boolean = false,
+  filterCategoryIds: Ref<string[]> | string[] | null = null // <-- Ajout d'un paramètre pour filtrer par catégories
 ) {
   return useQuery<{ data: (Transaction & { tags: Tag[] })[]; count: number }>({
-    queryKey: computed(() => ["transactions", unref(page), unref(pageSize), unref(search), unref(showWithoutCategory)]),
+    queryKey: computed(() => [
+      "transactions",
+      unref(page),
+      unref(pageSize),
+      unref(search),
+      unref(showWithoutCategory),
+      unref(filterCategoryIds)
+    ]),
     queryFn: async () => {
       const from = (unref(page) - 1) * unref(pageSize);
       const to = from + unref(pageSize) - 1;
@@ -28,6 +36,9 @@ export function useTransactionsQuery(
       }
       if (unref(showWithoutCategory)) {
         query = query.is('category_id', null);
+      }
+      if (filterCategoryIds && unref(filterCategoryIds)?.length > 0) {
+        query = query.in('category_id', unref(filterCategoryIds));
       }
       const { data, error, count } = await query;
       if (error) throw new Error(error.message);

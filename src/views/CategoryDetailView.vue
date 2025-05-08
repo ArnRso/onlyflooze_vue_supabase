@@ -15,8 +15,9 @@ const transactions = computed(() => txResult.value?.data || []);
 
 const recurringEstimate = computed(() => {
   if (!category.value?.is_recurring) return null;
+  // Utiliser toutes les transactions de la catégorie, pas seulement celles chargées par défaut
   return estimateNextRecurringTransaction(
-    transactions.value.map(t => ({ date: t.transaction_date, amount: t.amount }))
+    (txResult.value?.data || []).map(t => ({ date: t.transaction_date, amount: t.amount }))
   );
 });
 </script>

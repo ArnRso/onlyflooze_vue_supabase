@@ -74,3 +74,20 @@ export function useUpdateCategoryMutation() {
     },
   });
 }
+
+export function useRecurringCategoriesWithTransactionsQuery() {
+  return useQuery({
+    queryKey: ["recurring-categories-with-transactions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("category")
+        .select("*, transactions:transaction(*)")
+        .eq("is_recurring", true)
+        .order("label", { ascending: true });
+      if (error) throw new Error(error.message);
+      // data: [{...cat, transactions: [...] }]
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
