@@ -2,7 +2,8 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-import CategoryView from "@/views/CategoryView.vue";
+import CategoryList from "@/views/CategoryList.vue";
+import CategoryDetailView from "@/views/CategoryDetailView.vue";
 import UserView from "@/views/UserView.vue";
 import TransactionsView from "@/views/TransactionsView.vue";
 import TransactionCreateView from "@/views/TransactionCreateView.vue";
@@ -25,7 +26,13 @@ const routes: Array<RouteRecordRaw> = [
     component: RegisterView,
     meta: { public: true },
   },
-  { path: "/categories", name: "categories", component: CategoryView },
+  { path: "/categories", name: "categories", component: CategoryList },
+  {
+    path: "/categories/:id",
+    name: "category-detail",
+    component: CategoryDetailView,
+    props: true,
+  },
   { path: "/user", name: "user", component: UserView },
   {
     path: "/transactions",
