@@ -50,6 +50,7 @@ const editId = ref<string | null>(null);
 const editLabel = ref("");
 const editAmount = ref(0);
 const editCategory = ref<Category | null>(null);
+const editTags = ref<Tag[]>([]);
 const editDate = ref("");
 const editError = ref("");
 
@@ -59,6 +60,7 @@ function startEdit(tx: Transaction & { tags: Tag[] }) {
   editAmount.value = tx.amount;
   editCategory.value =
     categories?.value?.find((c) => c.id === tx.category_id) || null;
+  editTags.value = [...(tx.tags || [])];
   editDate.value = tx.transaction_date || "";
   editError.value = "";
 }
@@ -68,6 +70,7 @@ function cancelEdit() {
   editLabel.value = "";
   editAmount.value = 0;
   editCategory.value = null;
+  editTags.value = [];
   editDate.value = "";
   editError.value = "";
 }
@@ -84,7 +87,23 @@ async function saveEdit(tx: Transaction & { tags: Tag[] }) {
         transaction_date: editDate.value,
       },
     });
+    // Gestion des tags : ajout/suppression différée
+    const initialTagIds = (tx.tags || []).map((t) => t.id);
+    const newTagIds = editTags.value.map((t) => t.id);
+    // Ajouts
+    for (const tagId of newTagIds) {
+      if (!initialTagIds.includes(tagId)) {
+        await addTagToTransaction({ transaction_id: tx.id, tag_id: tagId });
+      }
+    }
+    // Suppressions
+    for (const tagId of initialTagIds) {
+      if (!newTagIds.includes(tagId)) {
+        await removeTagFromTransaction({ transaction_id: tx.id, tag_id: tagId });
+      }
+    }
     cancelEdit();
+    refetchPaginatedTransactions();
   } catch (e: any) {
     editError.value = e.message || "Erreur lors de la modification";
   }
@@ -547,7 +566,7 @@ async function handleCategoryCreateForTx(
                   <template v-if="editId === tx.id">
                     <Multiselect
                       v-if="allTags"
-                      :model-value="getTransactionTags(tx)"
+                      v-model="editTags"
                       :options="allTags"
                       :multiple="true"
                       :close-on-select="false"
@@ -557,8 +576,6 @@ async function handleCategoryCreateForTx(
                       track-by="id"
                       placeholder="Ajouter des tags"
                       :taggable="true"
-                      @select="(tag: Tag) => handleTagAdd(tag, tx)"
-                      @remove="(tag: Tag) => handleTagRemove(tag, tx)"
                       @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
                       class="w-48 max-w-xs multiselect-tags-wrap"
                     />
