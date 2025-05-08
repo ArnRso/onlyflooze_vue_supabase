@@ -23,8 +23,19 @@ export function estimateNextRecurringTransaction(transactions: TransactionLike[]
   // Moyenne des jours du mois
   const estimatedDay = Math.round(days.reduce((a, b) => a + b, 0) / days.length);
 
-  // Montant de la transaction la plus récente
-  const nextAmount = sorted[sorted.length - 1].amount;
+  // Trouver le mois précédent par rapport à la transaction la plus récente
+  const lastDate = new Date(sorted[sorted.length - 1].date);
+  const prevMonth = lastDate.getMonth() === 0 ? 11 : lastDate.getMonth() - 1;
+  const prevYear = lastDate.getMonth() === 0 ? lastDate.getFullYear() - 1 : lastDate.getFullYear();
+
+  // Filtrer les transactions du mois précédent
+  const prevMonthTransactions = sorted.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+  });
+
+  // Somme des montants du mois précédent
+  const nextAmount = prevMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
 
   return { estimatedDay, nextAmount };
 }
