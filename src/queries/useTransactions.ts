@@ -140,3 +140,20 @@ export function useTransactionByIdQuery(id: string) {
     enabled: !!id,
   });
 }
+
+export function useCategoryTransactionsQuery(categoryId: string) {
+  return useQuery<{ data: Transaction[] }>({
+    queryKey: ["transactions", "category", categoryId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transaction")
+        .select("*")
+        .eq("category_id", categoryId)
+        .order("transaction_date", { ascending: false });
+      if (error) throw new Error(error.message);
+      return { data: data as Transaction[] };
+    },
+    enabled: !!categoryId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
