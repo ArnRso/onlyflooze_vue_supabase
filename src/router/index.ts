@@ -10,6 +10,7 @@ import TransactionCreateView from "@/views/TransactionCreateView.vue";
 import TransactionEditView from "@/views/TransactionEditView.vue";
 import TagsView from "@/views/TagsView.vue";
 import AssignCategoryView from "@/views/AssignCategoryView.vue";
+import MonthlyRecurringSummaryView from "@/views/MonthlyRecurringSummaryView.vue";
 import { supabase } from "@/supabase";
 
 const routes: Array<RouteRecordRaw> = [
@@ -59,6 +60,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/assign-category",
     name: "assign-category",
     component: AssignCategoryView,
+  },
+  {
+    path: "/monthly-recurring-summary",
+    name: "monthly-recurring-summary",
+    component: MonthlyRecurringSummaryView,
   },
 ];
 
