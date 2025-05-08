@@ -8,6 +8,7 @@ import TransactionsView from "@/views/TransactionsView.vue";
 import TransactionCreateView from "@/views/TransactionCreateView.vue";
 import TransactionEditView from "@/views/TransactionEditView.vue";
 import TagsView from "@/views/TagsView.vue";
+import AssignCategoryView from "@/views/AssignCategoryView.vue";
 import { supabase } from "@/supabase";
 
 const routes: Array<RouteRecordRaw> = [
@@ -46,6 +47,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/tags",
     name: "tags",
     component: TagsView,
+  },
+  {
+    path: "/assign-category",
+    name: "assign-category",
+    component: AssignCategoryView,
   },
 ];
 

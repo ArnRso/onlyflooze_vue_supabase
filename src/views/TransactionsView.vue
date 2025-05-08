@@ -29,7 +29,7 @@ const {
   isLoading,
   error,
   refetch: refetchPaginatedTransactions,
-} = useTransactionsQuery(page, pageSize);
+} = useTransactionsQuery(page, pageSize, "");
 
 const transactions = computed(() => transactionsResponse.value?.data ?? []);
 const total = computed(() => transactionsResponse.value?.count ?? 0);
