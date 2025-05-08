@@ -105,67 +105,84 @@ const handleDelete = async (id: string) => {
         {{ error }}
       </div>
       <div v-if="isLoading" class="text-center">Chargement...</div>
-      <ul>
-        <li
-          v-for="cat in categories"
-          :key="cat.id"
-          class="flex items-center justify-between py-2 border-b last:border-b-0"
-        >
-          <div v-if="editId !== cat.id" class="flex items-center gap-4">
-            <span>{{ cat.label }}</span>
-            <span v-if="cat.is_recurring" class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Récurrente</span>
-            <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Ponctuelle</span>
-          </div>
-          <div v-else class="flex gap-2 flex-1 items-center">
-            <input
-              v-model="editLabel"
-              type="text"
-              class="flex-1 border rounded px-2 py-1"
-            />
-            <label
-              class="flex items-center cursor-pointer select-none"
-              @click="editIsRecurring = !editIsRecurring"
-            >
-              <span
-                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
-                :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
-              >
-                <span
-                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                  :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+      <table class="min-w-full divide-y divide-gray-200 mb-6">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+            <th class="px-4 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="cat in categories" :key="cat.id">
+            <td class="px-4 py-2">
+              <template v-if="editId !== cat.id">
+                {{ cat.label }}
+              </template>
+              <template v-else>
+                <input
+                  v-model="editLabel"
+                  type="text"
+                  class="flex-1 border rounded px-2 py-1"
                 />
-              </span>
-              <span class="ml-1">Récurrente</span>
-            </label>
-            <button
-              @click="handleEdit"
-              class="bg-green-600 text-white px-2 py-1 rounded shadow"
-            >
-              Valider
-            </button>
-            <button
-              @click="() => { editId = null; editLabel = ''; editIsRecurring = false; }"
-              class="bg-gray-300 px-2 py-1 rounded"
-            >
-              Annuler
-            </button>
-          </div>
-          <div v-if="editId !== cat.id" class="flex gap-2">
-            <button
-              @click="() => startEdit(cat)"
-              class="text-blue-600 hover:underline"
-            >
-              Modifier
-            </button>
-            <button
-              @click="() => handleDelete(cat.id)"
-              class="text-red-600 hover:underline"
-            >
-              Supprimer
-            </button>
-          </div>
-        </li>
-      </ul>
+              </template>
+            </td>
+            <td class="px-4 py-2">
+              <template v-if="editId !== cat.id">
+                <span v-if="cat.is_recurring" class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Récurrente</span>
+                <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Ponctuelle</span>
+              </template>
+              <template v-else>
+                <label
+                  class="flex items-center cursor-pointer select-none"
+                  @click="editIsRecurring = !editIsRecurring"
+                >
+                  <span
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                    :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
+                  >
+                    <span
+                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                      :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+                    />
+                  </span>
+                  <span class="ml-1">Récurrente</span>
+                </label>
+              </template>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <template v-if="editId !== cat.id">
+                <button
+                  @click="() => startEdit(cat)"
+                  class="text-blue-600 hover:underline mr-2"
+                >
+                  Modifier
+                </button>
+                <button
+                  @click="() => handleDelete(cat.id)"
+                  class="text-red-600 hover:underline"
+                >
+                  Supprimer
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  @click="handleEdit"
+                  class="bg-green-600 text-white px-2 py-1 rounded shadow mr-2"
+                >
+                  Valider
+                </button>
+                <button
+                  @click="() => { editId = null; editLabel = ''; editIsRecurring = false; }"
+                  class="bg-gray-300 px-2 py-1 rounded"
+                >
+                  Annuler
+                </button>
+              </template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
