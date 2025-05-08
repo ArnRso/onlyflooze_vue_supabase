@@ -68,6 +68,13 @@ function closeDropdown() {
           >
             Catégories
           </RouterLink>
+          <RouterLink
+            v-if="user"
+            to="/monthly-recurring-summary"
+            class="hover:text-indigo-200 transition duration-300 py-2"
+          >
+            Récap. récurrent
+          </RouterLink>
           <div v-if="!user" class="flex space-x-4">
             <RouterLink
               to="login"
@@ -228,6 +235,13 @@ function closeDropdown() {
             @click="isMobileMenuOpen = false"
           >
             Catégories
+          </RouterLink>
+          <RouterLink
+            to="/monthly-recurring-summary"
+            class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
+          >
+            Récap. récurrent
           </RouterLink>
           <RouterLink
             to="/user"
