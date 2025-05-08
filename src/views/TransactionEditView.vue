@@ -1,41 +1,39 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   useTransactionByIdQuery,
   useUpdateTransactionMutation,
-} from "@/queries/useTransactions";
-import { useCategoriesQuery } from "@/queries/useCategories";
+} from '@/queries/useTransactions'
+import { useCategoriesQuery } from '@/queries/useCategories'
 
-const props = defineProps<{ id: string }>();
-const router = useRouter();
-const {
-  data: transaction,
-} = useTransactionByIdQuery(props.id);
-const { mutateAsync, isPending } = useUpdateTransactionMutation();
-const { data: categories } = useCategoriesQuery();
+const props = defineProps<{ id: string }>()
+const router = useRouter()
+const { data: transaction } = useTransactionByIdQuery(props.id)
+const { mutateAsync, isPending } = useUpdateTransactionMutation()
+const { data: categories } = useCategoriesQuery()
 
-const label = ref("");
-const amount = ref(0);
-const transaction_date = ref("");
-const category_id = ref("");
-const error = ref("");
+const label = ref('')
+const amount = ref(0)
+const transaction_date = ref('')
+const category_id = ref('')
+const error = ref('')
 
 watch(
   transaction,
   (tx) => {
     if (tx) {
-      label.value = tx.label;
-      amount.value = tx.amount;
-      transaction_date.value = tx.transaction_date;
-      category_id.value = tx.category_id || "";
+      label.value = tx.label
+      amount.value = tx.amount
+      transaction_date.value = tx.transaction_date
+      category_id.value = tx.category_id || ''
     }
   },
   { immediate: true }
-);
+)
 
 const submit = async () => {
-  error.value = "";
+  error.value = ''
   try {
     await mutateAsync({
       id: props.id,
@@ -45,12 +43,13 @@ const submit = async () => {
         transaction_date: transaction_date.value,
         category_id: category_id.value || null,
       },
-    });
-    router.push("/transactions");
+    })
+    router.push('/transactions')
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : "Erreur lors de la modification";
+    error.value =
+      e instanceof Error ? e.message : 'Erreur lors de la modification'
   }
-};
+}
 </script>
 
 <template>

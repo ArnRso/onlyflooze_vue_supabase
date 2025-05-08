@@ -1,84 +1,84 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router'
 import {
   useTransactionsQuery,
   useDeleteTransactionMutation,
   useUpdateTransactionMutation,
   useAddBulkTransactionsMutation,
-} from "@/queries/useTransactions";
+} from '@/queries/useTransactions'
 import {
   useCategoriesQuery,
   useAddCategoryMutation,
   type Category,
-} from "@/queries/useCategories";
-import { ref, computed } from "vue";
-import Multiselect from "vue-multiselect";
-import { useTagsQuery, useAddTagMutation } from "@/queries/useTags";
-import { useSessionQuery } from "@/queries/useAuth";
+} from '@/queries/useCategories'
+import { ref, computed } from 'vue'
+import Multiselect from 'vue-multiselect'
+import { useTagsQuery, useAddTagMutation } from '@/queries/useTags'
+import { useSessionQuery } from '@/queries/useAuth'
 import {
   useAddTransactionTagMutation,
   useDeleteTransactionTagMutation,
-} from "@/queries/useTransactionTags";
-import type { Transaction, Tag } from "@/queries/useTransactions";
-import MdiPencil from '@/components/icons/MdiPencil.vue';
-import MdiTrashCan from '@/components/icons/MdiTrashCan.vue';
+} from '@/queries/useTransactionTags'
+import type { Transaction, Tag } from '@/queries/useTransactions'
+import MdiPencil from '@/components/icons/MdiPencil.vue'
+import MdiTrashCan from '@/components/icons/MdiTrashCan.vue'
 
-const router = useRouter();
-const page = ref(1);
-const pageSize = 50;
+const router = useRouter()
+const page = ref(1)
+const pageSize = 50
 const {
   data: transactionsResponse,
   isLoading,
   error,
   refetch: refetchPaginatedTransactions,
-} = useTransactionsQuery(page, pageSize, "");
+} = useTransactionsQuery(page, pageSize, '')
 
-const transactions = computed(() => transactionsResponse.value?.data ?? []);
-const total = computed(() => transactionsResponse.value?.count ?? 0);
-const totalPages = computed(() => Math.ceil(total.value / pageSize));
-const { data: categories } = useCategoriesQuery();
-const { mutateAsync: addCategory } = useAddCategoryMutation();
+const transactions = computed(() => transactionsResponse.value?.data ?? [])
+const total = computed(() => transactionsResponse.value?.count ?? 0)
+const totalPages = computed(() => Math.ceil(total.value / pageSize))
+const { data: categories } = useCategoriesQuery()
+const { mutateAsync: addCategory } = useAddCategoryMutation()
 
 const { mutateAsync: deleteTransaction, isPending: isDeleting } =
-  useDeleteTransactionMutation();
+  useDeleteTransactionMutation()
 
 const { mutateAsync: updateTransaction, isPending: isUpdating } =
-  useUpdateTransactionMutation();
+  useUpdateTransactionMutation()
 
-const deleteError = ref("");
+const deleteError = ref('')
 
 // Pour l'édition inline
-const editId = ref<string | null>(null);
-const editLabel = ref("");
-const editAmount = ref(0);
-const editCategory = ref<Category | null>(null);
-const editTags = ref<Tag[]>([]);
-const editDate = ref("");
-const editError = ref("");
+const editId = ref<string | null>(null)
+const editLabel = ref('')
+const editAmount = ref(0)
+const editCategory = ref<Category | null>(null)
+const editTags = ref<Tag[]>([])
+const editDate = ref('')
+const editError = ref('')
 
 function startEdit(tx: Transaction & { tags: Tag[] }) {
-  editId.value = tx.id;
-  editLabel.value = tx.label;
-  editAmount.value = tx.amount;
+  editId.value = tx.id
+  editLabel.value = tx.label
+  editAmount.value = tx.amount
   editCategory.value =
-    categories?.value?.find((c) => c.id === tx.category_id) || null;
-  editTags.value = [...(tx.tags || [])];
-  editDate.value = tx.transaction_date || "";
-  editError.value = "";
+    categories?.value?.find((c) => c.id === tx.category_id) || null
+  editTags.value = [...(tx.tags || [])]
+  editDate.value = tx.transaction_date || ''
+  editError.value = ''
 }
 
 function cancelEdit() {
-  editId.value = null;
-  editLabel.value = "";
-  editAmount.value = 0;
-  editCategory.value = null;
-  editTags.value = [];
-  editDate.value = "";
-  editError.value = "";
+  editId.value = null
+  editLabel.value = ''
+  editAmount.value = 0
+  editCategory.value = null
+  editTags.value = []
+  editDate.value = ''
+  editError.value = ''
 }
 
 async function saveEdit(tx: Transaction & { tags: Tag[] }) {
-  editError.value = "";
+  editError.value = ''
   try {
     await updateTransaction({
       id: tx.id,
@@ -88,73 +88,74 @@ async function saveEdit(tx: Transaction & { tags: Tag[] }) {
         category_id: editCategory.value?.id || null,
         transaction_date: editDate.value,
       },
-    });
+    })
     // Gestion des tags : ajout/suppression différée
-    const initialTagIds = (tx.tags || []).map((t) => t.id);
-    const newTagIds = editTags.value.map((t) => t.id);
+    const initialTagIds = (tx.tags || []).map((t) => t.id)
+    const newTagIds = editTags.value.map((t) => t.id)
     // Ajouts
     for (const tagId of newTagIds) {
       if (!initialTagIds.includes(tagId)) {
-        await addTagToTransaction({ transaction_id: tx.id, tag_id: tagId });
+        await addTagToTransaction({ transaction_id: tx.id, tag_id: tagId })
       }
     }
     // Suppressions
     for (const tagId of initialTagIds) {
       if (!newTagIds.includes(tagId)) {
-        await removeTagFromTransaction({ transaction_id: tx.id, tag_id: tagId });
+        await removeTagFromTransaction({ transaction_id: tx.id, tag_id: tagId })
       }
     }
-    cancelEdit();
-    refetchPaginatedTransactions();
+    cancelEdit()
+    refetchPaginatedTransactions()
   } catch (e: unknown) {
-    editError.value = (e as Error).message || "Erreur lors de la modification";
+    editError.value = (e as Error).message || 'Erreur lors de la modification'
   }
 }
 
 const formatAmount = (amount: number) => {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-  }).format(amount);
-};
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(amount)
+}
 
 const formatDate = (dateStr: string) => {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("fr-FR");
-};
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('fr-FR')
+}
 
 async function handleDelete(txId: string) {
-  deleteError.value = "";
-  if (confirm("Supprimer cette transaction ?")) {
+  deleteError.value = ''
+  if (confirm('Supprimer cette transaction ?')) {
     try {
-      await deleteTransaction(txId);
+      await deleteTransaction(txId)
     } catch (e: unknown) {
-      deleteError.value = (e as Error).message || "Erreur lors de la suppression";
+      deleteError.value =
+        (e as Error).message || 'Erreur lors de la suppression'
     }
   }
 }
 
 function goToPage(p: number) {
   if (p >= 1 && p <= totalPages.value) {
-    page.value = p;
+    page.value = p
   }
 }
 
 // Pour l'import CSV
-const fileInputRef = ref<HTMLInputElement | null>(null);
-const isImporting = ref(false);
-const importMessage = ref("");
-const importError = ref("");
-const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation();
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const isImporting = ref(false)
+const importMessage = ref('')
+const importError = ref('')
+const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation()
 
 // Fonction pour parser la date JJ/MM/AAAA en YYYY-MM-DD
 function parseDate(dateStr: string): string | null {
-  if (!dateStr) return null;
-  const parts = dateStr.split("/");
+  if (!dateStr) return null
+  const parts = dateStr.split('/')
   if (parts.length === 3) {
-    const [day, month, year] = parts;
+    const [day, month, year] = parts
     if (
       !isNaN(parseInt(day)) &&
       !isNaN(parseInt(month)) &&
@@ -165,48 +166,48 @@ function parseDate(dateStr: string): string | null {
       parseInt(day) <= 31 &&
       year.length === 4
     ) {
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
     }
   }
-  console.warn(`Format de date invalide ignoré: ${dateStr}`);
-  return null;
+  console.warn(`Format de date invalide ignoré: ${dateStr}`)
+  return null
 }
 
 async function handleFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
 
-  isImporting.value = true;
-  importMessage.value = "";
-  importError.value = "";
+  isImporting.value = true
+  importMessage.value = ''
+  importError.value = ''
 
   try {
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = async (e) => {
-      const text = e.target?.result as string;
+      const text = e.target?.result as string
       if (!text) {
-        importError.value = "Impossible de lire le fichier.";
-        isImporting.value = false;
-        return;
+        importError.value = 'Impossible de lire le fichier.'
+        isImporting.value = false
+        return
       }
 
-      const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+      const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '')
       if (lines.length < 2) {
         importError.value =
-          "Le fichier CSV est vide ou ne contient pas d'en-têtes.";
-        isImporting.value = false;
-        return;
+          "Le fichier CSV est vide ou ne contient pas d'en-têtes."
+        isImporting.value = false
+        return
       }
 
       // Nettoyer les en-têtes en supprimant les guillemets
       const headers = lines[0]
-        .split(";")
-        .map((h) => h.trim().replace(/^"|"$/g, ""));
-      const dateIndex = headers.indexOf("Date operation");
-      const labelIndex = headers.indexOf("Libelle");
-      const debitIndex = headers.indexOf("Debit");
-      const creditIndex = headers.indexOf("Credit");
+        .split(';')
+        .map((h) => h.trim().replace(/^"|"$/g, ''))
+      const dateIndex = headers.indexOf('Date operation')
+      const labelIndex = headers.indexOf('Libelle')
+      const debitIndex = headers.indexOf('Debit')
+      const creditIndex = headers.indexOf('Credit')
 
       if (
         dateIndex === -1 ||
@@ -215,140 +216,140 @@ async function handleFileUpload(event: Event) {
         creditIndex === -1
       ) {
         importError.value =
-          'En-têtes manquants. Assurez-vous que le fichier contient "Date operation", "Libelle", "Debit", "Credit".';
-        console.error("Headers found:", headers); // Pour le débogage
-        isImporting.value = false;
-        return;
+          'En-têtes manquants. Assurez-vous que le fichier contient "Date operation", "Libelle", "Debit", "Credit".'
+        console.error('Headers found:', headers) // Pour le débogage
+        isImporting.value = false
+        return
       }
 
-      const transactionsToCreate = [];
-      let invalidCount = 0;
+      const transactionsToCreate = []
+      let invalidCount = 0
 
       for (let i = 1; i < lines.length; i++) {
         // Nettoyer les valeurs en supprimant les guillemets
         const values = lines[i]
-          .split(";")
-          .map((v) => v.trim().replace(/^"|"$/g, ""));
+          .split(';')
+          .map((v) => v.trim().replace(/^"|"$/g, ''))
         if (
           values.length <
           Math.max(dateIndex, labelIndex, debitIndex, creditIndex) + 1
         ) {
-          console.warn(`Ligne ${i + 1} ignorée: nombre de colonnes incorrect.`);
-          invalidCount++;
-          continue;
+          console.warn(`Ligne ${i + 1} ignorée: nombre de colonnes incorrect.`)
+          invalidCount++
+          continue
         }
 
-        const rawDate = values[dateIndex];
-        const label = values[labelIndex];
-        const debit = parseFloat(values[debitIndex].replace(",", ".") || "0");
-        const credit = parseFloat(values[creditIndex].replace(",", ".") || "0");
+        const rawDate = values[dateIndex]
+        const label = values[labelIndex]
+        const debit = parseFloat(values[debitIndex].replace(',', '.') || '0')
+        const credit = parseFloat(values[creditIndex].replace(',', '.') || '0')
 
         if (!label) {
-          console.warn(`Ligne ${i + 1} ignorée: Libellé manquant.`);
-          invalidCount++;
-          continue;
+          console.warn(`Ligne ${i + 1} ignorée: Libellé manquant.`)
+          invalidCount++
+          continue
         }
 
-        const transaction_date = parseDate(rawDate);
+        const transaction_date = parseDate(rawDate)
         if (!transaction_date) {
-          console.warn(`Ligne ${i + 1} ignorée: Date invalide (${rawDate}).`);
-          invalidCount++;
-          continue;
+          console.warn(`Ligne ${i + 1} ignorée: Date invalide (${rawDate}).`)
+          invalidCount++
+          continue
         }
 
-        const amount = credit - debit;
+        const amount = credit - debit
 
         transactionsToCreate.push({
           label,
           amount,
           transaction_date,
           category_id: null,
-        });
+        })
       }
 
       if (transactionsToCreate.length > 0) {
         try {
           // Import en masse avec un seul appel API - les doublons seront gérés par Supabase via upsert
-          const addedTransactions = await addBulkTransactions(
-            transactionsToCreate
-          );
+          const addedTransactions =
+            await addBulkTransactions(transactionsToCreate)
           importMessage.value = `${
             addedTransactions.length
           } transaction(s) ajoutée(s). ${
             transactionsToCreate.length - addedTransactions.length
-          } transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`;
-          refetchPaginatedTransactions();
+          } transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`
+          refetchPaginatedTransactions()
         } catch (e: unknown) {
           importError.value =
-            (e as Error).message || "Erreur lors de la création des transactions.";
+            (e as Error).message ||
+            'Erreur lors de la création des transactions.'
         }
       } else {
-        importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`;
+        importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`
       }
 
-      isImporting.value = false;
+      isImporting.value = false
       if (fileInputRef.value) {
-        fileInputRef.value.value = "";
+        fileInputRef.value.value = ''
       }
-    };
+    }
 
     reader.onerror = () => {
-      importError.value = "Erreur lors de la lecture du fichier.";
-      isImporting.value = false;
+      importError.value = 'Erreur lors de la lecture du fichier.'
+      isImporting.value = false
       if (fileInputRef.value) {
-        fileInputRef.value.value = "";
+        fileInputRef.value.value = ''
       }
-    };
+    }
 
-    reader.readAsText(file, "UTF-8");
+    reader.readAsText(file, 'UTF-8')
   } catch (e: unknown) {
-    importError.value = (e as Error).message || "Une erreur est survenue.";
-    isImporting.value = false;
+    importError.value = (e as Error).message || 'Une erreur est survenue.'
+    isImporting.value = false
     if (fileInputRef.value) {
-      fileInputRef.value.value = "";
+      fileInputRef.value.value = ''
     }
   }
 }
 
-const { data: allTags } = useTagsQuery();
-const { mutateAsync: addTagToTransaction } = useAddTransactionTagMutation();
+const { data: allTags } = useTagsQuery()
+const { mutateAsync: addTagToTransaction } = useAddTransactionTagMutation()
 const { mutateAsync: removeTagFromTransaction } =
-  useDeleteTransactionTagMutation();
-const { mutateAsync: addTag } = useAddTagMutation();
-const { data: user } = useSessionQuery();
+  useDeleteTransactionTagMutation()
+const { mutateAsync: addTag } = useAddTagMutation()
+const { data: user } = useSessionQuery()
 
 async function handleTagCreate(
   newLabel: string,
   tx: Transaction & { tags: Tag[] }
 ) {
-  if (!user.value?.id) return;
+  if (!user.value?.id) return
   // Créer le tag
-  const tag = await addTag({ label: newLabel });
+  const tag = await addTag({ label: newLabel })
   // Lier le tag à la transaction
-  await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id });
-  refetchPaginatedTransactions();
+  await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id })
+  refetchPaginatedTransactions()
 }
 
 async function handleCategoryCreateForTx(
   newLabel: string,
   tx: Transaction & { tags: Tag[] }
 ) {
-  if (!user.value?.id) return;
-  const cat = await addCategory({ label: newLabel });
+  if (!user.value?.id) return
+  const cat = await addCategory({ label: newLabel })
   await updateTransaction({
     id: tx.id,
     updates: { category_id: cat.id },
-  });
-  refetchPaginatedTransactions();
+  })
+  refetchPaginatedTransactions()
 }
 
 function getTransactionTags(tx: Transaction & { tags: Tag[] }) {
-  return tx.tags || [];
+  return tx.tags || []
 }
 
 function getTransactionCategory(tx: Transaction) {
-  if (!categories?.value) return null;
-  return categories.value.find((c) => c.id === tx.category_id) || null;
+  if (!categories?.value) return null
+  return categories.value.find((c) => c.id === tx.category_id) || null
 }
 </script>
 
@@ -378,7 +379,7 @@ function getTransactionCategory(tx: Transaction) {
             :class="{ 'opacity-50': isImporting }"
             :disabled="isImporting"
           >
-            {{ isImporting ? "Import en cours..." : "Importer CSV" }}
+            {{ isImporting ? 'Import en cours...' : 'Importer CSV' }}
           </label>
           <span v-if="isImporting" class="text-sm text-gray-600"
             >Traitement...</span
@@ -496,8 +497,8 @@ function getTransactionCategory(tx: Transaction) {
                     editId === tx.id
                       ? ''
                       : tx.amount < 0
-                      ? 'text-red-600'
-                      : 'text-green-600'
+                        ? 'text-red-600'
+                        : 'text-green-600'
                   "
                 >
                   <template v-if="editId === tx.id">
@@ -527,7 +528,10 @@ function getTransactionCategory(tx: Transaction) {
                       placeholder="Choisir une catégorie"
                       :allow-empty="true"
                       :taggable="true"
-                      @tag="(newLabel: string) => handleCategoryCreateForTx(newLabel, tx)"
+                      @tag="
+                        (newLabel: string) =>
+                          handleCategoryCreateForTx(newLabel, tx)
+                      "
                       class="w-40 max-w-xs"
                     />
                     <span v-else class="text-gray-400">-</span>
@@ -560,7 +564,11 @@ function getTransactionCategory(tx: Transaction) {
                   </template>
                   <template v-else>
                     <span v-if="getTransactionTags(tx).length > 0">
-                      <span v-for="tag in getTransactionTags(tx)" :key="tag.id" class="inline-block bg-indigo-100 text-indigo-700 rounded px-2 py-0.5 mr-1 text-xs">
+                      <span
+                        v-for="tag in getTransactionTags(tx)"
+                        :key="tag.id"
+                        class="inline-block bg-indigo-100 text-indigo-700 rounded px-2 py-0.5 mr-1 text-xs"
+                      >
                         {{ tag.label }}
                       </span>
                     </span>
@@ -648,7 +656,7 @@ input:disabled {
 }
 
 /* Style pour cacher l'input file par défaut mais le rendre accessible */
-input[type="file"].hidden {
+input[type='file'].hidden {
   width: 0.1px;
   height: 0.1px;
   opacity: 0;
@@ -657,7 +665,7 @@ input[type="file"].hidden {
   z-index: -1;
 }
 
-label[for="csv-upload"]:disabled {
+label[for='csv-upload']:disabled {
   cursor: not-allowed;
 }
 

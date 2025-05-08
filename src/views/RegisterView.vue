@@ -1,25 +1,26 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRegisterMutation } from "@/queries/useAuth";
+import { ref } from 'vue'
+import { useRegisterMutation } from '@/queries/useAuth'
 
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
-const successMessage = ref("");
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const successMessage = ref('')
 
-const { mutateAsync: registerUser } = useRegisterMutation();
+const { mutateAsync: registerUser } = useRegisterMutation()
 
 const register = async () => {
-  errorMessage.value = "";
-  successMessage.value = "";
+  errorMessage.value = ''
+  successMessage.value = ''
   try {
-    await registerUser({ email: email.value, password: password.value });
+    await registerUser({ email: email.value, password: password.value })
     successMessage.value =
-      "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription.";
+      "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription."
   } catch (e: unknown) {
-    errorMessage.value = e instanceof Error ? e.message : "Erreur lors de l'inscription";
+    errorMessage.value =
+      e instanceof Error ? e.message : "Erreur lors de l'inscription"
   }
-};
+}
 </script>
 <template>
   <div

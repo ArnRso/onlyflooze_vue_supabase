@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useSessionQuery, signOut } from "@/queries/useAuth";
-import { useQueryClient } from "@tanstack/vue-query";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSessionQuery, signOut } from '@/queries/useAuth'
+import { useQueryClient } from '@tanstack/vue-query'
 
-const isMobileMenuOpen = ref(false);
-const isDropdownOpen = ref(false);
-const router = useRouter();
-const queryClient = useQueryClient();
+const isMobileMenuOpen = ref(false)
+const isDropdownOpen = ref(false)
+const router = useRouter()
+const queryClient = useQueryClient()
 
-const { data: user } = useSessionQuery();
+const { data: user } = useSessionQuery()
 
 const handleSignOut = async () => {
-  await signOut();
-  await queryClient.invalidateQueries({ queryKey: ["session"] });
-  await router.push("/");
-};
+  await signOut()
+  await queryClient.invalidateQueries({ queryKey: ['session'] })
+  await router.push('/')
+}
 
 const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value;
-};
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
 
 function toggleDropdown() {
-  isDropdownOpen.value = !isDropdownOpen.value;
+  isDropdownOpen.value = !isDropdownOpen.value
 }
 
 function closeDropdown() {
-  isDropdownOpen.value = false;
+  isDropdownOpen.value = false
 }
 </script>
 
@@ -154,7 +154,12 @@ function closeDropdown() {
                   Assigner Catégorie
                 </RouterLink>
                 <button
-                  @click="() => { handleSignOut(); closeDropdown(); }"
+                  @click="
+                    () => {
+                      handleSignOut()
+                      closeDropdown()
+                    }
+                  "
                   class="block w-full text-left px-4 py-2 hover:bg-indigo-50 transition rounded-none"
                 >
                   Déconnexion
@@ -265,7 +270,12 @@ function closeDropdown() {
             Assigner Catégorie
           </RouterLink>
           <button
-            @click="() => { handleSignOut(); isMobileMenuOpen = false; }"
+            @click="
+              () => {
+                handleSignOut()
+                isMobileMenuOpen = false
+              }
+            "
             class="block w-full text-left hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Déconnexion

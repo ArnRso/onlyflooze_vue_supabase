@@ -1,34 +1,35 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useLoginMutation, useSessionQuery, signOut } from "@/queries/useAuth";
-import { useQueryClient } from "@tanstack/vue-query";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLoginMutation, useSessionQuery, signOut } from '@/queries/useAuth'
+import { useQueryClient } from '@tanstack/vue-query'
 
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
 
-const { mutateAsync: login } = useLoginMutation();
-const { data: user } = useSessionQuery();
-const router = useRouter();
-const queryClient = useQueryClient();
+const { mutateAsync: login } = useLoginMutation()
+const { data: user } = useSessionQuery()
+const router = useRouter()
+const queryClient = useQueryClient()
 
 const handleLogin = async () => {
   try {
-    await login({ email: email.value, password: password.value });
-    errorMessage.value = "";
-    await queryClient.invalidateQueries({ queryKey: ["session"] });
-    await router.push("/");
+    await login({ email: email.value, password: password.value })
+    errorMessage.value = ''
+    await queryClient.invalidateQueries({ queryKey: ['session'] })
+    await router.push('/')
   } catch (e: unknown) {
-    errorMessage.value = e instanceof Error ? e.message : "Identifiants invalides.";
+    errorMessage.value =
+      e instanceof Error ? e.message : 'Identifiants invalides.'
   }
-};
+}
 
 const handleLogout = async () => {
-  await signOut();
-  await queryClient.invalidateQueries({ queryKey: ["session"] });
-  await router.push("/");
-};
+  await signOut()
+  await queryClient.invalidateQueries({ queryKey: ['session'] })
+  await router.push('/')
+}
 </script>
 <template>
   <div

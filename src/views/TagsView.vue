@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue'
 import {
   useTagsQuery,
   useAddTagMutation,
   useDeleteTagMutation,
   useUpdateTagMutation,
-} from "@/queries/useTags";
-import { Tag } from "@/queries/useTransactions";
+} from '@/queries/useTags'
+import { Tag } from '@/queries/useTransactions'
 
-const { data: tags, isLoading, error } = useTagsQuery();
-const { mutateAsync: addTag, isPending: isAdding } = useAddTagMutation();
-const { mutateAsync: deleteTag } = useDeleteTagMutation();
-const { mutateAsync: updateTag } = useUpdateTagMutation();
+const { data: tags, isLoading, error } = useTagsQuery()
+const { mutateAsync: addTag, isPending: isAdding } = useAddTagMutation()
+const { mutateAsync: deleteTag } = useDeleteTagMutation()
+const { mutateAsync: updateTag } = useUpdateTagMutation()
 
-const newLabel = ref("");
-const editId = ref<string | null>(null);
-const editLabel = ref("");
+const newLabel = ref('')
+const editId = ref<string | null>(null)
+const editLabel = ref('')
 
 const handleAdd = async () => {
-  if (!newLabel.value.trim()) return;
-  await addTag({ label: newLabel.value });
-  newLabel.value = "";
-};
+  if (!newLabel.value.trim()) return
+  await addTag({ label: newLabel.value })
+  newLabel.value = ''
+}
 
 const startEdit = (tag: Tag) => {
-  editId.value = tag.id;
-  editLabel.value = tag.label;
-};
+  editId.value = tag.id
+  editLabel.value = tag.label
+}
 
 const handleEdit = async () => {
-  if (!editLabel.value.trim()) return;
+  if (!editLabel.value.trim()) return
   if (editId.value) {
     await updateTag({
       id: editId.value,
       updates: { label: editLabel.value },
-    });
-    editId.value = null;
-    editLabel.value = "";
+    })
+    editId.value = null
+    editLabel.value = ''
   }
-};
+}
 
 const handleDelete = async (id: string) => {
-  if (confirm("Supprimer ce tag ?")) {
-    await deleteTag(id);
+  if (confirm('Supprimer ce tag ?')) {
+    await deleteTag(id)
   }
-};
+}
 </script>
 
 <template>
@@ -99,8 +99,8 @@ const handleDelete = async (id: string) => {
             <button
               @click="
                 () => {
-                  editId = null;
-                  editLabel = '';
+                  editId = null
+                  editLabel = ''
                 }
               "
               class="bg-gray-300 px-2 py-1 rounded"

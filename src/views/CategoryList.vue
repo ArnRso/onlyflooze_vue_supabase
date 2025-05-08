@@ -1,65 +1,68 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import type { Category } from "@/queries/useCategories";
+import { ref } from 'vue'
+import type { Category } from '@/queries/useCategories'
 import {
   useCategoriesQuery,
   useAddCategoryMutation,
   useDeleteCategoryMutation,
   useUpdateCategoryMutation,
-} from "@/queries/useCategories";
-import { useSessionQuery } from "@/queries/useAuth";
-import MdiMagnify from "@/components/icons/MdiMagnify.vue";
-import MdiPencil from "@/components/icons/MdiPencil.vue";
-import MdiTrashCan from "@/components/icons/MdiTrashCan.vue";
+} from '@/queries/useCategories'
+import { useSessionQuery } from '@/queries/useAuth'
+import MdiMagnify from '@/components/icons/MdiMagnify.vue'
+import MdiPencil from '@/components/icons/MdiPencil.vue'
+import MdiTrashCan from '@/components/icons/MdiTrashCan.vue'
 
-const { data: categories, isLoading, error } = useCategoriesQuery();
+const { data: categories, isLoading, error } = useCategoriesQuery()
 const { mutateAsync: addCategory, isPending: isAdding } =
-  useAddCategoryMutation();
+  useAddCategoryMutation()
 // Suppression des variables inutilisées
-const { mutateAsync: deleteCategory } = useDeleteCategoryMutation();
-const { mutateAsync: updateCategory } = useUpdateCategoryMutation();
-const { data: user } = useSessionQuery();
+const { mutateAsync: deleteCategory } = useDeleteCategoryMutation()
+const { mutateAsync: updateCategory } = useUpdateCategoryMutation()
+const { data: user } = useSessionQuery()
 
 const userId =
-  user && typeof user === "object" && "id" in user ? user.id : user?.value?.id;
+  user && typeof user === 'object' && 'id' in user ? user.id : user?.value?.id
 
-const newLabel = ref("");
-const newIsRecurring = ref(false);
-const editId = ref<string | null>(null);
-const editLabel = ref("");
-const editIsRecurring = ref(false);
+const newLabel = ref('')
+const newIsRecurring = ref(false)
+const editId = ref<string | null>(null)
+const editLabel = ref('')
+const editIsRecurring = ref(false)
 
 const handleAdd = async () => {
-  if (!newLabel.value.trim() || !userId) return;
-  await addCategory({ label: newLabel.value, is_recurring: newIsRecurring.value });
-  newLabel.value = "";
-  newIsRecurring.value = false;
-};
+  if (!newLabel.value.trim() || !userId) return
+  await addCategory({
+    label: newLabel.value,
+    is_recurring: newIsRecurring.value,
+  })
+  newLabel.value = ''
+  newIsRecurring.value = false
+}
 
 const startEdit = (cat: Category) => {
-  editId.value = cat.id;
-  editLabel.value = cat.label;
-  editIsRecurring.value = cat.is_recurring;
-};
+  editId.value = cat.id
+  editLabel.value = cat.label
+  editIsRecurring.value = cat.is_recurring
+}
 
 const handleEdit = async () => {
-  if (!editLabel.value.trim()) return;
+  if (!editLabel.value.trim()) return
   if (editId.value) {
     await updateCategory({
       id: editId.value,
       updates: { label: editLabel.value, is_recurring: editIsRecurring.value },
-    });
-    editId.value = null;
-    editLabel.value = "";
-    editIsRecurring.value = false;
+    })
+    editId.value = null
+    editLabel.value = ''
+    editIsRecurring.value = false
   }
-};
+}
 
 const handleDelete = async (id: string) => {
-  if (confirm("Supprimer cette catégorie ?")) {
-    await deleteCategory(id);
+  if (confirm('Supprimer cette catégorie ?')) {
+    await deleteCategory(id)
   }
-};
+}
 </script>
 
 <template>
@@ -110,8 +113,16 @@ const handleDelete = async (id: string) => {
       <table class="min-w-full divide-y divide-gray-200 mb-6">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+            <th
+              class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Nom
+            </th>
+            <th
+              class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Statut
+            </th>
             <th class="px-4 py-2"></th>
           </tr>
         </thead>
@@ -131,8 +142,16 @@ const handleDelete = async (id: string) => {
             </td>
             <td class="px-4 py-2">
               <template v-if="editId !== cat.id">
-                <span v-if="cat.is_recurring" class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">Récurrente</span>
-                <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Ponctuelle</span>
+                <span
+                  v-if="cat.is_recurring"
+                  class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded"
+                  >Récurrente</span
+                >
+                <span
+                  v-else
+                  class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded"
+                  >Ponctuelle</span
+                >
               </template>
               <template v-else>
                 <label
@@ -145,7 +164,9 @@ const handleDelete = async (id: string) => {
                   >
                     <span
                       class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                      :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+                      :class="
+                        editIsRecurring ? 'translate-x-6' : 'translate-x-1'
+                      "
                     />
                   </span>
                   <span class="ml-1">Récurrente</span>
@@ -186,7 +207,13 @@ const handleDelete = async (id: string) => {
                   Valider
                 </button>
                 <button
-                  @click="() => { editId = null; editLabel = ''; editIsRecurring = false; }"
+                  @click="
+                    () => {
+                      editId = null
+                      editLabel = ''
+                      editIsRecurring = false
+                    }
+                  "
                   class="bg-gray-300 px-2 py-1 rounded"
                 >
                   Annuler
