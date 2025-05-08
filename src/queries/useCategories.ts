@@ -8,7 +8,7 @@ export function useCategoriesQuery() {
   return useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("category").select("*");
+      const { data, error } = await supabase.from("category").select("*").order("label", { ascending: true });
       if (error) throw new Error(error.message);
       return data as Category[];
     },
@@ -24,6 +24,7 @@ export function useAddCategoryMutation() {
         .from("category")
         .insert([payload])
         .select()
+        .order("label", { ascending: true })
         .single();
       if (error) throw new Error(error.message);
       return data as Category;
@@ -63,6 +64,7 @@ export function useUpdateCategoryMutation() {
         .update(updates)
         .eq("id", id)
         .select()
+        .order("label", { ascending: true })
         .single();
       if (error) throw new Error(error.message);
       return data as Category;
