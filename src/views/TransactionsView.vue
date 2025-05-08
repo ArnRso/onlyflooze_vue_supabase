@@ -20,6 +20,9 @@ import {
   useDeleteTransactionTagMutation,
 } from "@/queries/useTransactionTags";
 import type { Transaction, Tag } from "@/queries/useTransactions";
+import MdiMagnify from '@/components/icons/MdiMagnify.vue';
+import MdiPencil from '@/components/icons/MdiPencil.vue';
+import MdiTrashCan from '@/components/icons/MdiTrashCan.vue';
 
 const router = useRouter();
 const page = ref(1);
@@ -612,23 +615,10 @@ async function handleCategoryCreateForTx(
                   <template v-else>
                     <button
                       @click="() => startEdit(tx)"
-                      class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
+                      class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
                       title="Modifier"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12.004 6.879l4.243 4.243m-2.121-6.364a2.121 2.121 0 113 3L7.5 20.5H4v-3.5l10.126-10.126z"
-                        />
-                      </svg>
+                      <MdiPencil class="h-5 w-5" />
                     </button>
                     <button
                       @click="() => handleDelete(tx.id)"
@@ -636,20 +626,7 @@ async function handleCategoryCreateForTx(
                       class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 focus:outline-none disabled:opacity-50"
                       title="Supprimer"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
-                        />
-                      </svg>
+                      <MdiTrashCan class="h-5 w-5" />
                     </button>
                   </template>
                 </td>
