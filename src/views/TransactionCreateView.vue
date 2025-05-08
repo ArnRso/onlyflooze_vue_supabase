@@ -14,7 +14,7 @@ const category_id = ref("");
 const error = ref("");
 const { mutateAsync, isPending } = useAddTransactionMutation();
 
-async function submit() {
+const submit = async () => {
   error.value = "";
   try {
     await mutateAsync({
@@ -24,10 +24,10 @@ async function submit() {
       category_id: category_id.value || null,
     });
     router.push("/transactions");
-  } catch (e: any) {
-    error.value = e.message || "Erreur lors de la création";
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : "Erreur lors de la création";
   }
-}
+};
 </script>
 
 <template>

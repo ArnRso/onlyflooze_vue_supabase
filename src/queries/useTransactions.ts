@@ -42,9 +42,12 @@ export function useTransactionsQuery(
       }
       const { data, error, count } = await query;
       if (error) throw new Error(error.message);
-      const transactionsWithTags = (data as any[]).map((tx) => ({
+      type TxWithTags = Transaction & { transaction_tag?: Array<{ tag: Tag }> };
+      const transactionsWithTags = (data as TxWithTags[]).map((tx) => ({
         ...tx,
-        tags: (tx.transaction_tag ?? []).map((tt: any) => tt.tag).filter(Boolean),
+        tags: Array.isArray(tx.transaction_tag)
+          ? tx.transaction_tag.map((tt) => tt.tag).filter(Boolean)
+          : [],
       }));
       return { data: transactionsWithTags, count: count ?? 0 };
     },

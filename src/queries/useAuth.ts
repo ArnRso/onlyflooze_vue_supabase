@@ -67,7 +67,7 @@ export function useSessionQuery() {
   const queryClient = useQueryClient();
   // Souscription unique aux changements d'état d'authentification
   if (typeof window !== "undefined" && !hasSubscribedToAuthStateChange) {
-    supabase.auth.onAuthStateChange((_event, _session) => {
+    supabase.auth.onAuthStateChange(() => {
       queryClient.invalidateQueries({ queryKey: ["session"] });
     });
     hasSubscribedToAuthStateChange = true;

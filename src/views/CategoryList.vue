@@ -15,10 +15,9 @@ import MdiTrashCan from "@/components/icons/MdiTrashCan.vue";
 const { data: categories, isLoading, error } = useCategoriesQuery();
 const { mutateAsync: addCategory, isPending: isAdding } =
   useAddCategoryMutation();
-const { mutateAsync: deleteCategory, isPending: isDeleting } =
-  useDeleteCategoryMutation();
-const { mutateAsync: updateCategory, isPending: isUpdating } =
-  useUpdateCategoryMutation();
+// Suppression des variables inutilisées
+const { mutateAsync: deleteCategory } = useDeleteCategoryMutation();
+const { mutateAsync: updateCategory } = useUpdateCategoryMutation();
 const { data: user } = useSessionQuery();
 
 const userId =

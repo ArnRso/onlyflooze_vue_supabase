@@ -16,7 +16,12 @@ export function useTransactionTagsQuery(transactionId: string) {
         .eq("transaction_id", transactionId);
       if (error) throw new Error(error.message);
       // data: [{ tag: { ...tag fields } }]
-      return (data ?? []).map((row: any) => row.tag as Tag);
+      return (data ?? []).map((row) => {
+        if (row && typeof row === 'object' && row.tag && typeof row.tag === 'object' && !Array.isArray(row.tag)) {
+          return row.tag as Tag;
+        }
+        return null;
+      }).filter(Boolean) as Tag[];
     },
     enabled: !!transactionId,
     staleTime: 1000 * 60 * 5,

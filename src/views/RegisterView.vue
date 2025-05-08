@@ -7,7 +7,7 @@ const password = ref("");
 const errorMessage = ref("");
 const successMessage = ref("");
 
-const { mutateAsync: registerUser, isPending } = useRegisterMutation();
+const { mutateAsync: registerUser } = useRegisterMutation();
 
 const register = async () => {
   errorMessage.value = "";
@@ -16,8 +16,8 @@ const register = async () => {
     await registerUser({ email: email.value, password: password.value });
     successMessage.value =
       "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription.";
-  } catch (e: any) {
-    errorMessage.value = e.message || "Erreur lors de l'inscription";
+  } catch (e: unknown) {
+    errorMessage.value = e instanceof Error ? e.message : "Erreur lors de l'inscription";
   }
 };
 </script>

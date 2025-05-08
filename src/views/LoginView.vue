@@ -8,7 +8,7 @@ const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 
-const { mutateAsync: login, isPending } = useLoginMutation();
+const { mutateAsync: login } = useLoginMutation();
 const { data: user } = useSessionQuery();
 const router = useRouter();
 const queryClient = useQueryClient();
@@ -19,8 +19,8 @@ const handleLogin = async () => {
     errorMessage.value = "";
     await queryClient.invalidateQueries({ queryKey: ["session"] });
     await router.push("/");
-  } catch (e: any) {
-    errorMessage.value = e.message || "Identifiants invalides.";
+  } catch (e: unknown) {
+    errorMessage.value = e instanceof Error ? e.message : "Identifiants invalides.";
   }
 };
 

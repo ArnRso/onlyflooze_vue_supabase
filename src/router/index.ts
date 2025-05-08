@@ -73,7 +73,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   // Autoriser l'accès libre aux routes publiques
   if (to.meta.public || to.matched.some((r) => r.meta.public)) {
     return true;

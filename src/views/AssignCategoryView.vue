@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import { useCategoriesQuery } from '@/queries/useCategories';
-import { useTransactionsQuery, useUpdateTransactionMutation, type Transaction } from '@/queries/useTransactions';
+import { useTransactionsQuery } from '@/queries/useTransactions';
 import { computed, ref, watch, watchEffect } from 'vue';
 import type { Tables } from '@/types/supabase';
 import { supabase } from '@/supabase';
@@ -154,7 +154,6 @@ const filteredTransactions = computed(() => {
 
 const canAssign = computed(() => selectedIds.value.length > 0 && selectedCategory.value && selectedCategory.value.id);
 
-const { mutateAsync: updateTransaction } = useUpdateTransactionMutation();
 const { mutateAsync: addCategory } = useAddCategoryMutation();
 
 const queryClient = useQueryClient();
@@ -188,8 +187,8 @@ async function assignCategory() {
     await queryClient.invalidateQueries({ queryKey: ["transactions"] });
     await queryClient.invalidateQueries({ queryKey: ["categories"] });
     refetch();
-  } catch (e: any) {
-    message.value = e.message || "Erreur lors de l'assignation.";
+  } catch (e: unknown) {
+    message.value = e instanceof Error ? e.message : "Erreur lors de l'assignation.";
     messageType.value = 'error';
   }
 }
@@ -205,8 +204,8 @@ async function handleCategoryCreate(newLabel: string) {
       selectedCategory.value = found;
       pendingCategoryId.value = null;
     }
-  } catch (e: any) {
-    message.value = e.message || "Erreur lors de la création de la catégorie.";
+  } catch (e: unknown) {
+    message.value = e instanceof Error ? e.message : "Erreur lors de la création de la catégorie.";
     messageType.value = 'error';
   }
 }
