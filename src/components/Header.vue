@@ -54,6 +54,20 @@ function closeDropdown() {
           >
             Accueil
           </RouterLink>
+          <RouterLink
+            v-if="user"
+            to="/transactions"
+            class="hover:text-indigo-200 transition duration-300 py-2"
+          >
+            Transactions
+          </RouterLink>
+          <RouterLink
+            v-if="user"
+            to="/categories"
+            class="hover:text-indigo-200 transition duration-300 py-2"
+          >
+            Catégories
+          </RouterLink>
           <div v-if="!user" class="flex space-x-4">
             <RouterLink
               to="login"
@@ -68,31 +82,7 @@ function closeDropdown() {
               S'inscrire
             </RouterLink>
           </div>
-          <div v-if="user" class="flex space-x-4 items-center">
-            <RouterLink
-              to="/categories"
-              class="hover:text-indigo-200 transition duration-300 py-2"
-            >
-              Catégories
-            </RouterLink>
-            <RouterLink
-              to="/transactions"
-              class="hover:text-indigo-200 transition duration-300 py-2"
-            >
-              Transactions
-            </RouterLink>
-            <RouterLink
-              to="/tags"
-              class="hover:text-indigo-200 transition duration-300 py-2"
-            >
-              Tags
-            </RouterLink>
-            <RouterLink
-              to="/assign-category"
-              class="hover:text-indigo-200 transition duration-300 py-2"
-            >
-              Assigner Catégorie
-            </RouterLink>
+          <div v-if="user" class="flex items-center">
             <!-- Dropdown utilisateur -->
             <div class="relative">
               <button
@@ -132,7 +122,7 @@ function closeDropdown() {
               </button>
               <div
                 v-if="isDropdownOpen"
-                class="absolute right-0 mt-2 w-40 bg-white text-gray-800 rounded shadow-lg z-50 overflow-hidden border border-indigo-200"
+                class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded shadow-lg z-50 overflow-hidden border border-indigo-200"
                 @mousedown.self="closeDropdown"
               >
                 <RouterLink
@@ -142,13 +132,22 @@ function closeDropdown() {
                 >
                   Profil
                 </RouterLink>
+                <RouterLink
+                  to="/tags"
+                  class="block px-4 py-2 hover:bg-indigo-50 transition rounded-none"
+                  @click="closeDropdown"
+                >
+                  Tags
+                </RouterLink>
+                <RouterLink
+                  to="/assign-category"
+                  class="block px-4 py-2 hover:bg-indigo-50 transition rounded-none"
+                  @click="closeDropdown"
+                >
+                  Assigner Catégorie
+                </RouterLink>
                 <button
-                  @click="
-                    () => {
-                      handleSignOut();
-                      closeDropdown();
-                    }
-                  "
+                  @click="() => { handleSignOut(); closeDropdown(); }"
                   class="block w-full text-left px-4 py-2 hover:bg-indigo-50 transition rounded-none"
                 >
                   Déconnexion
@@ -217,11 +216,11 @@ function closeDropdown() {
         </template>
         <template v-else>
           <RouterLink
-            to="user"
+            to="/transactions"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
             @click="isMobileMenuOpen = false"
           >
-            Profil
+            Transactions
           </RouterLink>
           <RouterLink
             to="/categories"
@@ -231,11 +230,11 @@ function closeDropdown() {
             Catégories
           </RouterLink>
           <RouterLink
-            to="/transactions"
+            to="/user"
             class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
             @click="isMobileMenuOpen = false"
           >
-            Transactions
+            Profil
           </RouterLink>
           <RouterLink
             to="/tags"
@@ -252,12 +251,7 @@ function closeDropdown() {
             Assigner Catégorie
           </RouterLink>
           <button
-            @click="
-              () => {
-                handleSignOut();
-                isMobileMenuOpen = false;
-              }
-            "
+            @click="() => { handleSignOut(); isMobileMenuOpen = false; }"
             class="block w-full text-left hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
           >
             Déconnexion
