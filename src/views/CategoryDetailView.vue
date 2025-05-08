@@ -220,8 +220,9 @@ const barChartOptions = {
         <div v-if="isLoading" class="text-center">Chargement...</div>
         <div v-else-if="transactions.length === 0" class="text-center text-gray-400">Aucune transaction.</div>
         <ul v-else class="divide-y divide-gray-200">
-          <li v-for="tx in transactions" :key="tx.id" class="py-2 flex justify-between">
+          <li v-for="tx in transactions" :key="tx.id" class="py-2 flex justify-between items-center">
             <span>{{ new Date(tx.transaction_date).toLocaleDateString() }}</span>
+            <span class="flex-1 text-gray-700 mx-4 truncate">{{ tx.label }}</span>
             <span class="font-mono">{{ formatAmount(tx.amount) }}</span>
           </li>
         </ul>
