@@ -8,25 +8,32 @@ export type Tag = Tables<"tag">;
 
 export function useTransactionsQuery(
   page: number | Ref<number> = 1,
-  pageSize: number | Ref<number> = 10
+  pageSize: number | Ref<number> = 10,
+  search: Ref<string> | string = '',
+  showWithoutCategory: Ref<boolean> | boolean = false
 ) {
   return useQuery<{ data: (Transaction & { tags: Tag[] })[]; count: number }>({
-    queryKey: computed(() => ["transactions", unref(page), unref(pageSize)]),
+    queryKey: computed(() => ["transactions", unref(page), unref(pageSize), unref(search), unref(showWithoutCategory)]),
     queryFn: async () => {
       const from = (unref(page) - 1) * unref(pageSize);
       const to = from + unref(pageSize) - 1;
-      const { data, error, count } = await supabase
+      let query = supabase
         .from("transaction")
         .select("*, transaction_tag(tag:tag_id(*))", { count: "exact" })
         .order("transaction_date", { ascending: false })
         .range(from, to);
+      if (unref(search)) {
+        const s = unref(search).toLowerCase().trim();
+        query = query.ilike("label", `%${s}%`);
+      }
+      if (unref(showWithoutCategory)) {
+        query = query.is('category_id', null);
+      }
+      const { data, error, count } = await query;
       if (error) throw new Error(error.message);
-      // Ajoute un champ tags à chaque transaction
       const transactionsWithTags = (data as any[]).map((tx) => ({
         ...tx,
-        tags: (tx.transaction_tag ?? [])
-          .map((tt: any) => tt.tag)
-          .filter(Boolean),
+        tags: (tx.transaction_tag ?? []).map((tt: any) => tt.tag).filter(Boolean),
       }));
       return { data: transactionsWithTags, count: count ?? 0 };
     },

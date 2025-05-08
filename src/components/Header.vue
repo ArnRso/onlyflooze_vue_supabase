@@ -87,6 +87,12 @@ function closeDropdown() {
             >
               Tags
             </RouterLink>
+            <RouterLink
+              to="/assign-category"
+              class="hover:text-indigo-200 transition duration-300 py-2"
+            >
+              Assigner Catégorie
+            </RouterLink>
             <!-- Dropdown utilisateur -->
             <div class="relative">
               <button
@@ -237,6 +243,13 @@ function closeDropdown() {
             @click="isMobileMenuOpen = false"
           >
             Tags
+          </RouterLink>
+          <RouterLink
+            to="/assign-category"
+            class="block hover:bg-white/10 px-3 py-2 rounded-lg transition duration-300"
+            @click="isMobileMenuOpen = false"
+          >
+            Assigner Catégorie
           </RouterLink>
           <button
             @click="
