@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useCategoriesQuery } from "@/queries/useCategories";
 import { useCategoryTransactionsQuery } from "@/queries/useTransactions";
-import { estimateNextRecurringTransaction } from "@/queries/estimateNextRecurringTransaction";
+import { estimateNextRecurringTransaction } from "@/services/recurringTransactionService";
 
 const route = useRoute();
 const categoryId = computed(() => route.params.id as string);
