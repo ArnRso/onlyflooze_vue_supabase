@@ -6,19 +6,12 @@ import {
   useDeleteTagMutation,
   useUpdateTagMutation,
 } from "@/queries/useTags";
-import { useSessionQuery } from "@/queries/useAuth";
 import { Tag } from "@/queries/useTransactions";
 
 const { data: tags, isLoading, error } = useTagsQuery();
 const { mutateAsync: addTag, isPending: isAdding } = useAddTagMutation();
-const { mutateAsync: deleteTag, isPending: isDeleting } =
-  useDeleteTagMutation();
-const { mutateAsync: updateTag, isPending: isUpdating } =
-  useUpdateTagMutation();
-const { data: user } = useSessionQuery();
-
-const userId =
-  user && typeof user === "object" && "id" in user ? user.id : user?.value?.id;
+const { mutateAsync: deleteTag } = useDeleteTagMutation();
+const { mutateAsync: updateTag } = useUpdateTagMutation();
 
 const newLabel = ref("");
 const editId = ref<string | null>(null);

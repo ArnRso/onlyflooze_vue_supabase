@@ -11,8 +11,6 @@ const props = defineProps<{ id: string }>();
 const router = useRouter();
 const {
   data: transaction,
-  isLoading: isLoadingTx,
-  error: errorTx,
 } = useTransactionByIdQuery(props.id);
 const { mutateAsync, isPending } = useUpdateTransactionMutation();
 const { data: categories } = useCategoriesQuery();
@@ -36,7 +34,7 @@ watch(
   { immediate: true }
 );
 
-async function submit() {
+const submit = async () => {
   error.value = "";
   try {
     await mutateAsync({
@@ -49,10 +47,10 @@ async function submit() {
       },
     });
     router.push("/transactions");
-  } catch (e: any) {
-    error.value = e.message || "Erreur lors de la modification";
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : "Erreur lors de la modification";
   }
-}
+};
 </script>
 
 <template>

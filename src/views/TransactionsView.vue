@@ -20,7 +20,6 @@ import {
   useDeleteTransactionTagMutation,
 } from "@/queries/useTransactionTags";
 import type { Transaction, Tag } from "@/queries/useTransactions";
-import MdiMagnify from '@/components/icons/MdiMagnify.vue';
 import MdiPencil from '@/components/icons/MdiPencil.vue';
 import MdiTrashCan from '@/components/icons/MdiTrashCan.vue';
 
@@ -107,8 +106,8 @@ async function saveEdit(tx: Transaction & { tags: Tag[] }) {
     }
     cancelEdit();
     refetchPaginatedTransactions();
-  } catch (e: any) {
-    editError.value = e.message || "Erreur lors de la modification";
+  } catch (e: unknown) {
+    editError.value = (e as Error).message || "Erreur lors de la modification";
   }
 }
 
@@ -131,8 +130,8 @@ async function handleDelete(txId: string) {
   if (confirm("Supprimer cette transaction ?")) {
     try {
       await deleteTransaction(txId);
-    } catch (e: any) {
-      deleteError.value = e.message || "Erreur lors de la suppression";
+    } catch (e: unknown) {
+      deleteError.value = (e as Error).message || "Erreur lors de la suppression";
     }
   }
 }
@@ -279,9 +278,9 @@ async function handleFileUpload(event: Event) {
             transactionsToCreate.length - addedTransactions.length
           } transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`;
           refetchPaginatedTransactions();
-        } catch (e: any) {
+        } catch (e: unknown) {
           importError.value =
-            e.message || "Erreur lors de la création des transactions.";
+            (e as Error).message || "Erreur lors de la création des transactions.";
         }
       } else {
         importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`;
@@ -302,8 +301,8 @@ async function handleFileUpload(event: Event) {
     };
 
     reader.readAsText(file, "UTF-8");
-  } catch (e: any) {
-    importError.value = e.message || "Une erreur est survenue.";
+  } catch (e: unknown) {
+    importError.value = (e as Error).message || "Une erreur est survenue.";
     isImporting.value = false;
     if (fileInputRef.value) {
       fileInputRef.value.value = "";
@@ -318,24 +317,6 @@ const { mutateAsync: removeTagFromTransaction } =
 const { mutateAsync: addTag } = useAddTagMutation();
 const { data: user } = useSessionQuery();
 
-function getTransactionTags(tx: Transaction & { tags: Tag[] }) {
-  return tx.tags || [];
-}
-
-function handleTagAdd(tag: Tag, tx: Transaction & { tags: Tag[] }) {
-  addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id }).then(() => {
-    refetchPaginatedTransactions();
-  });
-}
-
-function handleTagRemove(tag: Tag, tx: Transaction & { tags: Tag[] }) {
-  removeTagFromTransaction({ transaction_id: tx.id, tag_id: tag.id }).then(
-    () => {
-      refetchPaginatedTransactions();
-    }
-  );
-}
-
 async function handleTagCreate(
   newLabel: string,
   tx: Transaction & { tags: Tag[] }
@@ -345,22 +326,6 @@ async function handleTagCreate(
   const tag = await addTag({ label: newLabel });
   // Lier le tag à la transaction
   await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id });
-  refetchPaginatedTransactions();
-}
-
-function getTransactionCategory(tx: Transaction) {
-  if (!categories?.value) return null;
-  return categories.value.find((c) => c.id === tx.category_id) || null;
-}
-
-async function handleCategorySelect(
-  cat: Category | null,
-  tx: Transaction & { tags: Tag[] }
-) {
-  await updateTransaction({
-    id: tx.id,
-    updates: { category_id: cat ? cat.id : null },
-  });
   refetchPaginatedTransactions();
 }
 
@@ -375,6 +340,15 @@ async function handleCategoryCreateForTx(
     updates: { category_id: cat.id },
   });
   refetchPaginatedTransactions();
+}
+
+function getTransactionTags(tx: Transaction & { tags: Tag[] }) {
+  return tx.tags || [];
+}
+
+function getTransactionCategory(tx: Transaction) {
+  if (!categories?.value) return null;
+  return categories.value.find((c) => c.id === tx.category_id) || null;
 }
 </script>
 

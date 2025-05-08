@@ -275,3 +275,4 @@ function closeDropdown() {
     </div>
   </header>
 </template>
+// Correction du nom du composant
