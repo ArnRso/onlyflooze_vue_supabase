@@ -4,21 +4,39 @@ import { useCategoriesQuery } from '@/queries/useCategories'
 import { useTagsQuery } from '@/queries/useTags'
 import type { TransactionFilter } from '@/types/TransactionFilter'
 
+const props = defineProps<{ filters: TransactionFilter }>()
 const emit = defineEmits<{
   (e: 'update:filters', filters: TransactionFilter): void
 }>()
 
-const label = ref('')
-const dateMin = ref('')
-const dateMax = ref('')
-const amountMin = ref<number | null>(null)
-const amountMax = ref<number | null>(null)
-const selectedCategory = ref<string | null>(null)
-const selectedTag = ref<string | null>(null)
+// Champs locaux synchronisés avec la prop
+const label = ref(props.filters.label)
+const dateMin = ref(props.filters.dateMin)
+const dateMax = ref(props.filters.dateMax)
+const amountMin = ref<number | null>(props.filters.amountMin)
+const amountMax = ref<number | null>(props.filters.amountMax)
+const selectedCategory = ref<string | null>(props.filters.category)
+const selectedTag = ref<string | null>(props.filters.tag)
+
+// Synchronisation descendante : si la prop change, on met à jour les champs locaux
+watch(
+  () => props.filters,
+  (newFilters) => {
+    label.value = newFilters.label
+    dateMin.value = newFilters.dateMin
+    dateMax.value = newFilters.dateMax
+    amountMin.value = newFilters.amountMin
+    amountMax.value = newFilters.amountMax
+    selectedCategory.value = newFilters.category
+    selectedTag.value = newFilters.tag
+  },
+  { deep: true, immediate: true }
+)
 
 const { data: categories } = useCategoriesQuery()
 const { data: tags } = useTagsQuery()
 
+// Émission à chaque modification locale
 watch(
   [
     label,

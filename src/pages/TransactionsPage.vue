@@ -1,15 +1,17 @@
 <script lang="ts" setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import {
   useAddBulkTransactionsMutation,
   useTransactionsQuery,
 } from '@/queries/useTransactions'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import TransactionList from '@/components/TransactionList.vue'
 import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
 import type { TransactionFilter } from '@/types/TransactionFilter'
 
 const router = useRouter()
+const route = useRoute()
 const page = ref(1)
 const pageSize = 50
 
@@ -25,10 +27,86 @@ const filters = ref<TransactionFilter>({
 
 const showFilters = ref(false)
 
-function updateFilters(newFilters: TransactionFilter) {
-  filters.value = { ...filters.value, ...newFilters }
-  page.value = 1
+// --- Synchronisation URL <-> filtres/page ---
+function filtersToQuery(f: TransactionFilter, pageVal: number) {
+  const q: Record<string, string> = {}
+  if (f.label) q.label = f.label
+  if (f.dateMin) q.dateMin = f.dateMin
+  if (f.dateMax) q.dateMax = f.dateMax
+  if (f.amountMin !== null && f.amountMin !== undefined)
+    q.amountMin = String(f.amountMin)
+  if (f.amountMax !== null && f.amountMax !== undefined)
+    q.amountMax = String(f.amountMax)
+  if (f.category) q.category = String(f.category)
+  if (f.tag) q.tag = String(f.tag)
+  if (pageVal && pageVal !== 1) q.page = String(pageVal)
+  return q
 }
+
+function getQueryString(val: unknown): string {
+  if (Array.isArray(val)) return val[0] ?? ''
+  return typeof val === 'string' ? val : ''
+}
+
+function getQueryNumber(val: unknown): number | null {
+  const s = getQueryString(val)
+  return s !== '' ? Number(s) : null
+}
+
+function queryToFilters(query: RouteLocationNormalizedLoaded['query']): {
+  filters: TransactionFilter
+  page: number
+} {
+  return {
+    filters: {
+      label: getQueryString(query.label),
+      dateMin: getQueryString(query.dateMin),
+      dateMax: getQueryString(query.dateMax),
+      amountMin: getQueryNumber(query.amountMin),
+      amountMax: getQueryNumber(query.amountMax),
+      category: getQueryString(query.category) || null,
+      tag: getQueryString(query.tag) || null,
+    },
+    page: query.page ? Number(getQueryString(query.page)) : 1,
+  }
+}
+
+// Initialisation à partir de l'URL
+const { filters: initialFilters, page: initialPage } = queryToFilters(
+  route.query
+)
+filters.value = { ...filters.value, ...initialFilters }
+page.value = initialPage
+
+// Watch pour mettre à jour l'URL quand filtres/page changent
+watch(
+  [filters, page],
+  ([newFilters, newPage]) => {
+    const query = filtersToQuery(newFilters, newPage)
+    router.replace({ query })
+  },
+  { deep: true }
+)
+
+// Watch pour réagir aux changements d'URL (ex: navigation arrière)
+watch(
+  () => route.query,
+  (newQuery) => {
+    const { filters: qFilters, page: qPage } = queryToFilters(newQuery)
+    // Ne mettre à jour que si différent pour éviter de casser la pagination
+    const filtersChanged =
+      JSON.stringify(filters.value) !==
+      JSON.stringify({ ...filters.value, ...qFilters })
+    const pageChanged = page.value !== qPage
+    if (filtersChanged) {
+      filters.value = { ...filters.value, ...qFilters }
+    }
+    if (pageChanged) {
+      page.value = qPage
+    }
+  }
+)
+// --- Fin synchronisation URL <-> filtres/page ---
 
 const {
   data: transactionsResponse,
@@ -237,10 +315,7 @@ async function handleFileUpload(event: Event) {
       </div>
       <Transition name="fade">
         <div v-if="showFilters">
-          <TransactionFilterForm
-            :filters="filters"
-            @update:filters="updateFilters"
-          />
+          <TransactionFilterForm v-model:filters="filters" />
         </div>
       </Transition>
       <div class="mb-6 flex justify-between items-center">
