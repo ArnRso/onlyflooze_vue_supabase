@@ -5,6 +5,7 @@ import { Ref, unref, computed } from 'vue'
 
 export type Transaction = Tables<'transaction'>
 export type Tag = Tables<'tag'>
+export type Category = Tables<'category'>
 
 export function useTransactionsQuery(
   page: number | Ref<number> = 1,
@@ -13,7 +14,10 @@ export function useTransactionsQuery(
   showWithoutCategory: Ref<boolean> | boolean = false,
   filterCategoryIds: Ref<string[]> | string[] | null = null // <-- Ajout d'un paramètre pour filtrer par catégories
 ) {
-  return useQuery<{ data: (Transaction & { tags: Tag[] })[]; count: number }>({
+  return useQuery<{
+    data: (Transaction & { tags: Tag[]; category?: Category | null })[]
+    count: number
+  }>({
     queryKey: computed(() => [
       'transactions',
       unref(page),
@@ -27,7 +31,9 @@ export function useTransactionsQuery(
       const to = from + unref(pageSize) - 1
       let query = supabase
         .from('transaction')
-        .select('*, transaction_tag(tag:tag_id(*))', { count: 'exact' })
+        .select('*, category:category_id(*), transaction_tag(tag:tag_id(*))', {
+          count: 'exact',
+        })
         .order('transaction_date', { ascending: false })
         .range(from, to)
       if (unref(search)) {
@@ -42,14 +48,20 @@ export function useTransactionsQuery(
       }
       const { data, error, count } = await query
       if (error) throw new Error(error.message)
-      type TxWithTags = Transaction & { transaction_tag?: Array<{ tag: Tag }> }
-      const transactionsWithTags = (data as TxWithTags[]).map((tx) => ({
-        ...tx,
-        tags: Array.isArray(tx.transaction_tag)
-          ? tx.transaction_tag.map((tt) => tt.tag).filter(Boolean)
-          : [],
-      }))
-      return { data: transactionsWithTags, count: count ?? 0 }
+      type TxWithTagsAndCategory = Transaction & {
+        transaction_tag?: Array<{ tag: Tag }>
+        category?: Category | null
+      }
+      const transactionsWithDetails = (data as TxWithTagsAndCategory[]).map(
+        (tx) => ({
+          ...tx,
+          tags: Array.isArray(tx.transaction_tag)
+            ? tx.transaction_tag.map((tt) => tt.tag).filter(Boolean)
+            : [],
+          category: tx.category || null,
+        })
+      )
+      return { data: transactionsWithDetails, count: count ?? 0 }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
