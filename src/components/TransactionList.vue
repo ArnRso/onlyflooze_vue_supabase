@@ -57,6 +57,14 @@
           >
             <MdiPencil />
           </button>
+          <button
+            @click="deleteTransaction(tx.id)"
+            :disabled="deleteStatus === 'pending'"
+            class="text-red-600 hover:bg-red-100 rounded-full p-1 ml-2 transition-colors focus:outline-none"
+            title="Supprimer la transaction"
+          >
+            <MdiTrashCan />
+          </button>
         </td>
       </tr>
     </tbody>
@@ -67,6 +75,11 @@
 import type { Category, Tag, Transaction } from '@/queries/useTransactions'
 import { defineProps } from 'vue'
 import MdiPencil from './icons/MdiPencil.vue'
+import MdiTrashCan from './icons/MdiTrashCan.vue'
+import { useDeleteTransactionMutation } from '@/queries/useTransactions'
+
+const { mutate: deleteTransaction, status: deleteStatus } =
+  useDeleteTransactionMutation()
 
 defineProps<{
   transactions: Array<Transaction & { tags: Tag[]; category?: Category | null }>
