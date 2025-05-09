@@ -2,9 +2,7 @@
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div
-      class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
-    >
+    <div class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
       <div class="flex items-center justify-between mb-6">
         <button
           class="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold"
@@ -124,9 +122,9 @@
               <td class="px-4 py-2 font-semibold">
                 <div class="flex items-center gap-2">
                   <router-link
-                    :to="{ name: 'category-detail', params: { id: cat.id } }"
                     class="text-indigo-600 hover:underline flex-shrink-0"
                     title="Voir le détail"
+                    :to="{ name: 'category-detail', params: { id: cat.id } }"
                   >
                     <MdiMagnify class="inline w-5 h-5 align-text-bottom" />
                   </router-link>
@@ -138,18 +136,20 @@
                 <span v-else>-</span>
               </td>
               <td
+                class="px-4 py-2 text-right"
                 :class="{
                   'text-red-600': cat.estimate && cat.estimate.nextAmount < 0,
                   'text-green-600': cat.estimate && cat.estimate.nextAmount > 0,
                 }"
-                class="px-4 py-2 text-right"
               >
-                <span v-if="cat.estimate">{{
-                  cat.estimate.nextAmount.toLocaleString('fr-FR', {
-                    style: 'currency',
-                    currency: 'EUR',
-                  })
-                }}</span>
+                <span v-if="cat.estimate">
+                  {{
+                    cat.estimate.nextAmount.toLocaleString('fr-FR', {
+                      style: 'currency',
+                      currency: 'EUR',
+                    })
+                  }}
+                </span>
                 <span v-else>-</span>
               </td>
               <td class="px-4 py-2 text-right">
@@ -157,17 +157,9 @@
                   <span class="text-green-700 font-bold">Déjà en base</span>
                   <ul class="text-xs mt-1">
                     <li v-for="tx in cat.txThisMonth" :key="tx.id">
-                      {{
-                        new Date(tx.transaction_date).toLocaleDateString(
-                          'fr-FR'
-                        )
-                      }}
+                      {{ new Date(tx.transaction_date).toLocaleDateString('fr-FR') }}
                       :
-                      <span
-                        :class="
-                          tx.amount < 0 ? 'text-red-600' : 'text-green-600'
-                        "
-                      >
+                      <span :class="tx.amount < 0 ? 'text-red-600' : 'text-green-600'">
                         {{
                           tx.amount.toLocaleString('fr-FR', {
                             style: 'currency',
@@ -179,11 +171,11 @@
                   </ul>
                 </template>
                 <template v-else-if="cat.estimate">
-                  <span class="text-blue-700 font-bold"
-                    >Prévu le {{ cat.estimate.estimatedDay }}/{{
+                  <span class="text-blue-700 font-bold">
+                    Prévu le {{ cat.estimate.estimatedDay }}/{{
                       (selectedMonth + 1).toString().padStart(2, '0')
-                    }}</span
-                  >
+                    }}
+                  </span>
                 </template>
                 <template v-else>
                   <span class="text-gray-400">Pas de données</span>
@@ -198,125 +190,104 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { useRecurringCategoriesWithTransactionsQuery } from '@/queries/useCategories'
-import { estimateNextRecurringTransaction } from '@/services/recurringTransactionService'
-import MdiMagnify from '@/components/icons/MdiMagnify.vue'
+  import { computed, ref } from 'vue'
+  import { useRecurringCategoriesWithTransactionsQuery } from '@/queries/useCategories'
+  import { estimateNextRecurringTransaction } from '@/services/recurringTransactionService'
+  import MdiMagnify from '@/components/icons/MdiMagnify.vue'
 
-const now = new Date()
-const selectedMonth = ref(now.getMonth()) // 0-based
-const selectedYear = ref(now.getFullYear())
+  const now = new Date()
+  const selectedMonth = ref(now.getMonth()) // 0-based
+  const selectedYear = ref(now.getFullYear())
 
-function prevMonth() {
-  if (selectedMonth.value === 0) {
-    selectedMonth.value = 11
-    selectedYear.value--
-  } else {
-    selectedMonth.value--
+  function prevMonth() {
+    if (selectedMonth.value === 0) {
+      selectedMonth.value = 11
+      selectedYear.value--
+    } else {
+      selectedMonth.value--
+    }
   }
-}
 
-function nextMonth() {
-  if (selectedMonth.value === 11) {
-    selectedMonth.value = 0
-    selectedYear.value++
-  } else {
-    selectedMonth.value++
+  function nextMonth() {
+    if (selectedMonth.value === 11) {
+      selectedMonth.value = 0
+      selectedYear.value++
+    } else {
+      selectedMonth.value++
+    }
   }
-}
 
-const { data: recurringCatsResp, isLoading: isLoadingCats } =
-  useRecurringCategoriesWithTransactionsQuery()
-const recurringCategories = computed(() => recurringCatsResp.value ?? [])
+  const { data: recurringCatsResp, isLoading: isLoadingCats } =
+    useRecurringCategoriesWithTransactionsQuery()
+  const recurringCategories = computed(() => recurringCatsResp.value ?? [])
 
-const summary = computed(() => {
-  return recurringCategories.value
-    .map((cat) => {
-      const catTx = Array.isArray(cat.transactions)
-        ? (cat.transactions as Array<{
-            transaction_date: string
-            amount: number
-            id: string
-          }>)
-        : []
-      const txThisMonth = catTx.filter((tx: { transaction_date: string }) => {
-        const d = new Date(tx.transaction_date)
-        return (
-          d.getFullYear() === selectedYear.value &&
-          d.getMonth() === selectedMonth.value
+  const summary = computed(() => {
+    return recurringCategories.value
+      .map((cat) => {
+        const catTx = Array.isArray(cat.transactions)
+          ? (cat.transactions as Array<{
+              transaction_date: string
+              amount: number
+              id: string
+            }>)
+          : []
+        const txThisMonth = catTx.filter((tx: { transaction_date: string }) => {
+          const d = new Date(tx.transaction_date)
+          return d.getFullYear() === selectedYear.value && d.getMonth() === selectedMonth.value
+        })
+        const estimate = estimateNextRecurringTransaction(
+          catTx.map((t: { transaction_date: string; amount: number }) => ({
+            date: t.transaction_date,
+            amount: t.amount,
+          }))
         )
+        return {
+          id: cat.id,
+          label: cat.label,
+          txThisMonth,
+          estimate,
+        }
       })
-      const estimate = estimateNextRecurringTransaction(
-        catTx.map((t: { transaction_date: string; amount: number }) => ({
-          date: t.transaction_date,
-          amount: t.amount,
-        }))
-      )
-      return {
-        id: cat.id,
-        label: cat.label,
-        txThisMonth,
-        estimate,
+      .sort((a, b) => {
+        if (!a.estimate) return 1
+        if (!b.estimate) return -1
+        return a.estimate.estimatedDay - b.estimate.estimatedDay
+      })
+  })
+
+  const totalSorti = computed(() => {
+    return summary.value.reduce((sum, cat) => {
+      return sum + cat.txThisMonth.filter((tx) => tx.amount < 0).reduce((s, tx) => s + tx.amount, 0)
+    }, 0)
+  })
+  const totalAPrevoir = computed(() => {
+    return summary.value.reduce((sum, cat) => {
+      if (cat.txThisMonth.length === 0 && cat.estimate && cat.estimate.nextAmount < 0) {
+        return sum + cat.estimate.nextAmount
       }
-    })
-    .sort((a, b) => {
-      if (!a.estimate) return 1
-      if (!b.estimate) return -1
-      return a.estimate.estimatedDay - b.estimate.estimatedDay
-    })
-})
+      return sum
+    }, 0)
+  })
+  const totalRentre = computed(() => {
+    return summary.value.reduce((sum, cat) => {
+      return sum + cat.txThisMonth.filter((tx) => tx.amount > 0).reduce((s, tx) => s + tx.amount, 0)
+    }, 0)
+  })
+  const totalARentrer = computed(() => {
+    return summary.value.reduce((sum, cat) => {
+      if (cat.txThisMonth.length === 0 && cat.estimate && cat.estimate.nextAmount > 0) {
+        return sum + cat.estimate.nextAmount
+      }
+      return sum
+    }, 0)
+  })
 
-const totalSorti = computed(() => {
-  return summary.value.reduce((sum, cat) => {
-    return (
-      sum +
-      cat.txThisMonth
-        .filter((tx) => tx.amount < 0)
-        .reduce((s, tx) => s + tx.amount, 0)
-    )
-  }, 0)
-})
-const totalAPrevoir = computed(() => {
-  return summary.value.reduce((sum, cat) => {
-    if (
-      cat.txThisMonth.length === 0 &&
-      cat.estimate &&
-      cat.estimate.nextAmount < 0
-    ) {
-      return sum + cat.estimate.nextAmount
-    }
-    return sum
-  }, 0)
-})
-const totalRentre = computed(() => {
-  return summary.value.reduce((sum, cat) => {
-    return (
-      sum +
-      cat.txThisMonth
-        .filter((tx) => tx.amount > 0)
-        .reduce((s, tx) => s + tx.amount, 0)
-    )
-  }, 0)
-})
-const totalARentrer = computed(() => {
-  return summary.value.reduce((sum, cat) => {
-    if (
-      cat.txThisMonth.length === 0 &&
-      cat.estimate &&
-      cat.estimate.nextAmount > 0
-    ) {
-      return sum + cat.estimate.nextAmount
-    }
-    return sum
-  }, 0)
-})
-
-const isLoading = computed(() => isLoadingCats && !recurringCatsResp.value)
+  const isLoading = computed(() => isLoadingCats && !recurringCatsResp.value)
 </script>
 
 <style scoped>
-.monthly-recurring-summary {
-  max-width: 900px;
-  margin: 0 auto;
-}
+  .monthly-recurring-summary {
+    max-width: 900px;
+    margin: 0 auto;
+  }
 </style>

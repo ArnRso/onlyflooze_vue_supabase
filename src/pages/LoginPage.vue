@@ -1,43 +1,40 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { signOut, useLoginMutation, useSessionQuery } from '@/queries/useAuth'
-import { useQueryClient } from '@tanstack/vue-query'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { signOut, useLoginMutation, useSessionQuery } from '@/queries/useAuth'
+  import { useQueryClient } from '@tanstack/vue-query'
 
-const email = ref('')
-const password = ref('')
-const errorMessage = ref('')
+  const email = ref('')
+  const password = ref('')
+  const errorMessage = ref('')
 
-const { mutateAsync: login } = useLoginMutation()
-const { data: user } = useSessionQuery()
-const router = useRouter()
-const queryClient = useQueryClient()
+  const { mutateAsync: login } = useLoginMutation()
+  const { data: user } = useSessionQuery()
+  const router = useRouter()
+  const queryClient = useQueryClient()
 
-const handleLogin = async () => {
-  try {
-    await login({ email: email.value, password: password.value })
-    errorMessage.value = ''
+  const handleLogin = async () => {
+    try {
+      await login({ email: email.value, password: password.value })
+      errorMessage.value = ''
+      await queryClient.invalidateQueries({ queryKey: ['session'] })
+      await router.push('/')
+    } catch (e: unknown) {
+      errorMessage.value = e instanceof Error ? e.message : 'Identifiants invalides.'
+    }
+  }
+
+  const handleLogout = async () => {
+    await signOut()
     await queryClient.invalidateQueries({ queryKey: ['session'] })
     await router.push('/')
-  } catch (e: unknown) {
-    errorMessage.value =
-      e instanceof Error ? e.message : 'Identifiants invalides.'
   }
-}
-
-const handleLogout = async () => {
-  await signOut()
-  await queryClient.invalidateQueries({ queryKey: ['session'] })
-  await router.push('/')
-}
 </script>
 <template>
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div
-      class="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
-    >
+    <div class="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
       <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Connexion</h2>
         <p class="text-gray-600">Accédez à votre espace personnel</p>
@@ -45,9 +42,7 @@ const handleLogout = async () => {
 
       <form class="space-y-6" @submit.prevent="handleLogin">
         <div>
-          <label class="block text-sm font-medium text-gray-700" for="email"
-            >Email</label
-          >
+          <label class="block text-sm font-medium text-gray-700" for="email">Email</label>
           <div class="mt-1">
             <input
               id="email"
@@ -63,9 +58,7 @@ const handleLogout = async () => {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700" for="password"
-            >Mot de passe</label
-          >
+          <label class="block text-sm font-medium text-gray-700" for="password">Mot de passe</label>
           <div class="mt-1">
             <input
               id="password"
@@ -104,16 +97,10 @@ const handleLogout = async () => {
       </form>
 
       <div class="mt-6">
-        <p
-          v-if="errorMessage"
-          class="text-red-600 text-center text-sm font-medium mb-4"
-        >
+        <p v-if="errorMessage" class="text-red-600 text-center text-sm font-medium mb-4">
           {{ errorMessage }}
         </p>
-        <div
-          v-if="user"
-          class="bg-green-50 border border-green-200 rounded-md p-4 mt-4"
-        >
+        <div v-if="user" class="bg-green-50 border border-green-200 rounded-md p-4 mt-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
@@ -146,10 +133,7 @@ const handleLogout = async () => {
         <div class="mt-6 text-center text-sm">
           <p>
             Pas encore de compte?
-            <RouterLink
-              class="font-medium text-indigo-600 hover:text-indigo-500"
-              to="/register"
-            >
+            <RouterLink class="font-medium text-indigo-600 hover:text-indigo-500" to="/register">
               S'inscrire
             </RouterLink>
           </p>

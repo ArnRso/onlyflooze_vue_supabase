@@ -41,9 +41,7 @@ export function useAddTransactionTagMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ transaction_id, tag_id }: TransactionTag) => {
-      const { error } = await supabase
-        .from('transaction_tag')
-        .insert([{ transaction_id, tag_id }])
+      const { error } = await supabase.from('transaction_tag').insert([{ transaction_id, tag_id }])
       if (error) throw new Error(error.message)
       return { transaction_id, tag_id }
     },

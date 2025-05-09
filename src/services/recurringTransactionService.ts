@@ -30,10 +30,7 @@ export function estimateNextRecurringTransaction(
   // Trouver le mois précédent par rapport à la transaction la plus récente
   const lastDate = new Date(sorted[sorted.length - 1].date)
   const prevMonth = lastDate.getMonth() === 0 ? 11 : lastDate.getMonth() - 1
-  const prevYear =
-    lastDate.getMonth() === 0
-      ? lastDate.getFullYear() - 1
-      : lastDate.getFullYear()
+  const prevYear = lastDate.getMonth() === 0 ? lastDate.getFullYear() - 1 : lastDate.getFullYear()
 
   // Filtrer les transactions du mois précédent
   const prevMonthTransactions = sorted.filter((t) => {

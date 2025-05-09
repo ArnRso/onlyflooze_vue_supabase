@@ -1,39 +1,37 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { signOut, useSessionQuery } from '@/queries/useAuth'
-import { useQueryClient } from '@tanstack/vue-query'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { signOut, useSessionQuery } from '@/queries/useAuth'
+  import { useQueryClient } from '@tanstack/vue-query'
 
-const isMobileMenuOpen = ref(false)
-const isDropdownOpen = ref(false)
-const router = useRouter()
-const queryClient = useQueryClient()
+  const isMobileMenuOpen = ref(false)
+  const isDropdownOpen = ref(false)
+  const router = useRouter()
+  const queryClient = useQueryClient()
 
-const { data: user } = useSessionQuery()
+  const { data: user } = useSessionQuery()
 
-const handleSignOut = async () => {
-  await signOut()
-  await queryClient.invalidateQueries({ queryKey: ['session'] })
-  await router.push('/')
-}
+  const handleSignOut = async () => {
+    await signOut()
+    await queryClient.invalidateQueries({ queryKey: ['session'] })
+    await router.push('/')
+  }
 
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
+  const toggleMobileMenu = () => {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value
+  }
 
-function toggleDropdown() {
-  isDropdownOpen.value = !isDropdownOpen.value
-}
+  function toggleDropdown() {
+    isDropdownOpen.value = !isDropdownOpen.value
+  }
 
-function closeDropdown() {
-  isDropdownOpen.value = false
-}
+  function closeDropdown() {
+    isDropdownOpen.value = false
+  }
 </script>
 
 <template>
-  <header
-    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-  >
+  <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
     <div class="max-w-7xl w-full mx-auto px-4 py-3">
       <div class="flex justify-between items-center">
         <!-- Logo / Home -->
@@ -48,10 +46,7 @@ function closeDropdown() {
 
         <!-- Desktop Navigation -->
         <nav class="hidden md:flex items-center space-x-6">
-          <RouterLink
-            class="hover:text-indigo-200 font-medium transition duration-300 py-2"
-            to="/"
-          >
+          <RouterLink class="hover:text-indigo-200 font-medium transition duration-300 py-2" to="/">
             Accueil
           </RouterLink>
           <RouterLink
@@ -76,10 +71,7 @@ function closeDropdown() {
             Récap. récurrent
           </RouterLink>
           <div v-if="!user" class="flex space-x-4">
-            <RouterLink
-              class="hover:text-indigo-200 transition duration-300 py-2"
-              to="login"
-            >
+            <RouterLink class="hover:text-indigo-200 transition duration-300 py-2" to="login">
               Connexion
             </RouterLink>
             <RouterLink
@@ -120,11 +112,7 @@ function closeDropdown() {
                   stroke-width="2"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    d="M19 9l-7 7-7-7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
               <div
@@ -171,10 +159,7 @@ function closeDropdown() {
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden">
-          <button
-            class="text-white focus:outline-none"
-            @click="toggleMobileMenu"
-          >
+          <button class="text-white focus:outline-none" @click="toggleMobileMenu">
             <svg
               class="h-6 w-6"
               fill="none"

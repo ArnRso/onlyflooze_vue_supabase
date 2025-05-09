@@ -6,20 +6,17 @@
     <div
       class="max-w-2xl w-full mx-auto bg-white/90 rounded-3xl shadow-2xl overflow-hidden p-10 flex flex-col items-center relative"
     >
-      <h1
-        class="mt-4 text-4xl font-extrabold text-indigo-700 text-center drop-shadow mb-4"
-      >
+      <h1 class="mt-4 text-4xl font-extrabold text-indigo-700 text-center drop-shadow mb-4">
         Bienvenue sur
-        <span
-          class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
-        >
+        <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
           OnlyFlooze
         </span>
       </h1>
       <p class="text-lg text-gray-700 text-center mb-6 max-w-xl">
-        Prenez le contrôle de vos finances personnelles en toute simplicité.<br />
-        OnlyFlooze vous aide à suivre vos dépenses, catégoriser vos transactions
-        et visualiser votre budget en un clin d'œil.
+        Prenez le contrôle de vos finances personnelles en toute simplicité.
+        <br />
+        OnlyFlooze vous aide à suivre vos dépenses, catégoriser vos transactions et visualiser votre
+        budget en un clin d'œil.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 mt-4">
         <RouterLink
@@ -36,25 +33,27 @@
         </RouterLink>
       </div>
       <div class="mt-10 w-full flex flex-col items-center">
-        <h2 class="text-2xl font-bold text-indigo-600 mb-2">
-          Pourquoi OnlyFlooze ?
-        </h2>
+        <h2 class="text-2xl font-bold text-indigo-600 mb-2">Pourquoi OnlyFlooze ?</h2>
         <ul class="text-gray-700 text-base space-y-2 max-w-lg">
           <li>
-            💡 <span class="font-medium">Interface claire</span> : visualisez
-            vos finances sans prise de tête.
+            💡
+            <span class="font-medium">Interface claire</span>
+            : visualisez vos finances sans prise de tête.
           </li>
           <li>
-            🔒 <span class="font-medium">Sécurité</span> : vos données restent
-            privées et protégées.
+            🔒
+            <span class="font-medium">Sécurité</span>
+            : vos données restent privées et protégées.
           </li>
           <li>
-            📊 <span class="font-medium">Statistiques</span> : suivez
-            l’évolution de vos dépenses et revenus.
+            📊
+            <span class="font-medium">Statistiques</span>
+            : suivez l’évolution de vos dépenses et revenus.
           </li>
           <li>
-            ⚡ <span class="font-medium">Rapide à prendre en main</span> :
-            commencez à gérer votre budget en quelques clics.
+            ⚡
+            <span class="font-medium">Rapide à prendre en main</span>
+            : commencez à gérer votre budget en quelques clics.
           </li>
         </ul>
       </div>

@@ -55,13 +55,7 @@ export function useDeleteCategoryMutation() {
 export function useUpdateCategoryMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: TablesUpdate<'category'>
-    }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: TablesUpdate<'category'> }) => {
       const { data, error } = await supabase
         .from('category')
         .update(updates)
