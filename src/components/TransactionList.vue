@@ -13,6 +13,9 @@
         <th class="px-4 py-2 text-right font-semibold text-gray-700">
           Montant
         </th>
+        <th class="px-4 py-2 text-center font-semibold text-gray-700">
+          Actions
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -44,6 +47,17 @@
         >
           {{ formatAmount(tx.amount) }}
         </td>
+        <td class="px-4 py-2 text-center">
+          <button
+            @click="
+              $router.push({ name: 'transaction-edit', params: { id: tx.id } })
+            "
+            class="text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors focus:outline-none"
+            title="Éditer la transaction"
+          >
+            <MdiPencil />
+          </button>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -52,6 +66,7 @@
 <script lang="ts" setup>
 import type { Category, Tag, Transaction } from '@/queries/useTransactions'
 import { defineProps } from 'vue'
+import MdiPencil from './icons/MdiPencil.vue'
 
 defineProps<{
   transactions: Array<Transaction & { tags: Tag[]; category?: Category | null }>
