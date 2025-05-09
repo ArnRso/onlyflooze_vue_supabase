@@ -6,18 +6,36 @@ import {
   useUpdateTransactionMutation,
 } from '@/queries/useTransactions'
 import { useCategoriesQuery } from '@/queries/useCategories'
+import Multiselect from 'vue-multiselect'
+import { useTagsQuery, useAddTagMutation } from '@/queries/useTags'
+import {
+  useTransactionTagsQuery,
+  useAddTransactionTagMutation,
+  useDeleteTransactionTagMutation,
+} from '@/queries/useTransactionTags'
+import { useAddCategoryMutation } from '@/queries/useCategories'
+import type { Category, Tag } from '@/queries/useTransactions'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
 const { data: transaction } = useTransactionByIdQuery(props.id)
 const { mutateAsync, isPending } = useUpdateTransactionMutation()
 const { data: categories } = useCategoriesQuery()
+const { data: tags = [] } = useTagsQuery()
+const { mutateAsync: addTag } = useAddTagMutation()
+const { mutateAsync: addCategory } = useAddCategoryMutation()
+const { data: transactionTags = [] } = useTransactionTagsQuery(props.id)
+const { mutateAsync: addTxTag } = useAddTransactionTagMutation()
+const { mutateAsync: deleteTxTag } = useDeleteTransactionTagMutation()
 
 const label = ref('')
 const amount = ref(0)
 const transaction_date = ref('')
 const category_id = ref('')
 const error = ref('')
+const selectedCategory = ref<Category | null>(null)
+const selectedTags = ref<Tag[]>([])
+const pendingCategoryId = ref<string | null>(null)
 
 watch(
   transaction,
@@ -27,9 +45,58 @@ watch(
       amount.value = tx.amount
       transaction_date.value = tx.transaction_date
       category_id.value = tx.category_id || ''
+      selectedCategory.value =
+        categories.value?.find((c: Category) => c.id === tx.category_id) || null
+      selectedTags.value = Array.isArray(transactionTags)
+        ? transactionTags
+        : (transactionTags?.value ?? [])
     }
   },
   { immediate: true }
+)
+
+async function handleCategoryCreate(newLabel: string) {
+  const cat = await addCategory({ label: newLabel })
+  pendingCategoryId.value = cat.id
+}
+
+watch(
+  () => categories.value,
+  (cats) => {
+    if (pendingCategoryId.value && cats) {
+      const found = cats.find((c: Category) => c.id === pendingCategoryId.value)
+      if (found) {
+        selectedCategory.value = found
+        category_id.value = found.id
+        pendingCategoryId.value = null
+      }
+    }
+  }
+)
+
+async function handleTagCreate(newLabel: string) {
+  const tag = await addTag({ label: newLabel })
+  selectedTags.value = [...selectedTags.value, tag]
+  await addTxTag({ transaction_id: props.id, tag_id: tag.id })
+}
+
+watch(
+  selectedTags,
+  async (newTags, oldTags) => {
+    // Ajout
+    for (const tag of newTags) {
+      if (!oldTags.find((t) => t.id === tag.id)) {
+        await addTxTag({ transaction_id: props.id, tag_id: tag.id })
+      }
+    }
+    // Suppression
+    for (const tag of oldTags) {
+      if (!newTags.find((t) => t.id === tag.id)) {
+        await deleteTxTag({ transaction_id: props.id, tag_id: tag.id })
+      }
+    }
+  },
+  { deep: true }
 )
 
 const submit = async () => {
@@ -41,7 +108,7 @@ const submit = async () => {
         label: label.value,
         amount: amount.value,
         transaction_date: transaction_date.value,
-        category_id: category_id.value || null,
+        category_id: selectedCategory.value?.id || null,
       },
     })
     await router.push('/transactions')
@@ -78,6 +145,7 @@ const submit = async () => {
             class="w-full border rounded px-3 py-2"
             required
             type="number"
+            step="0.01"
           />
         </div>
         <div>
@@ -91,12 +159,31 @@ const submit = async () => {
         </div>
         <div>
           <label class="block mb-1">Catégorie</label>
-          <select v-model="category_id" class="w-full border rounded px-3 py-2">
-            <option value="">Aucune</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.label }}
-            </option>
-          </select>
+          <Multiselect
+            v-model="selectedCategory"
+            :options="categories ?? []"
+            :allow-empty="true"
+            :taggable="true"
+            label="label"
+            track-by="id"
+            placeholder="Sélectionner ou créer une catégorie"
+            @tag="handleCategoryCreate"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block mb-1">Tags</label>
+          <Multiselect
+            v-model="selectedTags"
+            :options="tags ?? []"
+            :multiple="true"
+            :taggable="true"
+            label="label"
+            track-by="id"
+            placeholder="Ajouter ou créer des tags"
+            @tag="handleTagCreate"
+            class="w-full"
+          />
         </div>
         <div v-if="error" class="text-red-600 text-center">{{ error }}</div>
         <div class="flex justify-between items-center">
