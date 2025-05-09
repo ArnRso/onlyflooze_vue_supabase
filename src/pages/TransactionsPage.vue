@@ -27,6 +27,19 @@ const filters = ref<TransactionFilter>({
 
 const showFilters = ref(false)
 
+const activeFiltersCount = computed(() => {
+  let count = 0
+  const f = filters.value
+  if (f.label && f.label.trim() !== '') count++
+  if (f.dateMin && f.dateMin.trim() !== '') count++
+  if (f.dateMax && f.dateMax.trim() !== '') count++
+  if (f.amountMin !== null && f.amountMin !== undefined) count++
+  if (f.amountMax !== null && f.amountMax !== undefined) count++
+  if (f.category) count++
+  if (f.tag) count++
+  return count
+})
+
 // --- Synchronisation URL <-> filtres/page ---
 function filtersToQuery(f: TransactionFilter, pageVal: number) {
   const q: Record<string, string> = {}
@@ -132,6 +145,12 @@ const isImporting = ref(false)
 const importMessage = ref('')
 const importError = ref('')
 const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation()
+
+const openFileDialog = () => {
+  if (fileInputRef.value && !isImporting.value) {
+    fileInputRef.value.click()
+  }
+}
 
 function parseDate(dateStr: string): string | null {
   if (!dateStr) return null
@@ -304,49 +323,53 @@ async function handleFileUpload(event: Event) {
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Transactions
       </h1>
-      <div class="flex justify-end mb-4">
+      <!-- Nouveau bandeau de boutons -->
+      <div
+        class="flex flex-row items-center gap-4 mb-8 px-4 py-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
+      >
         <button
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded shadow"
+          class="bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
+          @click="() => router.push('/transactions/new')"
+        >
+          Créer transaction
+        </button>
+        <button
+          class="bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 disabled:opacity-50"
+          :class="{ 'opacity-50': isImporting }"
+          :disabled="isImporting"
+          type="button"
+          @click="openFileDialog"
+        >
+          {{ isImporting ? 'Import en cours...' : 'Importer CSV' }}
+        </button>
+        <input
+          id="csv-upload"
+          ref="fileInputRef"
+          accept=".csv"
+          class="hidden"
+          type="file"
+          @change="handleFileUpload"
+        />
+        <button
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow"
           @click="showFilters = !showFilters"
           type="button"
         >
-          {{ showFilters ? 'Masquer la recherche' : 'Afficher la recherche' }}
+          {{ showFilters ? 'Masquer la recherche' : 'Afficher la recherche'
+          }}<span v-if="activeFiltersCount > 0">
+            ({{ activeFiltersCount }})</span
+          >
         </button>
+        <span v-if="isImporting" class="text-sm text-gray-600 ml-2"
+          >Traitement...</span
+        >
       </div>
+      <!-- Fin du bandeau de boutons -->
       <Transition name="fade">
         <div v-if="showFilters">
           <TransactionFilterForm v-model:filters="filters" />
         </div>
       </Transition>
-      <div class="mb-6 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <input
-            id="csv-upload"
-            ref="fileInputRef"
-            accept=".csv"
-            class="hidden"
-            type="file"
-            @change="handleFileUpload"
-          />
-          <label
-            :class="{ 'opacity-50': isImporting }"
-            :disabled="isImporting"
-            class="cursor-pointer bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 disabled:opacity-50"
-            for="csv-upload"
-          >
-            {{ isImporting ? 'Import en cours...' : 'Importer CSV' }}
-          </label>
-          <span v-if="isImporting" class="text-sm text-gray-600"
-            >Traitement...</span
-          >
-        </div>
-        <button
-          class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700"
-          @click="() => router.push('/transactions/new')"
-        >
-          Créer une transaction
-        </button>
-      </div>
       <div
         v-if="importMessage"
         class="mb-4 p-3 bg-green-100 text-green-800 rounded text-center"
