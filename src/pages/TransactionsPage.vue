@@ -11,7 +11,7 @@
   const router = useRouter()
   const route = useRoute()
   const page = ref(1)
-  const pageSize = 50
+  const pageSize = ref(50)
 
   const filters = ref<TransactionFilter>({
     label: '',
@@ -40,8 +40,8 @@
     return count
   })
 
-  // --- Synchronisation URL <-> filtres/page ---
-  function filtersToQuery(f: TransactionFilter, pageVal: number) {
+  // --- Synchronisation URL <-> filtres/page/pageSize ---
+  function filtersToQuery(f: TransactionFilter, pageVal: number, pageSizeVal: number) {
     const q: Record<string, string> = {}
     if (f.label) q.label = f.label
     if (f.dateMin) q.dateMin = f.dateMin
@@ -51,6 +51,7 @@
     if (f.category) q.category = String(f.category)
     if (f.tag) q.tag = String(f.tag)
     if (pageVal && pageVal !== 1) q.page = String(pageVal)
+    if (pageSizeVal && pageSizeVal !== 50) q.pageSize = String(pageSizeVal)
     return q
   }
 
@@ -67,6 +68,7 @@
   function queryToFilters(query: RouteLocationNormalizedLoaded['query']): {
     filters: TransactionFilter
     page: number
+    pageSize: number
   } {
     return {
       filters: {
@@ -79,19 +81,25 @@
         tag: getQueryString(query.tag) || null,
       },
       page: query.page ? Number(getQueryString(query.page)) : 1,
+      pageSize: query.pageSize ? Number(getQueryString(query.pageSize)) : 50,
     }
   }
 
   // Initialisation à partir de l'URL
-  const { filters: initialFilters, page: initialPage } = queryToFilters(route.query)
+  const {
+    filters: initialFilters,
+    page: initialPage,
+    pageSize: initialPageSize,
+  } = queryToFilters(route.query)
   filters.value = { ...filters.value, ...initialFilters }
   page.value = initialPage
+  pageSize.value = initialPageSize
 
-  // Watch pour mettre à jour l'URL quand filtres/page changent
+  // Watch pour mettre à jour l'URL quand filtres/page/pageSize changent
   watch(
-    [filters, page],
-    ([newFilters, newPage]) => {
-      const query = filtersToQuery(newFilters, newPage)
+    [filters, page, pageSize],
+    ([newFilters, newPage, newPageSize]) => {
+      const query = filtersToQuery(newFilters, newPage, newPageSize)
       router.replace({ query })
     },
     { deep: true }
@@ -101,20 +109,24 @@
   watch(
     () => route.query,
     (newQuery) => {
-      const { filters: qFilters, page: qPage } = queryToFilters(newQuery)
+      const { filters: qFilters, page: qPage, pageSize: qPageSize } = queryToFilters(newQuery)
       // Ne mettre à jour que si différent pour éviter de casser la pagination
       const filtersChanged =
         JSON.stringify(filters.value) !== JSON.stringify({ ...filters.value, ...qFilters })
       const pageChanged = page.value !== qPage
+      const pageSizeChanged = pageSize.value !== qPageSize
       if (filtersChanged) {
         filters.value = { ...filters.value, ...qFilters }
       }
       if (pageChanged) {
         page.value = qPage
       }
+      if (pageSizeChanged) {
+        pageSize.value = qPageSize
+      }
     }
   )
-  // --- Fin synchronisation URL <-> filtres/page ---
+  // --- Fin synchronisation URL <-> filtres/page/pageSize ---
 
   const {
     data: transactionsResponse,
@@ -125,7 +137,7 @@
 
   const transactions = computed(() => transactionsResponse.value?.data ?? [])
   const total = computed(() => transactionsResponse.value?.count ?? 0)
-  const totalPages = computed(() => Math.ceil(total.value / pageSize))
+  const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
   const deleteError = ref('')
 
   function goToPage(p: number) {
@@ -399,28 +411,50 @@
       <div v-if="deleteError" class="text-red-600 mb-4 text-center">
         {{ deleteError }}
       </div>
-      <div v-if="totalPages > 1" class="mb-4 mt-6 flex justify-between items-center text-sm">
-        <a
-          :class="[
-            'text-indigo-600 hover:underline',
-            { 'opacity-40 pointer-events-none': page === 1 },
-          ]"
-          href="#"
-          @click.prevent="() => goToPage(page - 1)"
-        >
-          Précédent
-        </a>
-        <span>Page {{ page }} sur {{ totalPages }}</span>
-        <a
-          :class="[
-            'text-indigo-600 hover:underline',
-            { 'opacity-40 pointer-events-none': page === totalPages },
-          ]"
-          href="#"
-          @click.prevent="() => goToPage(page + 1)"
-        >
-          Suivant
-        </a>
+      <!-- Pagination + sélecteur pageSize -->
+      <div
+        v-if="totalPages > 1"
+        class="mb-4 mt-6 flex flex-wrap gap-2 justify-between items-center text-sm"
+      >
+        <div class="flex items-center gap-2">
+          <a
+            :class="[
+              'text-indigo-600 hover:underline',
+              { 'opacity-40 pointer-events-none': page === 1 },
+            ]"
+            href="#"
+            @click.prevent="() => goToPage(page - 1)"
+          >
+            Précédent
+          </a>
+          <span>Page {{ page }} sur {{ totalPages }}</span>
+          <a
+            :class="[
+              'text-indigo-600 hover:underline',
+              { 'opacity-40 pointer-events-none': page === totalPages },
+            ]"
+            href="#"
+            @click.prevent="() => goToPage(page + 1)"
+          >
+            Suivant
+          </a>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="page-size-select">Résultats par page :</label>
+          <select
+            id="page-size-select"
+            v-model.number="pageSize"
+            class="border rounded px-2 py-1"
+            @change="page = 1"
+          >
+            <option :value="10">10</option>
+            <option :value="25">25</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+            <option :value="500">500</option>
+            <option :value="1000">1000 (max)</option>
+          </select>
+        </div>
       </div>
       <div v-else style="height: 24px"></div>
       <div v-if="isLoading" class="text-center">Chargement...</div>
