@@ -365,7 +365,19 @@
       <!-- Fin du bandeau de boutons -->
       <Transition name="fade">
         <div v-if="showFilters">
-          <TransactionFilterForm v-model:filters="filters" />
+          <div class="mb-6 px-4 py-3 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
+            <div class="flex flex-row items-center justify-between mb-2">
+              <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
+              <button
+                aria-label="Fermer"
+                class="text-blue-500 hover:text-blue-700 font-semibold"
+                @click="showFilters = false"
+              >
+                ✕
+              </button>
+            </div>
+            <TransactionFilterForm v-model:filters="filters" />
+          </div>
         </div>
       </Transition>
       <Transition name="fade">
