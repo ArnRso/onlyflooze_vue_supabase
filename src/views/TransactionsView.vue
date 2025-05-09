@@ -2,26 +2,10 @@
 import { useRouter } from 'vue-router'
 import {
   useTransactionsQuery,
-  useDeleteTransactionMutation,
-  useUpdateTransactionMutation,
   useAddBulkTransactionsMutation,
 } from '@/queries/useTransactions'
-import {
-  useCategoriesQuery,
-  useAddCategoryMutation,
-  type Category,
-} from '@/queries/useCategories'
 import { ref, computed } from 'vue'
-import Multiselect from 'vue-multiselect'
-import { useTagsQuery, useAddTagMutation } from '@/queries/useTags'
-import { useSessionQuery } from '@/queries/useAuth'
-import {
-  useAddTransactionTagMutation,
-  useDeleteTransactionTagMutation,
-} from '@/queries/useTransactionTags'
-import type { Transaction, Tag } from '@/queries/useTransactions'
-import MdiPencil from '@/components/icons/MdiPencil.vue'
-import MdiTrashCan from '@/components/icons/MdiTrashCan.vue'
+import TransactionList from '@/components/TransactionList.vue'
 
 const router = useRouter()
 const page = ref(1)
@@ -36,106 +20,7 @@ const {
 const transactions = computed(() => transactionsResponse.value?.data ?? [])
 const total = computed(() => transactionsResponse.value?.count ?? 0)
 const totalPages = computed(() => Math.ceil(total.value / pageSize))
-const { data: categories } = useCategoriesQuery()
-const { mutateAsync: addCategory } = useAddCategoryMutation()
-
-const { mutateAsync: deleteTransaction, isPending: isDeleting } =
-  useDeleteTransactionMutation()
-
-const { mutateAsync: updateTransaction, isPending: isUpdating } =
-  useUpdateTransactionMutation()
-
 const deleteError = ref('')
-
-// Pour l'édition inline
-const editId = ref<string | null>(null)
-const editLabel = ref('')
-const editAmount = ref(0)
-const editCategory = ref<Category | null>(null)
-const editTags = ref<Tag[]>([])
-const editDate = ref('')
-const editError = ref('')
-
-function startEdit(tx: Transaction & { tags: Tag[] }) {
-  editId.value = tx.id
-  editLabel.value = tx.label
-  editAmount.value = tx.amount
-  editCategory.value =
-    categories?.value?.find((c) => c.id === tx.category_id) || null
-  editTags.value = [...(tx.tags || [])]
-  editDate.value = tx.transaction_date || ''
-  editError.value = ''
-}
-
-function cancelEdit() {
-  editId.value = null
-  editLabel.value = ''
-  editAmount.value = 0
-  editCategory.value = null
-  editTags.value = []
-  editDate.value = ''
-  editError.value = ''
-}
-
-async function saveEdit(tx: Transaction & { tags: Tag[] }) {
-  editError.value = ''
-  try {
-    await updateTransaction({
-      id: tx.id,
-      updates: {
-        label: editLabel.value,
-        amount: editAmount.value,
-        category_id: editCategory.value?.id || null,
-        transaction_date: editDate.value,
-      },
-    })
-    // Gestion des tags : ajout/suppression différée
-    const initialTagIds = (tx.tags || []).map((t) => t.id)
-    const newTagIds = editTags.value.map((t) => t.id)
-    // Ajouts
-    for (const tagId of newTagIds) {
-      if (!initialTagIds.includes(tagId)) {
-        await addTagToTransaction({ transaction_id: tx.id, tag_id: tagId })
-      }
-    }
-    // Suppressions
-    for (const tagId of initialTagIds) {
-      if (!newTagIds.includes(tagId)) {
-        await removeTagFromTransaction({ transaction_id: tx.id, tag_id: tagId })
-      }
-    }
-    cancelEdit()
-    refetchPaginatedTransactions()
-  } catch (e: unknown) {
-    editError.value = (e as Error).message || 'Erreur lors de la modification'
-  }
-}
-
-const formatAmount = (amount: number) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(amount)
-}
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleDateString('fr-FR')
-}
-
-async function handleDelete(txId: string) {
-  deleteError.value = ''
-  if (confirm('Supprimer cette transaction ?')) {
-    try {
-      await deleteTransaction(txId)
-    } catch (e: unknown) {
-      deleteError.value =
-        (e as Error).message || 'Erreur lors de la suppression'
-    }
-  }
-}
 
 function goToPage(p: number) {
   if (p >= 1 && p <= totalPages.value) {
@@ -150,7 +35,6 @@ const importMessage = ref('')
 const importError = ref('')
 const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation()
 
-// Fonction pour parser la date JJ/MM/AAAA en YYYY-MM-DD
 function parseDate(dateStr: string): string | null {
   if (!dateStr) return null
   const parts = dateStr.split('/')
@@ -310,47 +194,6 @@ async function handleFileUpload(event: Event) {
     }
   }
 }
-
-const { data: allTags } = useTagsQuery()
-const { mutateAsync: addTagToTransaction } = useAddTransactionTagMutation()
-const { mutateAsync: removeTagFromTransaction } =
-  useDeleteTransactionTagMutation()
-const { mutateAsync: addTag } = useAddTagMutation()
-const { data: user } = useSessionQuery()
-
-async function handleTagCreate(
-  newLabel: string,
-  tx: Transaction & { tags: Tag[] }
-) {
-  if (!user.value?.id) return
-  // Créer le tag
-  const tag = await addTag({ label: newLabel })
-  // Lier le tag à la transaction
-  await addTagToTransaction({ transaction_id: tx.id, tag_id: tag.id })
-  refetchPaginatedTransactions()
-}
-
-async function handleCategoryCreateForTx(
-  newLabel: string,
-  tx: Transaction & { tags: Tag[] }
-) {
-  if (!user.value?.id) return
-  const cat = await addCategory({ label: newLabel })
-  await updateTransaction({
-    id: tx.id,
-    updates: { category_id: cat.id },
-  })
-  refetchPaginatedTransactions()
-}
-
-function getTransactionTags(tx: Transaction & { tags: Tag[] }) {
-  return tx.tags || []
-}
-
-function getTransactionCategory(tx: Transaction) {
-  if (!categories?.value) return null
-  return categories.value.find((c) => c.id === tx.category_id) || null
-}
 </script>
 
 <template>
@@ -385,7 +228,6 @@ function getTransactionCategory(tx: Transaction) {
             >Traitement...</span
           >
         </div>
-
         <button
           @click="() => router.push('/transactions/new')"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700"
@@ -441,210 +283,8 @@ function getTransactionCategory(tx: Transaction) {
       <div v-if="isLoading" class="text-center">Chargement...</div>
       <div v-else>
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Libellé
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Montant (€)
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Date
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Catégorie
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Tags
-                </th>
-                <th
-                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="tx in transactions" :key="tx.id">
-                <!-- Libellé -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <template v-if="editId === tx.id">
-                    <input
-                      v-model="editLabel"
-                      class="border rounded px-2 py-1 w-full"
-                    />
-                  </template>
-                  <template v-else>
-                    {{ tx.label }}
-                  </template>
-                </td>
-                <!-- Montant -->
-                <td
-                  class="px-6 py-4 whitespace-nowrap"
-                  :class="
-                    editId === tx.id
-                      ? ''
-                      : tx.amount < 0
-                        ? 'text-red-600'
-                        : 'text-green-600'
-                  "
-                >
-                  <template v-if="editId === tx.id">
-                    <input
-                      v-model.number="editAmount"
-                      type="number"
-                      class="border rounded px-2 py-1 w-full"
-                    />
-                  </template>
-                  <template v-else>
-                    {{ formatAmount(tx.amount) }}
-                  </template>
-                </td>
-                <!-- Date -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ formatDate(tx.transaction_date) }}
-                </td>
-                <!-- Catégorie -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <template v-if="editId === tx.id">
-                    <Multiselect
-                      v-if="categories"
-                      v-model="editCategory"
-                      :options="categories"
-                      label="label"
-                      track-by="id"
-                      placeholder="Choisir une catégorie"
-                      :allow-empty="true"
-                      :taggable="true"
-                      @tag="
-                        (newLabel: string) =>
-                          handleCategoryCreateForTx(newLabel, tx)
-                      "
-                      class="w-40 max-w-xs"
-                    />
-                    <span v-else class="text-gray-400">-</span>
-                  </template>
-                  <template v-else>
-                    <span>
-                      {{ getTransactionCategory(tx)?.label || '-' }}
-                    </span>
-                  </template>
-                </td>
-                <!-- Tags -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <template v-if="editId === tx.id">
-                    <Multiselect
-                      v-if="allTags"
-                      v-model="editTags"
-                      :options="allTags"
-                      :multiple="true"
-                      :close-on-select="false"
-                      :clear-on-select="true"
-                      :preserve-search="true"
-                      label="label"
-                      track-by="id"
-                      placeholder="Ajouter des tags"
-                      :taggable="true"
-                      @tag="(newLabel: string) => handleTagCreate(newLabel, tx)"
-                      class="w-48 max-w-xs multiselect-tags-wrap"
-                    />
-                    <span v-else class="text-gray-400">-</span>
-                  </template>
-                  <template v-else>
-                    <span v-if="getTransactionTags(tx).length > 0">
-                      <span
-                        v-for="tag in getTransactionTags(tx)"
-                        :key="tag.id"
-                        class="inline-block bg-indigo-100 text-indigo-700 rounded px-2 py-0.5 mr-1 text-xs"
-                      >
-                        {{ tag.label }}
-                      </span>
-                    </span>
-                    <span v-else class="text-gray-400">-</span>
-                  </template>
-                </td>
-                <!-- Actions -->
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end"
-                >
-                  <template v-if="editId === tx.id">
-                    <button
-                      @click="() => saveEdit(tx)"
-                      :disabled="isUpdating"
-                      class="bg-green-600 text-white px-2 py-1 rounded shadow"
-                    >
-                      Valider
-                    </button>
-                    <button
-                      @click="cancelEdit"
-                      class="bg-gray-300 px-2 py-1 rounded"
-                    >
-                      Annuler
-                    </button>
-                  </template>
-                  <template v-else>
-                    <button
-                      @click="() => startEdit(tx)"
-                      class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 focus:outline-none"
-                      title="Modifier"
-                    >
-                      <MdiPencil class="h-5 w-5" />
-                    </button>
-                    <button
-                      @click="() => handleDelete(tx.id)"
-                      :disabled="isDeleting"
-                      class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 focus:outline-none disabled:opacity-50"
-                      title="Supprimer"
-                    >
-                      <MdiTrashCan class="h-5 w-5" />
-                    </button>
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <TransactionList :transactions="transactions" />
         </div>
-        <div v-if="editError" class="text-red-600 text-center mt-2">
-          {{ editError }}
-        </div>
-      </div>
-      <div
-        v-if="totalPages > 1"
-        class="mt-6 flex justify-between items-center text-sm"
-      >
-        <a
-          href="#"
-          @click.prevent="() => goToPage(page - 1)"
-          :class="[
-            'text-indigo-600 hover:underline',
-            { 'opacity-40 pointer-events-none': page === 1 },
-          ]"
-        >
-          Précédent
-        </a>
-        <span>Page {{ page }} sur {{ totalPages }}</span>
-        <a
-          href="#"
-          @click.prevent="() => goToPage(page + 1)"
-          :class="[
-            'text-indigo-600 hover:underline',
-            { 'opacity-40 pointer-events-none': page === totalPages },
-          ]"
-        >
-          Suivant
-        </a>
       </div>
     </div>
   </div>
