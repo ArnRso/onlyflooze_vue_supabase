@@ -6,6 +6,7 @@
   import TransactionList from '@/components/TransactionList.vue'
   import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
   import BulkActionsMenu from '@/components/BulkActionsMenu.vue'
+  import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
 
   const router = useRouter()
@@ -23,8 +24,12 @@
     tag: null,
   })
 
-  const showFilters = ref(false)
-  const showBulkActions = ref(false)
+  const openPanel = ref<null | 'create' | 'filters' | 'bulk'>(null)
+
+  function closePanel() {
+    openPanel.value = null
+  }
+
   const selectedTransactions = ref([]) // À connecter plus tard à la sélection réelle
 
   const activeFiltersCount = computed(() => {
@@ -144,6 +149,10 @@
     if (p >= 1 && p <= totalPages.value) {
       page.value = p
     }
+  }
+
+  function handleTransactionCreated() {
+    refetchPaginatedTransactions()
   }
 
   // Pour l'import CSV
@@ -315,9 +324,10 @@
       >
         <button
           class="bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
-          @click="() => router.push('/transactions/new')"
+          type="button"
+          @click="openPanel = openPanel === 'create' ? null : 'create'"
         >
-          Créer transaction
+          {{ openPanel === 'create' ? 'Masquer la création' : 'Créer transaction' }}
         </button>
         <button
           class="bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 disabled:opacity-50"
@@ -339,14 +349,9 @@
         <button
           class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow relative"
           type="button"
-          @click="
-            () => {
-              showFilters = !showFilters
-              if (showFilters) showBulkActions = false
-            }
-          "
+          @click="openPanel = openPanel === 'filters' ? null : 'filters'"
         >
-          {{ showFilters ? 'Masquer la recherche' : 'Afficher la recherche' }}
+          {{ openPanel === 'filters' ? 'Masquer la recherche' : 'Afficher la recherche' }}
           <span
             v-if="activeFiltersCount > 0"
             class="ml-2 inline-block bg-white text-gray-700 font-bold rounded-full px-2 text-xs border border-gray-400 align-middle"
@@ -357,14 +362,9 @@
         <button
           class="bg-orange-500 text-white px-3 py-1.5 rounded shadow hover:bg-orange-600 relative"
           type="button"
-          @click="
-            () => {
-              showBulkActions = !showBulkActions
-              if (showBulkActions) showFilters = false
-            }
-          "
+          @click="openPanel = openPanel === 'bulk' ? null : 'bulk'"
         >
-          {{ showBulkActions ? 'Masquer les actions en lot' : 'Actions en lot' }}
+          {{ openPanel === 'bulk' ? 'Masquer les actions en lot' : 'Actions en lot' }}
           <span
             v-if="selectedTransactions.length > 0"
             class="ml-2 inline-block bg-white text-orange-600 font-bold rounded-full px-2 text-xs border border-orange-400 align-middle"
@@ -376,14 +376,14 @@
       </div>
       <!-- Fin du bandeau de boutons -->
       <Transition name="fade">
-        <div v-if="showFilters">
+        <div v-if="openPanel === 'filters'">
           <div class="mb-6 px-4 py-3 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
             <div class="flex flex-row items-center justify-between mb-2">
               <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
               <button
                 aria-label="Fermer"
                 class="text-blue-500 hover:text-blue-700 font-semibold"
-                @click="showFilters = false"
+                @click="closePanel"
               >
                 ✕
               </button>
@@ -394,9 +394,16 @@
       </Transition>
       <Transition name="fade">
         <BulkActionsMenu
-          v-if="showBulkActions"
+          v-if="openPanel === 'bulk'"
           :selected-transactions="selectedTransactions"
-          @close="showBulkActions = false"
+          @close="closePanel"
+        />
+      </Transition>
+      <Transition name="fade">
+        <TransactionCreatePanel
+          v-if="openPanel === 'create'"
+          @close="closePanel"
+          @created="handleTransactionCreated"
         />
       </Transition>
       <div v-if="importMessage" class="mb-4 p-3 bg-green-100 text-green-800 rounded text-center">
