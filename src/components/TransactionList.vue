@@ -77,18 +77,14 @@
         </td>
         <td class="px-4 py-2">
           <template v-if="tx.tags.length">
-            <span
+            <RouterLink
               v-for="tag in tx.tags"
               :key="tag.id"
-              class="inline-block bg-gray-200 text-gray-700 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium"
+              class="inline-block bg-gray-200 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium text-indigo-600 hover:underline cursor-pointer"
+              :to="{ path: '/transactions', query: { tag: tag.id } }"
             >
-              <RouterLink
-                class="text-indigo-600 hover:underline cursor-pointer"
-                :to="{ path: '/transactions', query: { tag: tag.id } }"
-              >
-                {{ tag.label }}
-              </RouterLink>
-            </span>
+              {{ tag.label }}
+            </RouterLink>
           </template>
           <template v-else>
             <RouterLink
