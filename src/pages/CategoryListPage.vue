@@ -1,85 +1,79 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import type { Category } from '@/queries/useCategories'
-import {
-  useAddCategoryMutation,
-  useCategoriesQuery,
-  useDeleteCategoryMutation,
-  useUpdateCategoryMutation,
-} from '@/queries/useCategories'
-import { useSessionQuery } from '@/queries/useAuth'
-import MdiMagnify from '@/components/icons/MdiMagnify.vue'
-import MdiPencil from '@/components/icons/MdiPencil.vue'
-import MdiTrashCan from '@/components/icons/MdiTrashCan.vue'
+  import { ref } from 'vue'
+  import type { Category } from '@/queries/useCategories'
+  import {
+    useAddCategoryMutation,
+    useCategoriesQuery,
+    useDeleteCategoryMutation,
+    useUpdateCategoryMutation,
+  } from '@/queries/useCategories'
+  import { useSessionQuery } from '@/queries/useAuth'
+  import MdiMagnify from '@/components/icons/MdiMagnify.vue'
+  import MdiPencil from '@/components/icons/MdiPencil.vue'
+  import MdiTrashCan from '@/components/icons/MdiTrashCan.vue'
 
-const { data: categories, isLoading, error } = useCategoriesQuery()
-const { mutateAsync: addCategory, isPending: isAdding } =
-  useAddCategoryMutation()
-// Suppression des variables inutilisées
-const { mutateAsync: deleteCategory } = useDeleteCategoryMutation()
-const { mutateAsync: updateCategory } = useUpdateCategoryMutation()
-const { data: user } = useSessionQuery()
+  const { data: categories, isLoading, error } = useCategoriesQuery()
+  const { mutateAsync: addCategory, isPending: isAdding } = useAddCategoryMutation()
+  // Suppression des variables inutilisées
+  const { mutateAsync: deleteCategory } = useDeleteCategoryMutation()
+  const { mutateAsync: updateCategory } = useUpdateCategoryMutation()
+  const { data: user } = useSessionQuery()
 
-const userId =
-  user && typeof user === 'object' && 'id' in user ? user.id : user?.value?.id
+  const userId = user && typeof user === 'object' && 'id' in user ? user.id : user?.value?.id
 
-const newLabel = ref('')
-const newIsRecurring = ref(false)
-const editId = ref<string | null>(null)
-const editLabel = ref('')
-const editIsRecurring = ref(false)
+  const newLabel = ref('')
+  const newIsRecurring = ref(false)
+  const editId = ref<string | null>(null)
+  const editLabel = ref('')
+  const editIsRecurring = ref(false)
 
-const handleAdd = async () => {
-  if (!newLabel.value.trim() || !userId) return
-  await addCategory({
-    label: newLabel.value,
-    is_recurring: newIsRecurring.value,
-  })
-  newLabel.value = ''
-  newIsRecurring.value = false
-}
-
-const startEdit = (cat: Category) => {
-  editId.value = cat.id
-  editLabel.value = cat.label
-  editIsRecurring.value = cat.is_recurring
-}
-
-const handleEdit = async () => {
-  if (!editLabel.value.trim()) return
-  if (editId.value) {
-    await updateCategory({
-      id: editId.value,
-      updates: { label: editLabel.value, is_recurring: editIsRecurring.value },
+  const handleAdd = async () => {
+    if (!newLabel.value.trim() || !userId) return
+    await addCategory({
+      label: newLabel.value,
+      is_recurring: newIsRecurring.value,
     })
-    editId.value = null
-    editLabel.value = ''
-    editIsRecurring.value = false
+    newLabel.value = ''
+    newIsRecurring.value = false
   }
-}
 
-const handleDelete = async (id: string) => {
-  if (confirm('Supprimer cette catégorie ?')) {
-    await deleteCategory(id)
+  const startEdit = (cat: Category) => {
+    editId.value = cat.id
+    editLabel.value = cat.label
+    editIsRecurring.value = cat.is_recurring
   }
-}
+
+  const handleEdit = async () => {
+    if (!editLabel.value.trim()) return
+    if (editId.value) {
+      await updateCategory({
+        id: editId.value,
+        updates: { label: editLabel.value, is_recurring: editIsRecurring.value },
+      })
+      editId.value = null
+      editLabel.value = ''
+      editIsRecurring.value = false
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Supprimer cette catégorie ?')) {
+      await deleteCategory(id)
+    }
+  }
 </script>
 
 <template>
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div
-      class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
-    >
-      <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
-        Catégories
-      </h1>
+    <div class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Catégories</h1>
       <form class="flex gap-2 mb-6 items-center" @submit.prevent="handleAdd">
         <input
           v-model="newLabel"
-          :disabled="isAdding"
           class="flex-1 border rounded px-3 py-2"
+          :disabled="isAdding"
           placeholder="Nouvelle catégorie"
           type="text"
         />
@@ -88,19 +82,19 @@ const handleDelete = async (id: string) => {
           @click="newIsRecurring = !newIsRecurring"
         >
           <span
-            :class="newIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
             class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+            :class="newIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
           >
             <span
-              :class="newIsRecurring ? 'translate-x-6' : 'translate-x-1'"
               class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-            />
+              :class="newIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+            ></span>
           </span>
           <span class="ml-1">Récurrente</span>
         </label>
         <button
-          :disabled="isAdding || !newLabel.trim()"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
+          :disabled="isAdding || !newLabel.trim()"
           type="submit"
         >
           Ajouter
@@ -133,11 +127,7 @@ const handleDelete = async (id: string) => {
                 {{ cat.label }}
               </template>
               <template v-else>
-                <input
-                  v-model="editLabel"
-                  class="flex-1 border rounded px-2 py-1"
-                  type="text"
-                />
+                <input v-model="editLabel" class="flex-1 border rounded px-2 py-1" type="text" />
               </template>
             </td>
             <td class="px-4 py-2">
@@ -145,13 +135,12 @@ const handleDelete = async (id: string) => {
                 <span
                   v-if="cat.is_recurring"
                   class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded"
-                  >Récurrente</span
                 >
-                <span
-                  v-else
-                  class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded"
-                  >Ponctuelle</span
-                >
+                  Récurrente
+                </span>
+                <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                  Ponctuelle
+                </span>
               </template>
               <template v-else>
                 <label
@@ -159,15 +148,13 @@ const handleDelete = async (id: string) => {
                   @click="editIsRecurring = !editIsRecurring"
                 >
                   <span
-                    :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
                     class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                    :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
                   >
                     <span
-                      :class="
-                        editIsRecurring ? 'translate-x-6' : 'translate-x-1'
-                      "
                       class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                    />
+                      :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+                    ></span>
                   </span>
                   <span class="ml-1">Récurrente</span>
                 </label>
@@ -176,9 +163,9 @@ const handleDelete = async (id: string) => {
             <td class="px-4 py-2 text-right">
               <template v-if="editId !== cat.id">
                 <router-link
-                  :to="{ name: 'category-detail', params: { id: cat.id } }"
                   class="inline-block text-indigo-600 hover:text-indigo-800 mr-2"
                   title="Détail"
+                  :to="{ name: 'category-detail', params: { id: cat.id } }"
                 >
                   <MdiMagnify class="w-5 h-5 align-middle" />
                 </router-link>
@@ -228,7 +215,7 @@ const handleDelete = async (id: string) => {
 </template>
 
 <style scoped>
-input:disabled {
-  background: #f3f3f3;
-}
+  input:disabled {
+    background: #f3f3f3;
+  }
 </style>

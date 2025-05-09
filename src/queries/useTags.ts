@@ -23,11 +23,7 @@ export function useAddTagMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload: TablesInsert<'tag'>) => {
-      const { data, error } = await supabase
-        .from('tag')
-        .insert([payload])
-        .select()
-        .single()
+      const { data, error } = await supabase.from('tag').insert([payload]).select().single()
       if (error) throw new Error(error.message)
       return data as Tag
     },
@@ -54,13 +50,7 @@ export function useDeleteTagMutation() {
 export function useUpdateTagMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: TablesUpdate<'tag'>
-    }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: TablesUpdate<'tag'> }) => {
       const { data, error } = await supabase
         .from('tag')
         .update(updates)

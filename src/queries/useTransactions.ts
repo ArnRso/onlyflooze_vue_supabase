@@ -48,16 +48,10 @@ export function useTransactionsQuery(
       if (resolvedFilters.dateMax) {
         query = query.lte('transaction_date', resolvedFilters.dateMax)
       }
-      if (
-        resolvedFilters.amountMin !== null &&
-        resolvedFilters.amountMin !== undefined
-      ) {
+      if (resolvedFilters.amountMin !== null && resolvedFilters.amountMin !== undefined) {
         query = query.gte('amount', resolvedFilters.amountMin)
       }
-      if (
-        resolvedFilters.amountMax !== null &&
-        resolvedFilters.amountMax !== undefined
-      ) {
+      if (resolvedFilters.amountMax !== null && resolvedFilters.amountMax !== undefined) {
         query = query.lte('amount', resolvedFilters.amountMax)
       }
       if (unref(showWithoutCategory) || resolvedFilters.category === '_none') {
@@ -70,20 +64,14 @@ export function useTransactionsQuery(
       if (resolvedFilters.tag === '_none') {
         // On veut les transactions sans tag :
         // Il faut récupérer les ids de toutes les transactions qui N'ONT PAS de tag dans transaction_tag
-        const { data: allTx, error: allTxError } = await supabase
-          .from('transaction')
-          .select('id')
+        const { data: allTx, error: allTxError } = await supabase.from('transaction').select('id')
         if (allTxError) throw new Error(allTxError.message)
         const { data: taggedTx, error: taggedTxError } = await supabase
           .from('transaction_tag')
           .select('transaction_id')
         if (taggedTxError) throw new Error(taggedTxError.message)
-        const taggedIds = new Set(
-          (taggedTx ?? []).map((row) => row.transaction_id)
-        )
-        const untaggedIds = (allTx ?? [])
-          .map((row) => row.id)
-          .filter((id) => !taggedIds.has(id))
+        const taggedIds = new Set((taggedTx ?? []).map((row) => row.transaction_id))
+        const untaggedIds = (allTx ?? []).map((row) => row.id).filter((id) => !taggedIds.has(id))
         if (untaggedIds.length === 0) {
           query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
         } else {
@@ -110,15 +98,13 @@ export function useTransactionsQuery(
         transaction_tag?: Array<{ tag: Tag }>
         category?: Category | null
       }
-      const transactionsWithDetails = (data as TxWithTagsAndCategory[]).map(
-        (tx) => ({
-          ...tx,
-          tags: Array.isArray(tx.transaction_tag)
-            ? tx.transaction_tag.map((tt) => tt.tag).filter(Boolean)
-            : [],
-          category: tx.category || null,
-        })
-      )
+      const transactionsWithDetails = (data as TxWithTagsAndCategory[]).map((tx) => ({
+        ...tx,
+        tags: Array.isArray(tx.transaction_tag)
+          ? tx.transaction_tag.map((tt) => tt.tag).filter(Boolean)
+          : [],
+        category: tx.category || null,
+      }))
       return { data: transactionsWithDetails, count: count ?? 0 }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -129,11 +115,7 @@ export function useAddTransactionMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload: TablesInsert<'transaction'>) => {
-      const { data, error } = await supabase
-        .from('transaction')
-        .insert([payload])
-        .select()
-        .single()
+      const { data, error } = await supabase.from('transaction').insert([payload]).select().single()
       if (error) throw new Error(error.message)
       return data as Transaction
     },
@@ -146,13 +128,7 @@ export function useAddTransactionMutation() {
 export function useUpdateTransactionMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: TablesUpdate<'transaction'>
-    }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: TablesUpdate<'transaction'> }) => {
       const { data, error } = await supabase
         .from('transaction')
         .update(updates)
@@ -210,11 +186,7 @@ export function useTransactionByIdQuery(id: string) {
   return useQuery<Transaction | null>({
     queryKey: ['transaction', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('transaction')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await supabase.from('transaction').select('*').eq('id', id).single()
       if (error) throw new Error(error.message)
       return data as Transaction
     },

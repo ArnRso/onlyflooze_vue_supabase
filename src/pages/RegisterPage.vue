@@ -1,34 +1,31 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { useRegisterMutation } from '@/queries/useAuth'
+  import { ref } from 'vue'
+  import { useRegisterMutation } from '@/queries/useAuth'
 
-const email = ref('')
-const password = ref('')
-const errorMessage = ref('')
-const successMessage = ref('')
+  const email = ref('')
+  const password = ref('')
+  const errorMessage = ref('')
+  const successMessage = ref('')
 
-const { mutateAsync: registerUser } = useRegisterMutation()
+  const { mutateAsync: registerUser } = useRegisterMutation()
 
-const register = async () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-  try {
-    await registerUser({ email: email.value, password: password.value })
-    successMessage.value =
-      "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription."
-  } catch (e: unknown) {
-    errorMessage.value =
-      e instanceof Error ? e.message : "Erreur lors de l'inscription"
+  const register = async () => {
+    errorMessage.value = ''
+    successMessage.value = ''
+    try {
+      await registerUser({ email: email.value, password: password.value })
+      successMessage.value =
+        "Compte créé avec succès ! Vérifiez votre email pour confirmer l'inscription."
+    } catch (e: unknown) {
+      errorMessage.value = e instanceof Error ? e.message : "Erreur lors de l'inscription"
+    }
   }
-}
 </script>
 <template>
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div
-      class="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
-    >
+    <div class="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
       <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Inscription</h2>
         <p class="text-gray-600">Créez votre compte pour commencer</p>
@@ -36,9 +33,7 @@ const register = async () => {
 
       <form class="space-y-6" @submit.prevent="register">
         <div>
-          <label class="block text-sm font-medium text-gray-700" for="email"
-            >Email</label
-          >
+          <label class="block text-sm font-medium text-gray-700" for="email">Email</label>
           <div class="mt-1">
             <input
               id="email"
@@ -54,9 +49,7 @@ const register = async () => {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700" for="password"
-            >Mot de passe</label
-          >
+          <label class="block text-sm font-medium text-gray-700" for="password">Mot de passe</label>
           <div class="mt-1">
             <input
               id="password"
@@ -92,10 +85,7 @@ const register = async () => {
           {{ errorMessage }}
         </p>
 
-        <div
-          v-if="successMessage"
-          class="bg-green-50 border border-green-200 rounded-md p-4 mt-4"
-        >
+        <div v-if="successMessage" class="bg-green-50 border border-green-200 rounded-md p-4 mt-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
@@ -123,10 +113,7 @@ const register = async () => {
         <div class="mt-6 text-center text-sm">
           <p>
             Déjà un compte?
-            <RouterLink
-              class="font-medium text-indigo-600 hover:text-indigo-500"
-              to="/login"
-            >
+            <RouterLink class="font-medium text-indigo-600 hover:text-indigo-500" to="/login">
               Se connecter
             </RouterLink>
           </p>

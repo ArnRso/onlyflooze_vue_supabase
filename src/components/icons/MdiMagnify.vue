@@ -13,7 +13,7 @@
 </template>
 
 <script>
-export default {
-  name: 'MdiMagnify',
-}
+  export default {
+    name: 'MdiMagnify',
+  }
 </script>
