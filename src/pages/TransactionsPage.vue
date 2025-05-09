@@ -5,6 +5,7 @@
   import { computed, ref, watch } from 'vue'
   import TransactionList from '@/components/TransactionList.vue'
   import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
+  import BulkActionsMenu from '@/components/BulkActionsMenu.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
 
   const router = useRouter()
@@ -23,6 +24,8 @@
   })
 
   const showFilters = ref(false)
+  const showBulkActions = ref(false)
+  const selectedTransactions = ref([]) // À connecter plus tard à la sélection réelle
 
   const activeFiltersCount = computed(() => {
     let count = 0
@@ -322,12 +325,40 @@
           @change="handleFileUpload"
         />
         <button
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow relative"
           type="button"
-          @click="showFilters = !showFilters"
+          @click="
+            () => {
+              showFilters = !showFilters
+              if (showFilters) showBulkActions = false
+            }
+          "
         >
           {{ showFilters ? 'Masquer la recherche' : 'Afficher la recherche' }}
-          <span v-if="activeFiltersCount > 0">({{ activeFiltersCount }})</span>
+          <span
+            v-if="activeFiltersCount > 0"
+            class="ml-2 inline-block bg-white text-gray-700 font-bold rounded-full px-2 text-xs border border-gray-400 align-middle"
+          >
+            {{ activeFiltersCount }}
+          </span>
+        </button>
+        <button
+          class="bg-orange-500 text-white px-3 py-1.5 rounded shadow hover:bg-orange-600 relative"
+          type="button"
+          @click="
+            () => {
+              showBulkActions = !showBulkActions
+              if (showBulkActions) showFilters = false
+            }
+          "
+        >
+          {{ showBulkActions ? 'Masquer les actions en lot' : 'Actions en lot' }}
+          <span
+            v-if="selectedTransactions.length > 0"
+            class="ml-2 inline-block bg-white text-orange-600 font-bold rounded-full px-2 text-xs border border-orange-400 align-middle"
+          >
+            {{ selectedTransactions.length }}
+          </span>
         </button>
         <span v-if="isImporting" class="text-sm text-gray-600 ml-2">Traitement...</span>
       </div>
@@ -336,6 +367,13 @@
         <div v-if="showFilters">
           <TransactionFilterForm v-model:filters="filters" />
         </div>
+      </Transition>
+      <Transition name="fade">
+        <BulkActionsMenu
+          v-if="showBulkActions"
+          :selected-transactions="selectedTransactions"
+          @close="showBulkActions = false"
+        />
       </Transition>
       <div v-if="importMessage" class="mb-4 p-3 bg-green-100 text-green-800 rounded text-center">
         {{ importMessage }}
@@ -376,7 +414,10 @@
       <div v-if="isLoading" class="text-center">Chargement...</div>
       <div v-else>
         <div class="overflow-x-auto">
-          <TransactionList :transactions="transactions" />
+          <TransactionList
+            :transactions="transactions"
+            @update:selected="selectedTransactions = $event"
+          />
         </div>
       </div>
     </div>
