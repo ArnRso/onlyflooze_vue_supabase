@@ -7,8 +7,8 @@
     >
       <div class="flex items-center justify-between mb-6">
         <button
-          @click="prevMonth"
           class="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold"
+          @click="prevMonth"
         >
           &lt;
         </button>
@@ -22,8 +22,8 @@
           }}
         </h1>
         <button
-          @click="nextMonth"
           class="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold"
+          @click="nextMonth"
         >
           &gt;
         </button>
@@ -138,11 +138,11 @@
                 <span v-else>-</span>
               </td>
               <td
-                class="px-4 py-2 text-right"
                 :class="{
                   'text-red-600': cat.estimate && cat.estimate.nextAmount < 0,
                   'text-green-600': cat.estimate && cat.estimate.nextAmount > 0,
                 }"
+                class="px-4 py-2 text-right"
               >
                 <span v-if="cat.estimate">{{
                   cat.estimate.nextAmount.toLocaleString('fr-FR', {
@@ -197,8 +197,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed } from 'vue'
+<script lang="ts" setup>
+import { computed, ref } from 'vue'
 import { useRecurringCategoriesWithTransactionsQuery } from '@/queries/useCategories'
 import { estimateNextRecurringTransaction } from '@/services/recurringTransactionService'
 import MdiMagnify from '@/components/icons/MdiMagnify.vue'
@@ -215,6 +215,7 @@ function prevMonth() {
     selectedMonth.value--
   }
 }
+
 function nextMonth() {
   if (selectedMonth.value === 11) {
     selectedMonth.value = 0

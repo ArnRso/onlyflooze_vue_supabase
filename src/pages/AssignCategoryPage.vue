@@ -13,55 +13,55 @@
       >
         <input
           v-model="search"
-          placeholder="Rechercher des transactions..."
           class="flex-1 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 pr-10"
+          placeholder="Rechercher des transactions..."
         />
         <input
           v-model.number="montantMin"
-          type="number"
-          step="0.01"
-          placeholder="Montant min"
           class="w-32 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="Montant min"
+          step="0.01"
+          type="number"
         />
         <input
           v-model.number="montantMax"
-          type="number"
-          step="0.01"
-          placeholder="Montant max"
           class="w-32 border rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="Montant max"
+          step="0.01"
+          type="number"
         />
         <button
           v-if="search"
-          @click="clearSearch"
+          aria-label="Effacer la recherche"
           class="absolute right-24 sm:right-36 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
           type="button"
-          aria-label="Effacer la recherche"
+          @click="clearSearch"
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
             class="h-5 w-5"
             fill="none"
-            viewBox="0 0 24 24"
             stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
             <path
+              d="M6 18L18 6M6 6l12 12"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
             />
           </svg>
         </button>
         <button
-          @click="fetchTransactions"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700"
+          @click="fetchTransactions"
         >
           Rechercher
         </button>
       </div>
       <div class="mb-4 flex items-center gap-4">
         <label class="flex items-center gap-2">
-          <input type="checkbox" v-model="showWithoutCategory" />
+          <input v-model="showWithoutCategory" type="checkbox" />
           Afficher uniquement les transactions sans catégorie
         </label>
       </div>
@@ -70,19 +70,19 @@
       >
         <Multiselect
           v-model="selectedCategory"
-          :options="sortedCategories"
-          label="label"
-          track-by="id"
-          placeholder="Sélectionner ou créer une catégorie"
           :allow-empty="true"
+          :options="sortedCategories"
           :taggable="true"
-          @tag="handleCategoryCreate"
           class="min-w-[200px] w-full sm:w-auto"
+          label="label"
+          placeholder="Sélectionner ou créer une catégorie"
+          track-by="id"
+          @tag="handleCategoryCreate"
         />
         <button
           :disabled="!canAssign"
-          @click="assignCategory"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 disabled:opacity-50"
+          @click="assignCategory"
         >
           Assigner la catégorie
         </button>
@@ -104,12 +104,12 @@
             <tr>
               <th class="px-4 py-2 text-center">
                 <input
-                  type="checkbox"
-                  :checked="allSelected"
-                  @change="toggleSelectAll"
                   :aria-label="
                     allSelected ? 'Tout décocher' : 'Tout sélectionner'
                   "
+                  :checked="allSelected"
+                  type="checkbox"
+                  @change="toggleSelectAll"
                 />
               </th>
               <th
@@ -137,13 +137,13 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="tx in filteredTransactions" :key="tx.id">
               <td class="px-4 py-2 text-center">
-                <input type="checkbox" v-model="selectedIds" :value="tx.id" />
+                <input v-model="selectedIds" :value="tx.id" type="checkbox" />
               </td>
               <td class="px-4 py-2">{{ formatDate(tx.transaction_date) }}</td>
               <td class="px-4 py-2">{{ tx.label }}</td>
               <td
-                class="px-4 py-2"
                 :class="tx.amount < 0 ? 'text-red-600' : 'text-green-600'"
+                class="px-4 py-2"
               >
                 {{ formatAmount(tx.amount) }}
               </td>
@@ -156,15 +156,17 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { useCategoriesQuery } from '@/queries/useCategories'
+<script lang="ts" setup>
+import type { Category } from '@/queries/useCategories'
+import {
+  useAddCategoryMutation,
+  useCategoriesQuery,
+} from '@/queries/useCategories'
 import { useTransactionsQuery } from '@/queries/useTransactions'
 import { computed, ref, watch, watchEffect } from 'vue'
 import type { Tables } from '@/types/supabase'
 import { supabase } from '@/supabase'
 import Multiselect from 'vue-multiselect'
-import { useAddCategoryMutation } from '@/queries/useCategories'
-import type { Category } from '@/queries/useCategories'
 import { useQueryClient } from '@tanstack/vue-query'
 
 const search = ref('')
@@ -319,12 +321,14 @@ function formatAmount(amount: number) {
     currency: 'EUR',
   }).format(amount)
 }
+
 function formatDate(dateStr: string) {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
   return d.toLocaleDateString('fr-FR')
 }
+
 function getCategoryLabel(categoryId: string | null) {
   // categories peut être une ref ou un tableau direct
   const cats =

@@ -1,10 +1,10 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { useRouter } from 'vue-router'
 import {
-  useTransactionsQuery,
   useAddBulkTransactionsMutation,
+  useTransactionsQuery,
 } from '@/queries/useTransactions'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import TransactionList from '@/components/TransactionList.vue'
 
 const router = useRouter()
@@ -209,18 +209,18 @@ async function handleFileUpload(event: Event) {
       <div class="mb-6 flex justify-between items-center">
         <div class="flex items-center gap-2">
           <input
-            type="file"
+            id="csv-upload"
             ref="fileInputRef"
-            @change="handleFileUpload"
             accept=".csv"
             class="hidden"
-            id="csv-upload"
+            type="file"
+            @change="handleFileUpload"
           />
           <label
-            for="csv-upload"
-            class="cursor-pointer bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 disabled:opacity-50"
             :class="{ 'opacity-50': isImporting }"
             :disabled="isImporting"
+            class="cursor-pointer bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 disabled:opacity-50"
+            for="csv-upload"
           >
             {{ isImporting ? 'Import en cours...' : 'Importer CSV' }}
           </label>
@@ -229,8 +229,8 @@ async function handleFileUpload(event: Event) {
           >
         </div>
         <button
-          @click="() => router.push('/transactions/new')"
           class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700"
+          @click="() => router.push('/transactions/new')"
         >
           Créer une transaction
         </button>
@@ -258,23 +258,23 @@ async function handleFileUpload(event: Event) {
         class="mb-4 mt-6 flex justify-between items-center text-sm"
       >
         <a
-          href="#"
-          @click.prevent="() => goToPage(page - 1)"
           :class="[
             'text-indigo-600 hover:underline',
             { 'opacity-40 pointer-events-none': page === 1 },
           ]"
+          href="#"
+          @click.prevent="() => goToPage(page - 1)"
         >
           Précédent
         </a>
         <span>Page {{ page }} sur {{ totalPages }}</span>
         <a
-          href="#"
-          @click.prevent="() => goToPage(page + 1)"
           :class="[
             'text-indigo-600 hover:underline',
             { 'opacity-40 pointer-events-none': page === totalPages },
           ]"
+          href="#"
+          @click.prevent="() => goToPage(page + 1)"
         >
           Suivant
         </a>

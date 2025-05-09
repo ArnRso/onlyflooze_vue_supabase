@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -62,31 +62,31 @@ const submit = async () => {
       <h1 class="text-2xl font-bold mb-6 text-center">
         Modifier la transaction
       </h1>
-      <form @submit.prevent="submit" class="space-y-4">
+      <form class="space-y-4" @submit.prevent="submit">
         <div>
           <label class="block mb-1">Libellé</label>
           <input
             v-model="label"
-            required
             class="w-full border rounded px-3 py-2"
+            required
           />
         </div>
         <div>
           <label class="block mb-1">Montant (€)</label>
           <input
             v-model.number="amount"
-            type="number"
-            required
             class="w-full border rounded px-3 py-2"
+            required
+            type="number"
           />
         </div>
         <div>
           <label class="block mb-1">Date</label>
           <input
             v-model="transaction_date"
-            type="date"
-            required
             class="w-full border rounded px-3 py-2"
+            required
+            type="date"
           />
         </div>
         <div>
@@ -101,16 +101,16 @@ const submit = async () => {
         <div v-if="error" class="text-red-600 text-center">{{ error }}</div>
         <div class="flex justify-between items-center">
           <button
+            class="text-gray-600"
             type="button"
             @click="() => router.push('/transactions')"
-            class="text-gray-600"
           >
             Annuler
           </button>
           <button
-            type="submit"
             :disabled="isPending"
             class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
+            type="submit"
           >
             Enregistrer
           </button>

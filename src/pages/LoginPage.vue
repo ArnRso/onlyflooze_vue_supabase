@@ -1,7 +1,7 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useLoginMutation, useSessionQuery, signOut } from '@/queries/useAuth'
+import { signOut, useLoginMutation, useSessionQuery } from '@/queries/useAuth'
 import { useQueryClient } from '@tanstack/vue-query'
 
 const email = ref('')
@@ -43,39 +43,39 @@ const handleLogout = async () => {
         <p class="text-gray-600">Accédez à votre espace personnel</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="handleLogin">
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700"
+          <label class="block text-sm font-medium text-gray-700" for="email"
             >Email</label
           >
           <div class="mt-1">
             <input
-              v-model="email"
               id="email"
-              name="email"
-              type="email"
+              v-model="email"
               autocomplete="email"
-              required
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              name="email"
               placeholder="votre@email.com"
+              required
+              type="email"
             />
           </div>
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700"
+          <label class="block text-sm font-medium text-gray-700" for="password"
             >Mot de passe</label
           >
           <div class="mt-1">
             <input
-              v-model="password"
               id="password"
-              name="password"
-              type="password"
+              v-model="password"
               autocomplete="current-password"
-              required
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              name="password"
               placeholder="••••••••"
+              required
+              type="password"
             />
           </div>
         </div>
@@ -84,19 +84,19 @@ const handleLogout = async () => {
           <div class="flex items-center">
             <input
               id="remember-me"
+              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               name="remember-me"
               type="checkbox"
-              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+            <label class="ml-2 block text-sm text-gray-900" for="remember-me">
               Se souvenir de moi
             </label>
           </div>
         </div>
         <div>
           <button
-            type="submit"
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300"
+            type="submit"
           >
             Se connecter
           </button>
@@ -117,16 +117,16 @@ const handleLogout = async () => {
           <div class="flex">
             <div class="flex-shrink-0">
               <svg
-                class="h-5 w-5 text-green-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
                 aria-hidden="true"
+                class="h-5 w-5 text-green-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                   clip-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  fill-rule="evenodd"
                 />
               </svg>
             </div>
@@ -137,8 +137,8 @@ const handleLogout = async () => {
             </div>
           </div>
           <button
-            @click="handleLogout"
             class="w-full mt-4 flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white border-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300"
+            @click="handleLogout"
           >
             Se déconnecter
           </button>
@@ -147,8 +147,8 @@ const handleLogout = async () => {
           <p>
             Pas encore de compte?
             <RouterLink
-              to="/register"
               class="font-medium text-indigo-600 hover:text-indigo-500"
+              to="/register"
             >
               S'inscrire
             </RouterLink>

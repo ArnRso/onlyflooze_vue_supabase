@@ -19,8 +19,8 @@
       <tr
         v-for="(tx, i) in transactions"
         :key="tx.id"
-        class="border-t border-gray-100 hover:bg-gray-50 transition"
         :class="i % 2 === 1 ? 'bg-gray-100' : ''"
+        class="border-t border-gray-100 hover:bg-gray-50 transition"
       >
         <td class="px-4 py-2 font-medium text-gray-900">{{ tx.label }}</td>
         <td class="px-4 py-2">
@@ -39,8 +39,8 @@
           {{ formatDate(tx.transaction_date) }}
         </td>
         <td
-          class="px-4 py-2 text-right font-mono font-semibold"
           :class="tx.amount < 0 ? 'text-red-600' : 'text-green-700'"
+          class="px-4 py-2 text-right font-mono font-semibold"
         >
           {{ formatAmount(tx.amount) }}
         </td>
@@ -49,8 +49,8 @@
   </table>
 </template>
 
-<script setup lang="ts">
-import type { Transaction, Tag, Category } from '@/queries/useTransactions'
+<script lang="ts" setup>
+import type { Category, Tag, Transaction } from '@/queries/useTransactions'
 import { defineProps } from 'vue'
 
 defineProps<{

@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { useSessionQuery, useProfileQuery } from '@/queries/useAuth'
+<script lang="ts" setup>
+import { useProfileQuery, useSessionQuery } from '@/queries/useAuth'
 
 const { data: user } = useSessionQuery()
 const { data: profile } = useProfileQuery(user.value?.id ?? null)

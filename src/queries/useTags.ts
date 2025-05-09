@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { supabase } from '@/supabase'
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase'
 
