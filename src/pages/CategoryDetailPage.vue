@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCategoriesQuery } from '@/queries/useCategories'
@@ -6,14 +6,14 @@ import { useCategoryTransactionsQuery } from '@/queries/useTransactions'
 import { estimateNextRecurringTransaction } from '@/services/recurringTransactionService'
 import { Line } from 'vue-chartjs'
 import {
+  CategoryScale,
   Chart as ChartJS,
-  Title,
-  Tooltip,
   Legend,
+  LinearScale,
   LineElement,
   PointElement,
-  CategoryScale,
-  LinearScale,
+  Title,
+  Tooltip,
 } from 'chart.js'
 
 ChartJS.register(
@@ -197,7 +197,7 @@ const barChartOptions = {
       </div>
       <div v-else>
         <div class="flex items-center justify-between mb-6">
-          <router-link to="/categories" class="text-indigo-600 hover:underline">
+          <router-link class="text-indigo-600 hover:underline" to="/categories">
             ← Retour aux catégories
           </router-link>
           <h1

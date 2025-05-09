@@ -1,9 +1,9 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref } from 'vue'
 import {
-  useTagsQuery,
   useAddTagMutation,
   useDeleteTagMutation,
+  useTagsQuery,
   useUpdateTagMutation,
 } from '@/queries/useTags'
 import { Tag } from '@/queries/useTransactions'
@@ -57,18 +57,18 @@ const handleDelete = async (id: string) => {
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Tags
       </h1>
-      <form @submit.prevent="handleAdd" class="flex gap-2 mb-6">
+      <form class="flex gap-2 mb-6" @submit.prevent="handleAdd">
         <input
           v-model="newLabel"
-          type="text"
-          placeholder="Nouveau tag"
-          class="flex-1 border rounded px-3 py-2"
           :disabled="isAdding"
+          class="flex-1 border rounded px-3 py-2"
+          placeholder="Nouveau tag"
+          type="text"
         />
         <button
-          type="submit"
-          class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
           :disabled="isAdding || !newLabel.trim()"
+          class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
+          type="submit"
         >
           Ajouter
         </button>
@@ -87,37 +87,37 @@ const handleDelete = async (id: string) => {
           <div v-else class="flex gap-2 flex-1">
             <input
               v-model="editLabel"
-              type="text"
               class="flex-1 border rounded px-2 py-1"
+              type="text"
             />
             <button
-              @click="handleEdit"
               class="bg-green-600 text-white px-2 py-1 rounded shadow"
+              @click="handleEdit"
             >
               Valider
             </button>
             <button
+              class="bg-gray-300 px-2 py-1 rounded"
               @click="
                 () => {
                   editId = null
                   editLabel = ''
                 }
               "
-              class="bg-gray-300 px-2 py-1 rounded"
             >
               Annuler
             </button>
           </div>
           <div v-if="editId !== tag.id" class="flex gap-2">
             <button
-              @click="() => startEdit(tag)"
               class="text-blue-600 hover:underline"
+              @click="() => startEdit(tag)"
             >
               Modifier
             </button>
             <button
-              @click="() => handleDelete(tag.id)"
               class="text-red-600 hover:underline"
+              @click="() => handleDelete(tag.id)"
             >
               Supprimer
             </button>

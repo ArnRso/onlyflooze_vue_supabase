@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from '@/App.vue'
 import router from './router'
 import './assets/main.css'
-import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import 'vue-multiselect/dist/vue-multiselect.css'
 
 const app = createApp(App)

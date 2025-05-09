@@ -1,9 +1,9 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref } from 'vue'
 import type { Category } from '@/queries/useCategories'
 import {
-  useCategoriesQuery,
   useAddCategoryMutation,
+  useCategoriesQuery,
   useDeleteCategoryMutation,
   useUpdateCategoryMutation,
 } from '@/queries/useCategories'
@@ -75,33 +75,33 @@ const handleDelete = async (id: string) => {
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Catégories
       </h1>
-      <form @submit.prevent="handleAdd" class="flex gap-2 mb-6 items-center">
+      <form class="flex gap-2 mb-6 items-center" @submit.prevent="handleAdd">
         <input
           v-model="newLabel"
-          type="text"
-          placeholder="Nouvelle catégorie"
-          class="flex-1 border rounded px-3 py-2"
           :disabled="isAdding"
+          class="flex-1 border rounded px-3 py-2"
+          placeholder="Nouvelle catégorie"
+          type="text"
         />
         <label
           class="flex items-center cursor-pointer select-none"
           @click="newIsRecurring = !newIsRecurring"
         >
           <span
-            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
             :class="newIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
           >
             <span
-              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
               :class="newIsRecurring ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
             />
           </span>
           <span class="ml-1">Récurrente</span>
         </label>
         <button
-          type="submit"
-          class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
           :disabled="isAdding || !newLabel.trim()"
+          class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
+          type="submit"
         >
           Ajouter
         </button>
@@ -135,8 +135,8 @@ const handleDelete = async (id: string) => {
               <template v-else>
                 <input
                   v-model="editLabel"
-                  type="text"
                   class="flex-1 border rounded px-2 py-1"
+                  type="text"
                 />
               </template>
             </td>
@@ -159,14 +159,14 @@ const handleDelete = async (id: string) => {
                   @click="editIsRecurring = !editIsRecurring"
                 >
                   <span
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
                     :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
                   >
                     <span
-                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
                       :class="
                         editIsRecurring ? 'translate-x-6' : 'translate-x-1'
                       "
+                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
                     />
                   </span>
                   <span class="ml-1">Récurrente</span>
@@ -183,30 +183,31 @@ const handleDelete = async (id: string) => {
                   <MdiMagnify class="w-5 h-5 align-middle" />
                 </router-link>
                 <button
-                  @click="() => startEdit(cat)"
                   class="inline-block text-blue-600 hover:text-blue-800 mr-2"
                   title="Modifier"
                   type="button"
+                  @click="() => startEdit(cat)"
                 >
                   <MdiPencil class="w-5 h-5 align-middle" />
                 </button>
                 <button
-                  @click="() => handleDelete(cat.id)"
                   class="inline-block text-red-600 hover:text-red-800"
                   title="Supprimer"
                   type="button"
+                  @click="() => handleDelete(cat.id)"
                 >
                   <MdiTrashCan class="w-5 h-5 align-middle" />
                 </button>
               </template>
               <template v-else>
                 <button
-                  @click="handleEdit"
                   class="bg-green-600 text-white px-2 py-1 rounded shadow mr-2"
+                  @click="handleEdit"
                 >
                   Valider
                 </button>
                 <button
+                  class="bg-gray-300 px-2 py-1 rounded"
                   @click="
                     () => {
                       editId = null
@@ -214,7 +215,6 @@ const handleDelete = async (id: string) => {
                       editIsRecurring = false
                     }
                   "
-                  class="bg-gray-300 px-2 py-1 rounded"
                 >
                   Annuler
                 </button>

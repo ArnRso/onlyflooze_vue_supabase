@@ -1,4 +1,4 @@
-<script setup lang="ts"></script>
+<script lang="ts" setup></script>
 <template>
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center"
@@ -12,8 +12,9 @@
         Bienvenue sur
         <span
           class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
-          >OnlyFlooze</span
         >
+          OnlyFlooze
+        </span>
       </h1>
       <p class="text-lg text-gray-700 text-center mb-6 max-w-xl">
         Prenez le contrôle de vos finances personnelles en toute simplicité.<br />
@@ -22,14 +23,14 @@
       </p>
       <div class="flex flex-col sm:flex-row gap-4 mt-4">
         <RouterLink
-          to="/register"
           class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition text-lg"
+          to="/register"
         >
           Commencer gratuitement
         </RouterLink>
         <RouterLink
-          to="/login"
           class="bg-white border-2 border-indigo-600 text-indigo-700 px-8 py-3 rounded-full font-semibold shadow hover:bg-indigo-50 transition text-lg"
+          to="/login"
         >
           J'ai déjà un compte
         </RouterLink>
