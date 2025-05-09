@@ -140,6 +140,7 @@ function resetFilters() {
       >
       <select v-model="selectedCategory" class="input">
         <option :value="null">Toutes</option>
+        <option value="_none">Sans catégorie</option>
         <option v-for="cat in categories ?? []" :key="cat.id" :value="cat.id">
           {{ cat.label }}
         </option>
@@ -149,6 +150,7 @@ function resetFilters() {
       <label class="block text-sm font-medium text-gray-700 mb-1">Tag</label>
       <select v-model="selectedTag" class="input">
         <option :value="null">Tous</option>
+        <option value="_none">Sans tag</option>
         <option v-for="tag in tags ?? []" :key="tag.id" :value="tag.id">
           {{ tag.label }}
         </option>
