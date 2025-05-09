@@ -2,17 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { supabase } from '@/supabase'
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase'
 import { computed, Ref, unref } from 'vue'
+import type { TransactionFilter } from '@/types/TransactionFilter'
 
 export type Transaction = Tables<'transaction'>
 export type Tag = Tables<'tag'>
 export type Category = Tables<'category'>
 
+// L'argument 'search' n'est plus utilisé, tout passe par filters.label
+// Si jamais il reste des appels avec 'search', il faut les remplacer par 'filters.label'
 export function useTransactionsQuery(
   page: number | Ref<number> = 1,
   pageSize: number | Ref<number> = 10,
-  search: Ref<string> | string = '',
-  showWithoutCategory: Ref<boolean> | boolean = false,
-  filterCategoryIds: Ref<string[]> | string[] | null = null // <-- Ajout d'un paramètre pour filtrer par catégories
+  filters: TransactionFilter | Ref<TransactionFilter>,
+  showWithoutCategory: Ref<boolean> | boolean = false
 ) {
   return useQuery<{
     data: (Transaction & { tags: Tag[]; category?: Category | null })[]
@@ -22,9 +24,8 @@ export function useTransactionsQuery(
       'transactions',
       unref(page),
       unref(pageSize),
-      unref(search),
+      JSON.stringify(unref(filters)),
       unref(showWithoutCategory),
-      unref(filterCategoryIds),
     ]),
     queryFn: async () => {
       const from = (unref(page) - 1) * unref(pageSize)
@@ -36,15 +37,49 @@ export function useTransactionsQuery(
         })
         .order('transaction_date', { ascending: false })
         .range(from, to)
-      if (unref(search)) {
-        const s = unref(search).toLowerCase().trim()
+      const resolvedFilters = unref(filters)
+      if (resolvedFilters.label) {
+        const s = resolvedFilters.label.toLowerCase().trim()
         query = query.ilike('label', `%${s}%`)
+      }
+      if (resolvedFilters.dateMin) {
+        query = query.gte('transaction_date', resolvedFilters.dateMin)
+      }
+      if (resolvedFilters.dateMax) {
+        query = query.lte('transaction_date', resolvedFilters.dateMax)
+      }
+      if (
+        resolvedFilters.amountMin !== null &&
+        resolvedFilters.amountMin !== undefined
+      ) {
+        query = query.gte('amount', resolvedFilters.amountMin)
+      }
+      if (
+        resolvedFilters.amountMax !== null &&
+        resolvedFilters.amountMax !== undefined
+      ) {
+        query = query.lte('amount', resolvedFilters.amountMax)
       }
       if (unref(showWithoutCategory)) {
         query = query.is('category_id', null)
       }
-      if (filterCategoryIds && unref(filterCategoryIds)?.length > 0) {
-        query = query.in('category_id', unref(filterCategoryIds))
+      if (resolvedFilters.category) {
+        query = query.eq('category_id', resolvedFilters.category)
+      }
+      if (resolvedFilters.tag) {
+        // Récupérer les transaction_id ayant ce tag (filtrage N-N sans doublons)
+        const { data: tagLinks, error: tagLinksError } = await supabase
+          .from('transaction_tag')
+          .select('transaction_id')
+          .eq('tag_id', resolvedFilters.tag)
+        if (tagLinksError) throw new Error(tagLinksError.message)
+        const transactionIds = (tagLinks ?? []).map((row) => row.transaction_id)
+        if (transactionIds.length === 0) {
+          // Aucun résultat possible, on force un id impossible
+          query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
+        } else {
+          query = query.in('id', transactionIds)
+        }
       }
       const { data, error, count } = await query
       if (error) throw new Error(error.message)

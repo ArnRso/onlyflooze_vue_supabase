@@ -6,16 +6,36 @@ import {
 } from '@/queries/useTransactions'
 import { computed, ref } from 'vue'
 import TransactionList from '@/components/TransactionList.vue'
+import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
+import type { TransactionFilter } from '@/types/TransactionFilter'
 
 const router = useRouter()
 const page = ref(1)
 const pageSize = 50
+
+const filters = ref<TransactionFilter>({
+  label: '',
+  dateMin: '',
+  dateMax: '',
+  amountMin: null,
+  amountMax: null,
+  category: null,
+  tag: null,
+})
+
+const showFilters = ref(false)
+
+function updateFilters(newFilters: TransactionFilter) {
+  filters.value = { ...filters.value, ...newFilters }
+  page.value = 1
+}
+
 const {
   data: transactionsResponse,
   isLoading,
   error,
   refetch: refetchPaginatedTransactions,
-} = useTransactionsQuery(page, pageSize, '')
+} = useTransactionsQuery(page, pageSize, filters, false)
 
 const transactions = computed(() => transactionsResponse.value?.data ?? [])
 const total = computed(() => transactionsResponse.value?.count ?? 0)
@@ -206,6 +226,23 @@ async function handleFileUpload(event: Event) {
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
         Transactions
       </h1>
+      <div class="flex justify-end mb-4">
+        <button
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded shadow"
+          @click="showFilters = !showFilters"
+          type="button"
+        >
+          {{ showFilters ? 'Masquer la recherche' : 'Afficher la recherche' }}
+        </button>
+      </div>
+      <Transition name="fade">
+        <div v-if="showFilters">
+          <TransactionFilterForm
+            :filters="filters"
+            @update:filters="updateFilters"
+          />
+        </div>
+      </Transition>
       <div class="mb-6 flex justify-between items-center">
         <div class="flex items-center gap-2">
           <input
@@ -313,5 +350,18 @@ label[for='csv-upload']:disabled {
   max-width: 320px;
   white-space: normal;
   word-break: break-word;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
 }
 </style>
