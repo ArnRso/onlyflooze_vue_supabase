@@ -4,6 +4,6 @@ export type TransactionFilter = {
   dateMax: string
   amountMin: number | null
   amountMax: number | null
-  category: string | null
-  tag: string | null
+  category: string | null | '_none'
+  tag: string | null | '_none'
 }

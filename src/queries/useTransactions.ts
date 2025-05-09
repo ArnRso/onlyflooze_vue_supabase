@@ -60,13 +60,36 @@ export function useTransactionsQuery(
       ) {
         query = query.lte('amount', resolvedFilters.amountMax)
       }
-      if (unref(showWithoutCategory)) {
+      if (unref(showWithoutCategory) || resolvedFilters.category === '_none') {
+        // Si on veut explicitement les transactions sans catégorie
         query = query.is('category_id', null)
-      }
-      if (resolvedFilters.category) {
+      } else if (resolvedFilters.category) {
         query = query.eq('category_id', resolvedFilters.category)
       }
-      if (resolvedFilters.tag) {
+      // Gestion du filtre tag
+      if (resolvedFilters.tag === '_none') {
+        // On veut les transactions sans tag :
+        // Il faut récupérer les ids de toutes les transactions qui N'ONT PAS de tag dans transaction_tag
+        const { data: allTx, error: allTxError } = await supabase
+          .from('transaction')
+          .select('id')
+        if (allTxError) throw new Error(allTxError.message)
+        const { data: taggedTx, error: taggedTxError } = await supabase
+          .from('transaction_tag')
+          .select('transaction_id')
+        if (taggedTxError) throw new Error(taggedTxError.message)
+        const taggedIds = new Set(
+          (taggedTx ?? []).map((row) => row.transaction_id)
+        )
+        const untaggedIds = (allTx ?? [])
+          .map((row) => row.id)
+          .filter((id) => !taggedIds.has(id))
+        if (untaggedIds.length === 0) {
+          query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
+        } else {
+          query = query.in('id', untaggedIds)
+        }
+      } else if (resolvedFilters.tag) {
         // Récupérer les transaction_id ayant ce tag (filtrage N-N sans doublons)
         const { data: tagLinks, error: tagLinksError } = await supabase
           .from('transaction_tag')

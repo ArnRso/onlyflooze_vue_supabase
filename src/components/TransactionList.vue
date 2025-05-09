@@ -55,16 +55,49 @@
         </td>
         <td class="px-4 py-2 font-medium text-gray-900">{{ tx.label }}</td>
         <td class="px-4 py-2">
-          {{ tx.category ? tx.category.label : '-' }}
+          <template v-if="tx.category">
+            <RouterLink
+              class="text-indigo-600 hover:underline cursor-pointer"
+              :to="{
+                path: '/transactions',
+                query: { category: tx.category.id },
+              }"
+            >
+              {{ tx.category.label }}
+            </RouterLink>
+          </template>
+          <template v-else>
+            <RouterLink
+              class="text-indigo-600 hover:underline cursor-pointer"
+              :to="{ path: '/transactions', query: { category: '_none' } }"
+            >
+              Sans catégorie
+            </RouterLink>
+          </template>
         </td>
         <td class="px-4 py-2">
-          <span
-            v-for="tag in tx.tags"
-            :key="tag.id"
-            class="inline-block bg-gray-200 text-gray-700 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium"
-          >
-            {{ tag.label }}
-          </span>
+          <template v-if="tx.tags.length">
+            <span
+              v-for="tag in tx.tags"
+              :key="tag.id"
+              class="inline-block bg-gray-200 text-gray-700 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium"
+            >
+              <RouterLink
+                class="text-indigo-600 hover:underline cursor-pointer"
+                :to="{ path: '/transactions', query: { tag: tag.id } }"
+              >
+                {{ tag.label }}
+              </RouterLink>
+            </span>
+          </template>
+          <template v-else>
+            <RouterLink
+              class="text-indigo-600 hover:underline cursor-pointer"
+              :to="{ path: '/transactions', query: { tag: '_none' } }"
+            >
+              Sans tag
+            </RouterLink>
+          </template>
         </td>
         <td class="px-4 py-2 text-gray-500 text-right">
           {{ formatDate(tx.transaction_date) }}
@@ -107,6 +140,7 @@ import MdiTrashCan from './icons/MdiTrashCan.vue'
 import { useDeleteTransactionMutation } from '@/queries/useTransactions'
 import { ref, watch, computed } from 'vue'
 import { defineEmits } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const emit = defineEmits(['update:selected'])
 
