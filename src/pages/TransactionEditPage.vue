@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAddTransactionMutation } from '@/queries/useTransactions'
+import {
+  useTransactionByIdQuery,
+  useUpdateTransactionMutation,
+} from '@/queries/useTransactions'
 import { useCategoriesQuery } from '@/queries/useCategories'
 
+const props = defineProps<{ id: string }>()
 const router = useRouter()
+const { data: transaction } = useTransactionByIdQuery(props.id)
+const { mutateAsync, isPending } = useUpdateTransactionMutation()
 const { data: categories } = useCategoriesQuery()
 
 const label = ref('')
@@ -12,20 +18,36 @@ const amount = ref(0)
 const transaction_date = ref('')
 const category_id = ref('')
 const error = ref('')
-const { mutateAsync, isPending } = useAddTransactionMutation()
+
+watch(
+  transaction,
+  (tx) => {
+    if (tx) {
+      label.value = tx.label
+      amount.value = tx.amount
+      transaction_date.value = tx.transaction_date
+      category_id.value = tx.category_id || ''
+    }
+  },
+  { immediate: true }
+)
 
 const submit = async () => {
   error.value = ''
   try {
     await mutateAsync({
-      label: label.value,
-      amount: amount.value,
-      transaction_date: transaction_date.value,
-      category_id: category_id.value || null,
+      id: props.id,
+      updates: {
+        label: label.value,
+        amount: amount.value,
+        transaction_date: transaction_date.value,
+        category_id: category_id.value || null,
+      },
     })
-    router.push('/transactions')
+    await router.push('/transactions')
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Erreur lors de la création'
+    error.value =
+      e instanceof Error ? e.message : 'Erreur lors de la modification'
   }
 }
 </script>
@@ -37,7 +59,9 @@ const submit = async () => {
     <div
       class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8"
     >
-      <h1 class="text-2xl font-bold mb-6 text-center">Créer une transaction</h1>
+      <h1 class="text-2xl font-bold mb-6 text-center">
+        Modifier la transaction
+      </h1>
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <label class="block mb-1">Libellé</label>
@@ -88,7 +112,7 @@ const submit = async () => {
             :disabled="isPending"
             class="bg-indigo-600 text-white px-4 py-2 rounded shadow"
           >
-            Créer
+            Enregistrer
           </button>
         </div>
       </form>
