@@ -144,6 +144,7 @@
   import { supabase } from '@/supabase'
   import Multiselect from 'vue-multiselect'
   import { useQueryClient } from '@tanstack/vue-query'
+  import type { TransactionFilter } from '@/types/TransactionFilter'
 
   const search = ref('')
   const debouncedSearch = ref(search.value)
@@ -163,6 +164,22 @@
   const showWithoutCategory = ref(false)
   const montantMin = ref<number | null>(null)
   const montantMax = ref<number | null>(null)
+
+  const filters = ref<TransactionFilter>({
+    label: '',
+    dateMin: '',
+    dateMax: '',
+    amountMin: null,
+    amountMax: null,
+    category: null,
+    tag: null,
+  })
+
+  watch([debouncedSearch, montantMin, montantMax], ([newSearch, min, max]) => {
+    filters.value.label = newSearch
+    filters.value.amountMin = min
+    filters.value.amountMax = max
+  })
 
   // Récupération des catégories
   const { data: categories = [], refetch: refetchCategories } = useCategoriesQuery()
@@ -187,7 +204,7 @@
   const { data: allTransactions = { data: [], count: 0 }, refetch } = useTransactionsQuery(
     page,
     pageSize,
-    debouncedSearch,
+    filters,
     showWithoutCategory
   )
 
