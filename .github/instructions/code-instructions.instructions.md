@@ -44,14 +44,22 @@ Coding standards, domain knowledge, and preferences that AI should follow.
 - Follow the Red-Green-Refactor cycle: write a failing test, write just enough code to pass, then refactor.
 - Ensure all new code is covered by tests and that tests are clear, isolated, and meaningful.
 
+## Tests
+
+- Tests must use, as much as possible, the types exported by the application (especially those from `src/types/supabase.ts`) to ensure type consistency between production code and tests.
+- Tests must be clear, isolated, and meaningful.
+- Respect the existing folder structure to organize test files.
+- Document public test functions or hooks when necessary.
+
 ## Git & Documentation
 
-- Commit messages must be clear and concise, in English or French.
+- Commit messages must be clear and concise, preferably in French.
 - Document every public function or component with a JSDoc comment.
 
 ## Project specifics
 
 - Use Supabase for authentication and data management.
+- Make maximum use of the exported types from the `src/types/supabase.ts` file for all Supabase-related data (queries, mutations, entities, etc.).
 - Use TanStack Query (Vue Query) for data fetching, caching, and synchronization with Supabase.
 - Follow business logic defined in existing services and queries.
 - Prefer the use of reusable UI components.
