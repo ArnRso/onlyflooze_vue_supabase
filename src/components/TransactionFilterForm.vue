@@ -8,6 +8,7 @@
   const props = defineProps<{ filters: TransactionFilter }>()
   const emit = defineEmits<{
     (e: 'update:filters', filters: TransactionFilter): void
+    (e: 'close'): void
   }>()
 
   // Utilisation d'un state réactif pour UForm
@@ -105,94 +106,111 @@
 </script>
 
 <template>
-  <UForm class="w-full mb-6" :state="state" @submit.prevent>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
-      <UFormField label="Libellé" name="label">
-        <UInput v-model="state.label" class="w-full" placeholder="Recherche libellé" />
-      </UFormField>
-      <UFormField label="Date min" name="dateMin">
-        <UPopover class="w-full">
-          <div class="relative w-full">
-            <UInput
-              class="w-full cursor-pointer text-left"
-              placeholder="Date min"
-              readonly
-              :value="
-                state.dateMin
-                  ? df.format(toCalendarDate(state.dateMin).toDate(getLocalTimeZone()))
-                  : ''
-              "
-              @click="open"
-            />
-            <button
-              v-if="state.dateMin"
-              aria-label="Effacer la date min"
-              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-              type="button"
-              @click.stop="state.dateMin = ''"
-            >
-              <span class="i-lucide-x text-base"></span>
-            </button>
-          </div>
-          <template #content>
-            <UCalendar v-model="dateMinCalendar" class="p-2" locale="fr" />
-          </template>
-        </UPopover>
-      </UFormField>
-      <UFormField label="Date max" name="dateMax">
-        <UPopover class="w-full">
-          <div class="relative w-full">
-            <UInput
-              class="w-full cursor-pointer text-left"
-              placeholder="Date max"
-              readonly
-              :value="
-                state.dateMax
-                  ? df.format(toCalendarDate(state.dateMax).toDate(getLocalTimeZone()))
-                  : ''
-              "
-              @click="open"
-            />
-            <button
-              v-if="state.dateMax"
-              aria-label="Effacer la date max"
-              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-              type="button"
-              @click.stop="state.dateMax = ''"
-            >
-              <span class="i-lucide-x text-base"></span>
-            </button>
-          </div>
-          <template #content>
-            <UCalendar v-model="dateMaxCalendar" class="p-2" locale="fr" />
-          </template>
-        </UPopover>
-      </UFormField>
-      <UFormField label="Montant min" name="amountMin">
-        <UInput
-          v-model.number="state.amountMin"
-          class="w-full"
-          placeholder="Montant min"
-          step="0.01"
-          type="number"
+  <UCard class="mb-6 px-4 py-3">
+    <template #header>
+      <div class="flex flex-row items-center justify-between">
+        <h2 class="text-lg font-bold text-primary">Filtrer les transactions</h2>
+        <UButton
+          aria-label="Fermer"
+          color="gray"
+          icon="i-lucide-x"
+          size="sm"
+          variant="ghost"
+          @click="$emit('close')"
         />
-      </UFormField>
-      <UFormField label="Montant max" name="amountMax">
-        <UInput
-          v-model.number="state.amountMax"
-          class="w-full"
-          placeholder="Montant max"
-          step="0.01"
-          type="number"
-        />
-      </UFormField>
-      <UFormField label="Catégorie" name="category">
-        <USelect v-model="state.category" class="w-full" :items="categoryOptions" />
-      </UFormField>
-      <UFormField label="Tag" name="tag">
-        <USelect v-model="state.tag" class="w-full" :items="tagOptions" />
-      </UFormField>
-      <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-end gap-2">
+      </div>
+    </template>
+    <UForm class="w-full" :state="state" @submit.prevent>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
+        <UFormField label="Libellé" name="label">
+          <UInput v-model="state.label" class="w-full" placeholder="Recherche libellé" />
+        </UFormField>
+        <UFormField label="Date min" name="dateMin">
+          <UPopover class="w-full">
+            <div class="relative w-full">
+              <UInput
+                class="w-full cursor-pointer text-left"
+                placeholder="Date min"
+                readonly
+                :value="
+                  state.dateMin
+                    ? df.format(toCalendarDate(state.dateMin).toDate(getLocalTimeZone()))
+                    : ''
+                "
+                @click="open"
+              />
+              <button
+                v-if="state.dateMin"
+                aria-label="Effacer la date min"
+                class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                type="button"
+                @click.stop="state.dateMin = ''"
+              >
+                <span class="i-lucide-x text-base"></span>
+              </button>
+            </div>
+            <template #content>
+              <UCalendar v-model="dateMinCalendar" class="p-2" locale="fr" />
+            </template>
+          </UPopover>
+        </UFormField>
+        <UFormField label="Date max" name="dateMax">
+          <UPopover class="w-full">
+            <div class="relative w-full">
+              <UInput
+                class="w-full cursor-pointer text-left"
+                placeholder="Date max"
+                readonly
+                :value="
+                  state.dateMax
+                    ? df.format(toCalendarDate(state.dateMax).toDate(getLocalTimeZone()))
+                    : ''
+                "
+                @click="open"
+              />
+              <button
+                v-if="state.dateMax"
+                aria-label="Effacer la date max"
+                class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                type="button"
+                @click.stop="state.dateMax = ''"
+              >
+                <span class="i-lucide-x text-base"></span>
+              </button>
+            </div>
+            <template #content>
+              <UCalendar v-model="dateMaxCalendar" class="p-2" locale="fr" />
+            </template>
+          </UPopover>
+        </UFormField>
+        <UFormField label="Montant min" name="amountMin">
+          <UInput
+            v-model.number="state.amountMin"
+            class="w-full"
+            placeholder="Montant min"
+            step="0.01"
+            type="number"
+          />
+        </UFormField>
+        <UFormField label="Montant max" name="amountMax">
+          <UInput
+            v-model.number="state.amountMax"
+            class="w-full"
+            placeholder="Montant max"
+            step="0.01"
+            type="number"
+          />
+        </UFormField>
+        <UFormField label="Catégorie" name="category">
+          <USelect v-model="state.category" class="w-full" :items="categoryOptions" />
+        </UFormField>
+        <UFormField label="Tag" name="tag">
+          <USelect v-model="state.tag" class="w-full" :items="tagOptions" />
+        </UFormField>
+      </div>
+    </UForm>
+    <template #footer>
+      <div class="flex justify-end gap-2 mt-4">
         <UButton
           color="primary"
           icon="i-lucide-rotate-ccw"
@@ -203,8 +221,8 @@
           Réinitialiser
         </UButton>
       </div>
-    </div>
-  </UForm>
+    </template>
+  </UCard>
 </template>
 
 <style scoped>

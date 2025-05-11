@@ -404,19 +404,7 @@
             <span v-if="isImporting" class="text-sm text-gray-600 sm:ml-2">Traitement...</span>
           </div>
           <Transition name="fade">
-            <UCard v-if="openPanel === 'filters'" class="mb-6 bg-blue-50 border-blue-200">
-              <div class="flex flex-row items-center justify-between mb-2">
-                <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
-                <UButton
-                  aria-label="Fermer"
-                  color="blue"
-                  icon="i-heroicons-x-mark"
-                  variant="ghost"
-                  @click="closePanel"
-                />
-              </div>
-              <TransactionFilterForm v-model:filters="filters" />
-            </UCard>
+            <TransactionFilterForm v-if="openPanel === 'filters'" v-model:filters="filters" />
           </Transition>
           <Transition name="fade">
             <BulkActionsMenu
