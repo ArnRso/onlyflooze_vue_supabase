@@ -1,166 +1,213 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { watch, computed, reactive } from 'vue'
   import { useCategoriesQuery } from '@/queries/useCategories'
   import { useTagsQuery } from '@/queries/useTags'
   import type { TransactionFilter } from '@/types/TransactionFilter'
+  import { CalendarDate, getLocalTimeZone } from '@internationalized/date'
 
   const props = defineProps<{ filters: TransactionFilter }>()
   const emit = defineEmits<{
     (e: 'update:filters', filters: TransactionFilter): void
   }>()
 
-  // Champs locaux synchronisés avec la prop
-  const label = ref(props.filters.label)
-  const dateMin = ref(props.filters.dateMin)
-  const dateMax = ref(props.filters.dateMax)
-  const amountMin = ref<number | null>(props.filters.amountMin)
-  const amountMax = ref<number | null>(props.filters.amountMax)
-  const selectedCategory = ref<string | null>(props.filters.category)
-  const selectedTag = ref<string | null>(props.filters.tag)
+  // Utilisation d'un state réactif pour UForm
+  const state = reactive({
+    label: props.filters.label,
+    dateMin: props.filters.dateMin,
+    dateMax: props.filters.dateMax,
+    amountMin: props.filters.amountMin,
+    amountMax: props.filters.amountMax,
+    category: props.filters.category,
+    tag: props.filters.tag,
+  })
 
-  // Synchronisation descendante : si la prop change, on met à jour les champs locaux
   watch(
     () => props.filters,
     (newFilters) => {
-      label.value = newFilters.label
-      dateMin.value = newFilters.dateMin
-      dateMax.value = newFilters.dateMax
-      amountMin.value = newFilters.amountMin
-      amountMax.value = newFilters.amountMax
-      selectedCategory.value = newFilters.category
-      selectedTag.value = newFilters.tag
+      state.label = newFilters.label
+      state.dateMin = newFilters.dateMin
+      state.dateMax = newFilters.dateMax
+      state.amountMin = newFilters.amountMin
+      state.amountMax = newFilters.amountMax
+      state.category = newFilters.category
+      state.tag = newFilters.tag
     },
     { deep: true, immediate: true }
+  )
+
+  // Synchronisation descendante
+  watch(
+    () => ({ ...state }),
+    (newState) => {
+      emit('update:filters', { ...newState })
+    },
+    { deep: true }
   )
 
   const { data: categories } = useCategoriesQuery()
   const { data: tags } = useTagsQuery()
 
-  // Émission à chaque modification locale
-  watch(
-    [label, dateMin, dateMax, amountMin, amountMax, selectedCategory, selectedTag],
-    () => {
-      emit('update:filters', {
-        label: label.value,
-        dateMin: dateMin.value,
-        dateMax: dateMax.value,
-        amountMin: amountMin.value,
-        amountMax: amountMax.value,
-        category: selectedCategory.value,
-        tag: selectedTag.value,
-      })
+  const tagOptions = computed(() => [
+    { label: 'Tous', value: null },
+    { label: 'Sans tag', value: '_none' },
+    ...(tags?.value ?? []).map((tag: { label: string; id: string }) => ({
+      label: tag.label,
+      value: tag.id,
+    })),
+  ])
+  const categoryOptions = computed(() => [
+    { label: 'Toutes', value: null },
+    { label: 'Sans catégorie', value: '_none' },
+    ...(categories?.value ?? []).map((cat: { label: string; id: string }) => ({
+      label: cat.label,
+      value: cat.id,
+    })),
+  ])
+
+  // Conversion helpers pour CalendarDate <-> string (yyyy-mm-dd)
+  function toCalendarDate(str?: string) {
+    if (!str) return undefined
+    const [y, m, d] = str.split('-').map(Number)
+    if (!y || !m || !d) return undefined
+    return new CalendarDate(y, m, d)
+  }
+  function toDateString(cd?: CalendarDate) {
+    if (!cd) return ''
+    return `${cd.year.toString().padStart(4, '0')}-${cd.month.toString().padStart(2, '0')}-${cd.day.toString().padStart(2, '0')}`
+  }
+
+  // Formatage date pour affichage dd/mm/yyyy avec Intl.DateTimeFormat
+  const df = new Intl.DateTimeFormat('fr-FR')
+
+  // Pour UCalendar, on utilise CalendarDate
+  const dateMinCalendar = computed({
+    get: () => toCalendarDate(state.dateMin),
+    set: (v) => {
+      state.dateMin = toDateString(v)
     },
-    { deep: true }
-  )
+  })
+  const dateMaxCalendar = computed({
+    get: () => toCalendarDate(state.dateMax),
+    set: (v) => {
+      state.dateMax = toDateString(v)
+    },
+  })
 
   function resetFilters() {
-    label.value = ''
-    dateMin.value = ''
-    dateMax.value = ''
-    amountMin.value = null
-    amountMax.value = null
-    selectedCategory.value = null
-    selectedTag.value = null
+    state.label = ''
+    state.dateMin = ''
+    state.dateMax = ''
+    state.amountMin = null
+    state.amountMax = null
+    state.category = null
+    state.tag = null
   }
 </script>
 
 <template>
-  <form
-    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end w-full mb-6"
-    @submit.prevent
-  >
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Libellé</label>
-      <input v-model="label"
-             class="input"
-             placeholder="Recherche libellé"
-             type="text"
-      />
+  <UForm class="w-full mb-6" :state="state" @submit.prevent>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
+      <UFormField label="Libellé" name="label">
+        <UInput v-model="state.label" class="w-full" placeholder="Recherche libellé" />
+      </UFormField>
+      <UFormField label="Date min" name="dateMin">
+        <UPopover class="w-full">
+          <div class="relative w-full">
+            <UInput
+              class="w-full cursor-pointer text-left"
+              placeholder="Date min"
+              readonly
+              :value="
+                state.dateMin
+                  ? df.format(toCalendarDate(state.dateMin).toDate(getLocalTimeZone()))
+                  : ''
+              "
+              @click="open"
+            />
+            <button
+              v-if="state.dateMin"
+              aria-label="Effacer la date min"
+              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              type="button"
+              @click.stop="state.dateMin = ''"
+            >
+              <span class="i-lucide-x text-base"></span>
+            </button>
+          </div>
+          <template #content>
+            <UCalendar v-model="dateMinCalendar" class="p-2" locale="fr" />
+          </template>
+        </UPopover>
+      </UFormField>
+      <UFormField label="Date max" name="dateMax">
+        <UPopover class="w-full">
+          <div class="relative w-full">
+            <UInput
+              class="w-full cursor-pointer text-left"
+              placeholder="Date max"
+              readonly
+              :value="
+                state.dateMax
+                  ? df.format(toCalendarDate(state.dateMax).toDate(getLocalTimeZone()))
+                  : ''
+              "
+              @click="open"
+            />
+            <button
+              v-if="state.dateMax"
+              aria-label="Effacer la date max"
+              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              type="button"
+              @click.stop="state.dateMax = ''"
+            >
+              <span class="i-lucide-x text-base"></span>
+            </button>
+          </div>
+          <template #content>
+            <UCalendar v-model="dateMaxCalendar" class="p-2" locale="fr" />
+          </template>
+        </UPopover>
+      </UFormField>
+      <UFormField label="Montant min" name="amountMin">
+        <UInput
+          v-model.number="state.amountMin"
+          class="w-full"
+          placeholder="Montant min"
+          step="0.01"
+          type="number"
+        />
+      </UFormField>
+      <UFormField label="Montant max" name="amountMax">
+        <UInput
+          v-model.number="state.amountMax"
+          class="w-full"
+          placeholder="Montant max"
+          step="0.01"
+          type="number"
+        />
+      </UFormField>
+      <UFormField label="Catégorie" name="category">
+        <USelect v-model="state.category" class="w-full" :items="categoryOptions" />
+      </UFormField>
+      <UFormField label="Tag" name="tag">
+        <USelect v-model="state.tag" class="w-full" :items="tagOptions" />
+      </UFormField>
+      <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-end gap-2">
+        <UButton
+          color="primary"
+          icon="i-lucide-rotate-ccw"
+          type="button"
+          variant="outline"
+          @click="resetFilters"
+        >
+          Réinitialiser
+        </UButton>
+      </div>
     </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Date min</label>
-      <input v-model="dateMin"
-             class="input"
-             placeholder="Date min"
-             type="date"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Date max</label>
-      <input v-model="dateMax"
-             class="input"
-             placeholder="Date max"
-             type="date"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Montant min</label>
-      <input
-        v-model.number="amountMin"
-        class="input"
-        placeholder="Montant min"
-        step="0.01"
-        type="number"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Montant max</label>
-      <input
-        v-model.number="amountMax"
-        class="input"
-        placeholder="Montant max"
-        step="0.01"
-        type="number"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-      <select v-model="selectedCategory" class="input">
-        <option :value="null">Toutes</option>
-        <option value="_none">Sans catégorie</option>
-        <option v-for="cat in categories ?? []" :key="cat.id" :value="cat.id">
-          {{ cat.label }}
-        </option>
-      </select>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Tag</label>
-      <select v-model="selectedTag" class="input">
-        <option :value="null">Tous</option>
-        <option value="_none">Sans tag</option>
-        <option v-for="tag in tags ?? []" :key="tag.id" :value="tag.id">
-          {{ tag.label }}
-        </option>
-      </select>
-    </div>
-    <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-end gap-2">
-      <button
-        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded shadow"
-        type="button"
-        @click="resetFilters"
-      >
-        Réinitialiser
-      </button>
-    </div>
-  </form>
+  </UForm>
 </template>
 
 <style scoped>
-  .input {
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    width: 100%;
-    min-width: 0;
-    font-size: 1rem;
-    background: #fff;
-    transition: border-color 0.2s;
-  }
-  .input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 1px #6366f1;
-  }
   form > div {
     min-width: 0;
   }
