@@ -91,21 +91,23 @@
           {{ formatAmount(tx.amount) }}
         </td>
         <td class="px-4 py-2 text-center">
-          <button
-            class="text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors focus:outline-none"
-            title="Éditer la transaction"
-            @click="$router.push({ name: 'transaction-edit', params: { id: tx.id } })"
-          >
-            <MdiPencil />
-          </button>
-          <button
-            class="text-red-600 hover:bg-red-100 rounded-full p-1 ml-2 transition-colors focus:outline-none"
-            :disabled="deleteStatus === 'pending'"
-            title="Supprimer la transaction"
-            @click="deleteTransaction(tx.id)"
-          >
-            <MdiTrashCan />
-          </button>
+          <div class="flex items-center justify-center">
+            <button
+              class="text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors focus:outline-none"
+              title="Éditer la transaction"
+              @click="$router.push({ name: 'transaction-edit', params: { id: tx.id } })"
+            >
+              <MdiPencil />
+            </button>
+            <button
+              class="text-red-600 hover:bg-red-100 rounded-full p-1 ml-2 transition-colors focus:outline-none"
+              :disabled="deleteStatus === 'pending'"
+              title="Supprimer la transaction"
+              @click="deleteTransaction(tx.id)"
+            >
+              <MdiTrashCan />
+            </button>
+          </div>
         </td>
       </tr>
     </tbody>

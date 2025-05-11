@@ -66,7 +66,7 @@
 
 <template>
   <form
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end w-full mb-6"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end w-full mb-6"
     @submit.prevent
   >
     <div>
@@ -133,7 +133,7 @@
         </option>
       </select>
     </div>
-    <div class="sm:col-span-2 md:col-span-4 flex justify-end gap-2">
+    <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-end gap-2">
       <button
         class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded shadow"
         type="button"

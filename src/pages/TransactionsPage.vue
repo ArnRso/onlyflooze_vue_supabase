@@ -316,21 +316,21 @@
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+    <div class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 sm:p-8">
       <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Transactions</h1>
       <!-- Nouveau bandeau de boutons -->
       <div
-        class="flex flex-row items-center gap-4 mb-8 px-4 py-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
+        class="flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 mb-8 px-4 py-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
       >
         <button
-          class="bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
+          class="w-full sm:w-auto bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
           type="button"
           @click="openPanel = openPanel === 'create' ? null : 'create'"
         >
-          {{ openPanel === 'create' ? 'Masquer la création' : 'Créer transaction' }}
+          {{ openPanel === 'create' ? 'Masquer création' : 'Créer transaction' }}
         </button>
         <button
-          class="bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 disabled:opacity-50"
+          class="w-full sm:w-auto bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 disabled:opacity-50"
           :class="{ 'opacity-50': isImporting }"
           :disabled="isImporting"
           type="button"
@@ -347,11 +347,11 @@
           @change="handleFileUpload"
         />
         <button
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow relative"
+          class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow relative"
           type="button"
           @click="openPanel = openPanel === 'filters' ? null : 'filters'"
         >
-          {{ openPanel === 'filters' ? 'Masquer la recherche' : 'Afficher la recherche' }}
+          {{ openPanel === 'filters' ? 'Masquer recherche' : 'Afficher recherche' }}
           <span
             v-if="activeFiltersCount > 0"
             class="ml-2 inline-block bg-white text-gray-700 font-bold rounded-full px-2 text-xs border border-gray-400 align-middle"
@@ -360,11 +360,11 @@
           </span>
         </button>
         <button
-          class="bg-orange-500 text-white px-3 py-1.5 rounded shadow hover:bg-orange-600 relative"
+          class="w-full sm:w-auto bg-orange-500 text-white px-3 py-1.5 rounded shadow hover:bg-orange-600 relative"
           type="button"
           @click="openPanel = openPanel === 'bulk' ? null : 'bulk'"
         >
-          {{ openPanel === 'bulk' ? 'Masquer les actions en lot' : 'Actions en lot' }}
+          {{ openPanel === 'bulk' ? 'Masquer actions lot' : 'Actions en lot' }}
           <span
             v-if="selectedTransactions.length > 0"
             class="ml-2 inline-block bg-white text-orange-600 font-bold rounded-full px-2 text-xs border border-orange-400 align-middle"
@@ -372,7 +372,7 @@
             {{ selectedTransactions.length }}
           </span>
         </button>
-        <span v-if="isImporting" class="text-sm text-gray-600 ml-2">Traitement...</span>
+        <span v-if="isImporting" class="text-sm text-gray-600 sm:ml-2">Traitement...</span>
       </div>
       <!-- Fin du bandeau de boutons -->
       <Transition name="fade">
