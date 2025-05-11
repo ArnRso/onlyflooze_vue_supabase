@@ -231,17 +231,6 @@
   const router = useRouter()
 
   // Helpers pour parser/stringifier les filtres
-  function parseFiltersFromQuery(query: Record<string, unknown>): TransactionFilter {
-    return {
-      label: typeof query.label === 'string' ? query.label : '',
-      dateMin: typeof query.dateMin === 'string' ? query.dateMin : '',
-      dateMax: typeof query.dateMax === 'string' ? query.dateMax : '',
-      amountMin: query.amountMin !== undefined ? Number(query.amountMin) : null,
-      amountMax: query.amountMax !== undefined ? Number(query.amountMax) : null,
-      category: typeof query.category === 'string' ? query.category : null,
-      tag: typeof query.tag === 'string' ? query.tag : null,
-    }
-  }
   function filtersToQuery(filters: TransactionFilter): Record<string, string> {
     const q: Record<string, string> = {}
     if (filters.label) q.label = filters.label
@@ -256,22 +245,80 @@
     return q
   }
 
+  // Helpers pour parser les query params (pour robustesse)
+  function getQueryString(val: unknown): string {
+    if (Array.isArray(val)) return val[0] ?? ''
+    return typeof val === 'string' ? val : ''
+  }
+  function getQueryNumber(val: unknown): number | null {
+    const s = getQueryString(val)
+    return s !== '' ? Number(s) : null
+  }
+  function queryToFilters(query: Record<string, unknown>): {
+    filters: TransactionFilter
+    page: number
+    pageSize: number
+  } {
+    return {
+      filters: {
+        label: getQueryString(query.label),
+        dateMin: getQueryString(query.dateMin),
+        dateMax: getQueryString(query.dateMax),
+        amountMin: getQueryNumber(query.amountMin),
+        amountMax: getQueryNumber(query.amountMax),
+        category: getQueryString(query.category) || null,
+        tag: getQueryString(query.tag) || null,
+      },
+      page: query.page ? Number(getQueryString(query.page)) : 1,
+      pageSize: query.pageSize ? Number(getQueryString(query.pageSize)) : 50,
+    }
+  }
+
   // Initialisation depuis l'URL
-  page.value = Number(route.query.page) || 1
-  pageSize.value = Number(route.query.pageSize) || 50
-  filters.value = parseFiltersFromQuery(route.query)
+  const {
+    filters: initialFilters,
+    page: initialPage,
+    pageSize: initialPageSize,
+  } = queryToFilters(route.query)
+  filters.value = { ...filters.value, ...initialFilters }
+  page.value = initialPage
+  pageSize.value = initialPageSize
 
   // Sync URL à chaque changement
-  watch([page, pageSize, filters], ([p, ps, f]) => {
-    router.replace({
-      query: {
-        ...route.query,
-        page: p !== 1 ? String(p) : undefined,
-        pageSize: ps !== 50 ? String(ps) : undefined,
-        ...filtersToQuery(f),
-      },
-    })
-  })
+  watch(
+    [filters, page, pageSize],
+    ([newFilters, newPage, newPageSize]) => {
+      const query = {
+        ...filtersToQuery(newFilters),
+        page: newPage !== 1 ? String(newPage) : undefined,
+        pageSize: newPageSize !== 50 ? String(newPageSize) : undefined,
+      }
+      router.replace({ query })
+    },
+    { deep: true }
+  )
+
+  // Watch pour réagir aux changements d'URL (ex: navigation arrière)
+  watch(
+    () => route.query,
+    (newQuery) => {
+      const { filters: qFilters, page: qPage, pageSize: qPageSize } = queryToFilters(newQuery)
+      // Mettre à jour que si différent pour éviter de casser la pagination
+      const filtersChanged =
+        JSON.stringify(filters.value) !== JSON.stringify({ ...filters.value, ...qFilters })
+      const pageChanged = page.value !== qPage
+      const pageSizeChanged = pageSize.value !== qPageSize
+      if (filtersChanged) {
+        filters.value = { ...filters.value, ...qFilters }
+      }
+      if (pageChanged) {
+        page.value = qPage
+      }
+      if (pageSizeChanged) {
+        pageSize.value = qPageSize
+      }
+    }
+  )
 </script>
 
 <template>
