@@ -64,4 +64,4 @@ Coding standards, domain knowledge, and preferences that AI should follow.
 - Follow business logic defined in existing services and queries.
 - Prefer the use of reusable UI components.
 - Avoid writing custom CSS as much as possible: always use Tailwind CSS for styling whenever possible.
-- Use shadcn-vue components for UI whenever possible to ensure consistency and accessibility.
+- Use Nuxt UI components (https://ui.nuxt.com/) for all UI. This ensures consistency, accessibility, and seamless integration with the Nuxt/Vue ecosystem.

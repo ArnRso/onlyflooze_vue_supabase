@@ -7,8 +7,10 @@
 </script>
 
 <template>
-  <AppHeader />
-  <RouterView />
+  <UApp>
+    <AppHeader />
+    <RouterView />
+  </UApp>
 </template>
 
 <style scoped></style>
