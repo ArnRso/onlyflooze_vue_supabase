@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { useCategoriesQuery } from '@/queries/useCategories'
   import { useTagsQuery } from '@/queries/useTags'
   import { useAddTransactionMutation } from '@/queries/useTransactions'
   import { useAddTransactionTagMutation } from '@/queries/useTransactionTags'
+  import { CalendarDate, getLocalTimeZone } from '@internationalized/date'
 
   const emit = defineEmits(['close', 'created'])
 
@@ -14,6 +15,21 @@
   const tag = ref<string | null>(null)
   const error = ref('')
   const isLoading = ref(false)
+
+  const dateCalendar = computed({
+    get: () => {
+      if (!date.value) return undefined
+      const [y, m, d] = date.value.split('-').map(Number)
+      if (!y || !m || !d) return undefined
+      return new CalendarDate(y, m, d)
+    },
+    set: (v) => {
+      date.value = v
+        ? `${v.year.toString().padStart(4, '0')}-${v.month.toString().padStart(2, '0')}-${v.day.toString().padStart(2, '0')}`
+        : ''
+    },
+  })
+  const df = new Intl.DateTimeFormat('fr-FR')
 
   const { data: categories } = useCategoriesQuery()
   const { data: tags } = useTagsQuery()
@@ -53,84 +69,108 @@
 </script>
 
 <template>
-  <div class="mb-6 px-4 py-3 bg-indigo-50 rounded-lg shadow-sm border border-indigo-200">
-    <div class="flex flex-row items-center justify-between mb-2">
-      <h2 class="text-lg font-bold text-indigo-700">Créer une transaction</h2>
-      <button
-        aria-label="Fermer"
-        class="text-indigo-500 hover:text-indigo-700 font-semibold"
-        @click="$emit('close')"
-      >
-        ✕
-      </button>
-    </div>
-    <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-      <div>
-        <label class="block text-sm font-medium mb-1">Libellé *</label>
-        <input v-model="label"
-               class="input"
-               required
-               type="text"
+  <UCard class="mb-6 px-4 py-3">
+    <template #header>
+      <div class="flex flex-row items-center justify-between">
+        <h2 class="text-lg font-bold text-primary">Créer une transaction</h2>
+        <UButton
+          aria-label="Fermer"
+          color="gray"
+          icon="i-lucide-x"
+          size="sm"
+          variant="ghost"
+          @click="$emit('close')"
         />
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Date *</label>
-        <input v-model="date"
-               class="input"
-               required
-               type="date"
+    </template>
+    <UForm class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+      <UFormField label="Libellé *" name="label">
+        <UInput v-model="label"
+                class="w-full"
+                placeholder="Libellé"
+                required
         />
+      </UFormField>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <UFormField class="flex-1" label="Date *" name="date">
+          <UPopover class="w-full">
+            <div class="relative w-full">
+              <UInput
+                class="w-full cursor-pointer text-left"
+                icon="i-lucide-calendar"
+                placeholder="Date"
+                readonly
+                required
+                :value="date.value ? df.format(dateCalendar.value.toDate(getLocalTimeZone())) : ''"
+                @click="open"
+              />
+              <button
+                v-if="date.value"
+                aria-label="Effacer la date"
+                class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                type="button"
+                @click.stop="date.value = ''"
+              >
+                <span class="i-lucide-x text-base"></span>
+              </button>
+            </div>
+            <template #content>
+              <UCalendar v-model="dateCalendar" class="p-2" locale="fr" />
+            </template>
+          </UPopover>
+        </UFormField>
+        <UFormField class="flex-1" label="Montant *" name="amount">
+          <UInput
+            v-model.number="amount"
+            class="w-full"
+            placeholder="Montant"
+            required
+            step="0.01"
+            type="number"
+          />
+        </UFormField>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Montant *</label>
-        <input v-model.number="amount"
-               class="input"
-               required
-               step="0.01"
-               type="number"
-        />
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Catégorie</label>
-        <select v-model="category" class="input">
-          <option :value="null">Aucune</option>
-          <option v-for="cat in categories ?? []" :key="cat.id" :value="cat.id">
-            {{ cat.label }}
-          </option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Tag</label>
-        <select v-model="tag" class="input">
-          <option :value="null">Aucun</option>
-          <option v-for="t in tags ?? []" :key="t.id" :value="t.id">{{ t.label }}</option>
-        </select>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <UFormField class="flex-1" label="Catégorie" name="category">
+          <USelect
+            v-model="category"
+            class="w-full"
+            :items="[
+              { label: 'Aucune', value: null },
+              ...((categories ?? []) as Array<{ label: string; id: string }>).map((cat) => ({
+                label: cat.label,
+                value: cat.id,
+              })),
+            ]"
+          />
+        </UFormField>
+        <UFormField class="flex-1" label="Tag" name="tag">
+          <USelect
+            v-model="tag"
+            class="w-full"
+            :items="[
+              { label: 'Aucun', value: null },
+              ...((tags ?? []) as Array<{ label: string; id: string }>).map((t) => ({
+                label: t.label,
+                value: t.id,
+              })),
+            ]"
+          />
+        </UFormField>
       </div>
       <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
-      <button
-        class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 disabled:opacity-50"
-        :disabled="isLoading"
+      <UButton block
+               color="primary"
+               icon="i-lucide-plus"
+               :loading="isLoading"
+               type="submit"
       >
-        {{ isLoading ? 'Création...' : 'Créer' }}
-      </button>
-    </form>
-  </div>
+        Créer
+      </UButton>
+    </UForm>
+  </UCard>
 </template>
 
 <style scoped>
-  .input {
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    width: 100%;
-    min-width: 0;
-    font-size: 1rem;
-    background: #fff;
-    transition: border-color 0.2s;
-  }
-  .input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 1px #6366f1;
-  }
+  /* Plus besoin de .input, tout est Nuxt UI */
 </style>
