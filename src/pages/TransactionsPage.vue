@@ -5,7 +5,7 @@
   import { computed, ref, watch } from 'vue'
   import TransactionList from '@/components/TransactionList.vue'
   import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
-  import BulkActionsMenu from '@/components/BulkActionsMenu.vue'
+  import BulkActionsMenu from '@/components/TransactionBulkActions.vue'
   import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
 
