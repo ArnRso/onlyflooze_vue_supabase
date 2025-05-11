@@ -17,14 +17,14 @@
       <p class="mb-2">{{ selectedTransactions.length }} transaction(s) sélectionnée(s).</p>
       <form class="flex flex-col gap-4">
         <!-- Attribution catégorie -->
-        <div class="flex flex-row items-center gap-2">
-          <label class="font-medium">Catégorie :</label>
-          <select v-model="selectedCategoryId" class="input">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <label class="font-medium shrink-0">Catégorie :</label>
+          <select v-model="selectedCategoryId" class="input w-full sm:w-auto grow">
             <option :value="null">Aucune</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
           </select>
           <button
-            class="bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
+            class="w-full sm:w-auto bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
             :disabled="!selectedCategoryId"
             type="button"
             @click="assignCategoryToAll"
@@ -33,33 +33,35 @@
           </button>
         </div>
         <!-- Ajout/suppression tag -->
-        <div class="flex flex-row items-center gap-2">
-          <label class="font-medium">Tag :</label>
-          <select v-model="selectedTagId" class="input">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <label class="font-medium shrink-0">Tag :</label>
+          <select v-model="selectedTagId" class="input w-full sm:w-auto grow">
             <option :value="null">Choisir un tag</option>
             <option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.label }}</option>
           </select>
-          <button
-            class="bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700"
-            :disabled="!selectedTagId"
-            type="button"
-            @click="addTagToAll"
-          >
-            Ajouter à tous
-          </button>
-          <button
-            class="bg-yellow-500 text-white px-3 py-1.5 rounded shadow hover:bg-yellow-600"
-            :disabled="!selectedTagId"
-            type="button"
-            @click="removeTagFromAll"
-          >
-            Retirer de tous
-          </button>
+          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              class="w-full sm:w-auto bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700"
+              :disabled="!selectedTagId"
+              type="button"
+              @click="addTagToAll"
+            >
+              Ajouter à tous
+            </button>
+            <button
+              class="w-full sm:w-auto bg-yellow-500 text-white px-3 py-1.5 rounded shadow hover:bg-yellow-600"
+              :disabled="!selectedTagId"
+              type="button"
+              @click="removeTagFromAll"
+            >
+              Retirer de tous
+            </button>
+          </div>
         </div>
         <!-- Suppression en masse -->
-        <div class="flex flex-row items-center gap-2">
+        <div class="flex flex-col sm:flex-row items-center gap-2">
           <button
-            class="bg-red-600 text-white px-3 py-1.5 rounded shadow hover:bg-red-700"
+            class="w-full sm:w-auto bg-red-600 text-white px-3 py-1.5 rounded shadow hover:bg-red-700"
             type="button"
             @click="deleteAll"
           >
