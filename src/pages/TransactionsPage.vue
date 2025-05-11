@@ -1,19 +1,15 @@
 <script lang="ts" setup>
-  import { useRouter, useRoute } from 'vue-router'
-  import type { RouteLocationNormalizedLoaded } from 'vue-router'
   import { useAddBulkTransactionsMutation, useTransactionsQuery } from '@/queries/useTransactions'
   import { computed, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
   import TransactionList from '@/components/TransactionList.vue'
   import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
   import BulkActionsMenu from '@/components/TransactionBulkActions.vue'
   import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
 
-  const router = useRouter()
-  const route = useRoute()
   const page = ref(1)
   const pageSize = ref(50)
-
   const filters = ref<TransactionFilter>({
     label: '',
     dateMin: '',
@@ -45,94 +41,6 @@
     return count
   })
 
-  // --- Synchronisation URL <-> filtres/page/pageSize ---
-  function filtersToQuery(f: TransactionFilter, pageVal: number, pageSizeVal: number) {
-    const q: Record<string, string> = {}
-    if (f.label) q.label = f.label
-    if (f.dateMin) q.dateMin = f.dateMin
-    if (f.dateMax) q.dateMax = f.dateMax
-    if (f.amountMin !== null && f.amountMin !== undefined) q.amountMin = String(f.amountMin)
-    if (f.amountMax !== null && f.amountMax !== undefined) q.amountMax = String(f.amountMax)
-    if (f.category) q.category = String(f.category)
-    if (f.tag) q.tag = String(f.tag)
-    if (pageVal && pageVal !== 1) q.page = String(pageVal)
-    if (pageSizeVal && pageSizeVal !== 50) q.pageSize = String(pageSizeVal)
-    return q
-  }
-
-  function getQueryString(val: unknown): string {
-    if (Array.isArray(val)) return val[0] ?? ''
-    return typeof val === 'string' ? val : ''
-  }
-
-  function getQueryNumber(val: unknown): number | null {
-    const s = getQueryString(val)
-    return s !== '' ? Number(s) : null
-  }
-
-  function queryToFilters(query: RouteLocationNormalizedLoaded['query']): {
-    filters: TransactionFilter
-    page: number
-    pageSize: number
-  } {
-    return {
-      filters: {
-        label: getQueryString(query.label),
-        dateMin: getQueryString(query.dateMin),
-        dateMax: getQueryString(query.dateMax),
-        amountMin: getQueryNumber(query.amountMin),
-        amountMax: getQueryNumber(query.amountMax),
-        category: getQueryString(query.category) || null,
-        tag: getQueryString(query.tag) || null,
-      },
-      page: query.page ? Number(getQueryString(query.page)) : 1,
-      pageSize: query.pageSize ? Number(getQueryString(query.pageSize)) : 50,
-    }
-  }
-
-  // Initialisation à partir de l'URL
-  const {
-    filters: initialFilters,
-    page: initialPage,
-    pageSize: initialPageSize,
-  } = queryToFilters(route.query)
-  filters.value = { ...filters.value, ...initialFilters }
-  page.value = initialPage
-  pageSize.value = initialPageSize
-
-  // Watch pour mettre à jour l'URL quand filtres/page/pageSize changent
-  watch(
-    [filters, page, pageSize],
-    ([newFilters, newPage, newPageSize]) => {
-      const query = filtersToQuery(newFilters, newPage, newPageSize)
-      router.replace({ query })
-    },
-    { deep: true }
-  )
-
-  // Watch pour réagir aux changements d'URL (ex: navigation arrière)
-  watch(
-    () => route.query,
-    (newQuery) => {
-      const { filters: qFilters, page: qPage, pageSize: qPageSize } = queryToFilters(newQuery)
-      // Ne mettre à jour que si différent pour éviter de casser la pagination
-      const filtersChanged =
-        JSON.stringify(filters.value) !== JSON.stringify({ ...filters.value, ...qFilters })
-      const pageChanged = page.value !== qPage
-      const pageSizeChanged = pageSize.value !== qPageSize
-      if (filtersChanged) {
-        filters.value = { ...filters.value, ...qFilters }
-      }
-      if (pageChanged) {
-        page.value = qPage
-      }
-      if (pageSizeChanged) {
-        pageSize.value = qPageSize
-      }
-    }
-  )
-  // --- Fin synchronisation URL <-> filtres/page/pageSize ---
-
   const {
     data: transactionsResponse,
     isLoading,
@@ -140,16 +48,24 @@
     refetch: refetchPaginatedTransactions,
   } = useTransactionsQuery(page, pageSize, filters, false)
 
+  // Sécurité : page ne doit jamais être < 1
+  watch(page, (val) => {
+    if (val < 1 || isNaN(val)) page.value = 1
+    else refetchPaginatedTransactions() // Ajout : refetch à chaque changement de page
+  })
+
+  // Ajout : refetch quand pageSize change
+  watch(pageSize, () => {
+    page.value = 1 // On revient à la première page si la taille change
+    refetchPaginatedTransactions()
+  })
+
   const transactions = computed(() => transactionsResponse.value?.data ?? [])
   const total = computed(() => transactionsResponse.value?.count ?? 0)
-  const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+  const totalPages = computed(() =>
+    pageSize.value > 0 ? Math.ceil(total.value / pageSize.value) : 1
+  )
   const deleteError = ref('')
-
-  function goToPage(p: number) {
-    if (p >= 1 && p <= totalPages.value) {
-      page.value = p
-    }
-  }
 
   function handleTransactionCreated() {
     refetchPaginatedTransactions()
@@ -310,170 +226,231 @@
       }
     }
   }
+
+  const route = useRoute()
+  const router = useRouter()
+
+  // Helpers pour parser/stringifier les filtres
+  function parseFiltersFromQuery(query: Record<string, unknown>): TransactionFilter {
+    return {
+      label: typeof query.label === 'string' ? query.label : '',
+      dateMin: typeof query.dateMin === 'string' ? query.dateMin : '',
+      dateMax: typeof query.dateMax === 'string' ? query.dateMax : '',
+      amountMin: query.amountMin !== undefined ? Number(query.amountMin) : null,
+      amountMax: query.amountMax !== undefined ? Number(query.amountMax) : null,
+      category: typeof query.category === 'string' ? query.category : null,
+      tag: typeof query.tag === 'string' ? query.tag : null,
+    }
+  }
+  function filtersToQuery(filters: TransactionFilter): Record<string, string> {
+    const q: Record<string, string> = {}
+    if (filters.label) q.label = filters.label
+    if (filters.dateMin) q.dateMin = filters.dateMin
+    if (filters.dateMax) q.dateMax = filters.dateMax
+    if (filters.amountMin !== null && filters.amountMin !== undefined)
+      q.amountMin = String(filters.amountMin)
+    if (filters.amountMax !== null && filters.amountMax !== undefined)
+      q.amountMax = String(filters.amountMax)
+    if (filters.category) q.category = filters.category
+    if (filters.tag) q.tag = filters.tag
+    return q
+  }
+
+  // Initialisation depuis l'URL
+  page.value = Number(route.query.page) || 1
+  pageSize.value = Number(route.query.pageSize) || 50
+  filters.value = parseFiltersFromQuery(route.query)
+
+  // Sync URL à chaque changement
+  watch([page, pageSize, filters], ([p, ps, f]) => {
+    router.replace({
+      query: {
+        ...route.query,
+        page: p !== 1 ? String(p) : undefined,
+        pageSize: ps !== 50 ? String(ps) : undefined,
+        ...filtersToQuery(f),
+      },
+    })
+  })
 </script>
 
 <template>
   <div
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div class="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 sm:p-8">
-      <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Transactions</h1>
-      <!-- Nouveau bandeau de boutons -->
-      <div
-        class="flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 mb-8 px-4 py-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
-      >
-        <button
-          class="w-full sm:w-auto bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
-          type="button"
-          @click="openPanel = openPanel === 'create' ? null : 'create'"
+    <UCard
+      class="max-w-7xl w-full mx-auto"
+      :ui="{ body: { padding: 'p-0 sm:p-0' }, base: 'rounded-xl shadow-md overflow-hidden' }"
+    >
+      <div class="p-6 sm:p-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Transactions</h1>
+        <!-- Bandeau de boutons avec Nuxt UI -->
+        <div
+          class="flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 mb-8 px-4 py-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
         >
-          {{ openPanel === 'create' ? 'Masquer création' : 'Créer transaction' }}
-        </button>
-        <button
-          class="w-full sm:w-auto bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 disabled:opacity-50"
-          :class="{ 'opacity-50': isImporting }"
-          :disabled="isImporting"
-          type="button"
-          @click="openFileDialog"
-        >
-          {{ isImporting ? 'Import en cours...' : 'Importer CSV' }}
-        </button>
-        <input
-          id="csv-upload"
-          ref="fileInputRef"
-          accept=".csv"
-          class="hidden"
-          type="file"
-          @change="handleFileUpload"
-        />
-        <button
-          class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-3 py-1.5 rounded shadow relative"
-          type="button"
-          @click="openPanel = openPanel === 'filters' ? null : 'filters'"
-        >
-          {{ openPanel === 'filters' ? 'Masquer recherche' : 'Afficher recherche' }}
-          <span
-            v-if="activeFiltersCount > 0"
-            class="ml-2 inline-block bg-white text-gray-700 font-bold rounded-full px-2 text-xs border border-gray-400 align-middle"
+          <UButton
+            block
+            class="w-full sm:w-auto"
+            color="primary"
+            icon="i-heroicons-plus"
+            :label="openPanel === 'create' ? 'Masquer création' : 'Créer transaction'"
+            size="md"
+            variant="outline"
+            @click="openPanel = openPanel === 'create' ? null : 'create'"
+          />
+          <UButton
+            block
+            class="w-full sm:w-auto"
+            color="primary"
+            :disabled="isImporting"
+            icon="i-heroicons-arrow-up-tray"
+            :label="isImporting ? 'Import en cours...' : 'Importer CSV'"
+            :loading="isImporting"
+            size="md"
+            variant="outline"
+            @click="openFileDialog"
           >
-            {{ activeFiltersCount }}
-          </span>
-        </button>
-        <button
-          class="w-full sm:w-auto bg-orange-500 text-white px-3 py-1.5 rounded shadow hover:bg-orange-600 relative"
-          type="button"
-          @click="openPanel = openPanel === 'bulk' ? null : 'bulk'"
-        >
-          {{ openPanel === 'bulk' ? 'Masquer actions lot' : 'Actions en lot' }}
-          <span
-            v-if="selectedTransactions.length > 0"
-            class="ml-2 inline-block bg-white text-orange-600 font-bold rounded-full px-2 text-xs border border-orange-400 align-middle"
+            <template v-if="isImporting" #trailing>
+              <UBadge class="ml-2" color="primary" variant="soft">...</UBadge>
+            </template>
+          </UButton>
+          <input
+            id="csv-upload"
+            ref="fileInputRef"
+            accept=".csv"
+            class="hidden"
+            type="file"
+            @change="handleFileUpload"
+          />
+          <UButton
+            block
+            class="w-full sm:w-auto"
+            color="primary"
+            icon="i-heroicons-magnifying-glass"
+            :label="openPanel === 'filters' ? 'Masquer recherche' : 'Recherche & filtres'"
+            size="md"
+            variant="outline"
+            @click="openPanel = openPanel === 'filters' ? null : 'filters'"
           >
-            {{ selectedTransactions.length }}
-          </span>
-        </button>
-        <span v-if="isImporting" class="text-sm text-gray-600 sm:ml-2">Traitement...</span>
-      </div>
-      <!-- Fin du bandeau de boutons -->
-      <Transition name="fade">
-        <div v-if="openPanel === 'filters'">
-          <div class="mb-6 px-4 py-3 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
+            <template v-if="activeFiltersCount > 0" #trailing>
+              <UBadge class="ml-2" color="primary" variant="soft">
+                {{ activeFiltersCount }}
+              </UBadge>
+            </template>
+          </UButton>
+          <UButton
+            block
+            class="w-full sm:w-auto"
+            color="warning"
+            icon="i-heroicons-rectangle-group"
+            :label="openPanel === 'bulk' ? 'Masquer actions lot' : 'Actions en lot'"
+            size="md"
+            variant="outline"
+            @click="openPanel = openPanel === 'bulk' ? null : 'bulk'"
+          >
+            <template v-if="selectedTransactions.length > 0" #trailing>
+              <UBadge class="ml-2" color="warning" variant="soft">
+                {{ selectedTransactions.length }}
+              </UBadge>
+            </template>
+          </UButton>
+          <span v-if="isImporting" class="text-sm text-gray-600 sm:ml-2">Traitement...</span>
+        </div>
+        <Transition name="fade">
+          <UCard v-if="openPanel === 'filters'" class="mb-6 bg-blue-50 border-blue-200">
             <div class="flex flex-row items-center justify-between mb-2">
               <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
-              <button
+              <UButton
                 aria-label="Fermer"
-                class="text-blue-500 hover:text-blue-700 font-semibold"
+                color="blue"
+                icon="i-heroicons-x-mark"
+                variant="ghost"
                 @click="closePanel"
-              >
-                ✕
-              </button>
+              />
             </div>
             <TransactionFilterForm v-model:filters="filters" />
+          </UCard>
+        </Transition>
+        <Transition name="fade">
+          <BulkActionsMenu
+            v-if="openPanel === 'bulk'"
+            :selected-transactions="selectedTransactions"
+            @close="closePanel"
+          />
+        </Transition>
+        <Transition name="fade">
+          <TransactionCreatePanel
+            v-if="openPanel === 'create'"
+            @close="closePanel"
+            @created="handleTransactionCreated"
+          />
+        </Transition>
+        <UAlert v-if="importMessage"
+                class="mb-4 text-center"
+                color="success"
+                variant="soft"
+        >
+          {{ importMessage }}
+        </UAlert>
+        <UAlert v-if="importError"
+                class="mb-4 text-center"
+                color="error"
+                variant="soft"
+        >
+          {{ importError }}
+        </UAlert>
+        <UAlert v-if="error"
+                class="mb-4 text-center"
+                color="error"
+                variant="soft"
+        >
+          {{ error.message }}
+        </UAlert>
+        <UAlert v-if="deleteError"
+                class="mb-4 text-center"
+                color="error"
+                variant="soft"
+        >
+          {{ deleteError }}
+        </UAlert>
+        <div class="mb-4 mt-6 flex flex-wrap gap-2 justify-between items-center text-sm">
+          <UPagination
+            v-if="totalPages > 1"
+            v-model:page="page"
+            :items-per-page="pageSize"
+            show-first
+            show-last
+            :total="total"
+          />
+          <div class="flex items-center gap-2 ml-auto">
+            <label for="page-size-select">Résultats par page :</label>
+            <USelect
+              id="page-size-select"
+              v-model="pageSize"
+              class="w-32"
+              :items="[
+                { label: '10', value: 10 },
+                { label: '25', value: 25 },
+                { label: '50', value: 50 },
+                { label: '100', value: 100 },
+                { label: '500', value: 500 },
+                { label: '1000 (max)', value: 1000 },
+              ]"
+              @change="page = 1"
+            />
           </div>
         </div>
-      </Transition>
-      <Transition name="fade">
-        <BulkActionsMenu
-          v-if="openPanel === 'bulk'"
-          :selected-transactions="selectedTransactions"
-          @close="closePanel"
-        />
-      </Transition>
-      <Transition name="fade">
-        <TransactionCreatePanel
-          v-if="openPanel === 'create'"
-          @close="closePanel"
-          @created="handleTransactionCreated"
-        />
-      </Transition>
-      <div v-if="importMessage" class="mb-4 p-3 bg-green-100 text-green-800 rounded text-center">
-        {{ importMessage }}
-      </div>
-      <div v-if="importError" class="mb-4 p-3 bg-red-100 text-red-800 rounded text-center">
-        {{ importError }}
-      </div>
-      <div v-if="error" class="text-red-600 mb-4 text-center">
-        {{ error.message }}
-      </div>
-      <div v-if="deleteError" class="text-red-600 mb-4 text-center">
-        {{ deleteError }}
-      </div>
-      <!-- Pagination + sélecteur pageSize -->
-      <div
-        v-if="totalPages > 1"
-        class="mb-4 mt-6 flex flex-wrap gap-2 justify-between items-center text-sm"
-      >
-        <div class="flex items-center gap-2">
-          <a
-            :class="[
-              'text-indigo-600 hover:underline',
-              { 'opacity-40 pointer-events-none': page === 1 },
-            ]"
-            href="#"
-            @click.prevent="() => goToPage(page - 1)"
-          >
-            Précédent
-          </a>
-          <span>Page {{ page }} sur {{ totalPages }}</span>
-          <a
-            :class="[
-              'text-indigo-600 hover:underline',
-              { 'opacity-40 pointer-events-none': page === totalPages },
-            ]"
-            href="#"
-            @click.prevent="() => goToPage(page + 1)"
-          >
-            Suivant
-          </a>
-        </div>
-        <div class="flex items-center gap-2">
-          <label for="page-size-select">Résultats par page :</label>
-          <select
-            id="page-size-select"
-            v-model.number="pageSize"
-            class="border rounded px-2 py-1"
-            @change="page = 1"
-          >
-            <option :value="10">10</option>
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-            <option :value="500">500</option>
-            <option :value="1000">1000 (max)</option>
-          </select>
+        <div v-if="isLoading" class="text-center">Chargement...</div>
+        <div v-else>
+          <div class="overflow-x-auto">
+            <TransactionList
+              :transactions="transactions"
+              @update:selected="selectedTransactions = $event"
+            />
+          </div>
         </div>
       </div>
-      <div v-else style="height: 24px"></div>
-      <div v-if="isLoading" class="text-center">Chargement...</div>
-      <div v-else>
-        <div class="overflow-x-auto">
-          <TransactionList
-            :transactions="transactions"
-            @update:selected="selectedTransactions = $event"
-          />
-        </div>
-      </div>
-    </div>
+    </UCard>
   </div>
 </template>
 
