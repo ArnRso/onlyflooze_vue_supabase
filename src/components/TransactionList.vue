@@ -1,128 +1,21 @@
 <template>
-  <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-    <thead>
-      <tr class="bg-gray-50">
-        <th class="px-2 py-2 text-center">
-          <input :checked="allSelected" type="checkbox" @change="toggleSelectAll" />
-        </th>
-        <th class="px-4 py-2 text-left font-semibold text-gray-700">Libellé</th>
-        <th class="px-4 py-2 text-left font-semibold text-gray-700">Catégorie</th>
-        <th class="px-4 py-2 text-left font-semibold text-gray-700">Tags</th>
-        <th class="px-4 py-2 text-right font-semibold text-gray-700">Date</th>
-        <th class="px-4 py-2 text-right font-semibold text-gray-700">Montant</th>
-        <th class="px-4 py-2 text-center font-semibold text-gray-700">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        v-for="(tx, i) in props.transactions"
-        :key="tx.id"
-        class="border-t border-gray-100 hover:bg-gray-50 transition"
-        :class="i % 2 === 1 ? 'bg-gray-100' : ''"
-      >
-        <td class="px-2 py-2 text-center">
-          <input
-            :checked="selectedTransactions.some((t) => t.id === tx.id)"
-            type="checkbox"
-            @change="
-              (e) => {
-                const checked = (e.target as HTMLInputElement)?.checked
-                if (checked) {
-                  if (!selectedTransactions.some((t) => t.id === tx.id))
-                    selectedTransactions.push(tx)
-                } else {
-                  const idx = selectedTransactions.findIndex((t) => t.id === tx.id)
-                  if (idx !== -1) selectedTransactions.splice(idx, 1)
-                }
-                emitSelection()
-              }
-            "
-          />
-        </td>
-        <td class="px-4 py-2 font-medium text-gray-900">{{ tx.label }}</td>
-        <td class="px-4 py-2">
-          <template v-if="tx.category">
-            <RouterLink
-              class="text-indigo-600 hover:underline cursor-pointer"
-              :to="{
-                path: '/transactions',
-                query: { category: tx.category.id },
-              }"
-            >
-              {{ tx.category.label }}
-            </RouterLink>
-          </template>
-          <template v-else>
-            <RouterLink
-              class="text-indigo-600 hover:underline cursor-pointer"
-              :to="{ path: '/transactions', query: { category: '_none' } }"
-            >
-              Sans catégorie
-            </RouterLink>
-          </template>
-        </td>
-        <td class="px-4 py-2">
-          <template v-if="tx.tags.length">
-            <RouterLink
-              v-for="tag in tx.tags"
-              :key="tag.id"
-              class="inline-block bg-gray-200 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium text-indigo-600 hover:underline cursor-pointer"
-              :to="{ path: '/transactions', query: { tag: tag.id } }"
-            >
-              {{ tag.label }}
-            </RouterLink>
-          </template>
-          <template v-else>
-            <RouterLink
-              class="text-indigo-600 hover:underline cursor-pointer"
-              :to="{ path: '/transactions', query: { tag: '_none' } }"
-            >
-              Sans tag
-            </RouterLink>
-          </template>
-        </td>
-        <td class="px-4 py-2 text-gray-500 text-right">
-          {{ formatDate(tx.transaction_date) }}
-        </td>
-        <td
-          class="px-4 py-2 text-right font-mono font-semibold"
-          :class="tx.amount < 0 ? 'text-red-600' : 'text-green-700'"
-        >
-          {{ formatAmount(tx.amount) }}
-        </td>
-        <td class="px-4 py-2 text-center">
-          <div class="flex items-center justify-center">
-            <button
-              class="text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors focus:outline-none"
-              title="Éditer la transaction"
-              @click="$router.push({ name: 'transaction-edit', params: { id: tx.id } })"
-            >
-              <MdiPencil />
-            </button>
-            <button
-              class="text-red-600 hover:bg-red-100 rounded-full p-1 ml-2 transition-colors focus:outline-none"
-              :disabled="deleteStatus === 'pending'"
-              title="Supprimer la transaction"
-              @click="deleteTransaction(tx.id)"
-            >
-              <MdiTrashCan />
-            </button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <UCard>
+    <UTable
+      v-model:row-selection="rowSelection"
+      class="w-full"
+      :columns="columns"
+      :data="tableRows"
+      :get-row-id="(row: any) => row.id"
+    />
+  </UCard>
 </template>
 
 <script lang="ts" setup>
   import type { Category, Tag, Transaction } from '@/queries/useTransactions'
-  import { defineProps } from 'vue'
-  import MdiPencil from './icons/MdiPencil.vue'
-  import MdiTrashCan from './icons/MdiTrashCan.vue'
+  import { defineProps, watch, computed, h, resolveComponent } from 'vue'
+  import { defineEmits, defineModel } from 'vue'
+  import { useRouter } from 'vue-router'
   import { useDeleteTransactionMutation } from '@/queries/useTransactions'
-  import { ref, watch, computed } from 'vue'
-  import { defineEmits } from 'vue'
-  import { RouterLink } from 'vue-router'
 
   const emit = defineEmits(['update:selected'])
 
@@ -130,60 +23,181 @@
     transactions: Array<Transaction & { tags: Tag[]; category?: Category | null }>
   }>()
 
-  const selectedTransactions = ref<(Transaction & { tags: Tag[]; category?: Category | null })[]>(
-    []
-  )
+  const rowSelection = defineModel<Record<string, boolean>>('rowSelection', { required: false })
 
-  const allSelected = computed(
-    () =>
-      props.transactions.length > 0 &&
-      selectedTransactions.value.length === props.transactions.length
-  )
+  const router = useRouter()
+  const {
+    mutate: deleteTransaction,
+    status: deleteStatus,
+    variables: deletingId,
+  } = useDeleteTransactionMutation()
 
-  function toggleSelectAll(e: Event) {
-    const checked = (e.target as HTMLInputElement).checked
-    if (checked) {
-      selectedTransactions.value = [...props.transactions]
-    } else {
-      selectedTransactions.value = []
-    }
-    emitSelection()
-  }
-
-  function emitSelection() {
-    emit('update:selected', selectedTransactions.value)
-  }
-
-  watch(
-    () => props.transactions,
-    () => {
-      // Nettoie la sélection si la liste change
-      selectedTransactions.value = selectedTransactions.value.filter((tx) =>
-        props.transactions.some((t) => t.id === tx.id)
-      )
-      emitSelection()
+  const columns = [
+    {
+      id: 'select',
+      header: ({ table }: { table: unknown }) => {
+        const t = table as {
+          getIsSomePageRowsSelected: () => boolean
+          getIsAllPageRowsSelected: () => boolean
+          toggleAllPageRowsSelected: (v: boolean) => void
+        }
+        const UCheckbox = resolveComponent('UCheckbox')
+        return h(UCheckbox, {
+          modelValue: t.getIsSomePageRowsSelected()
+            ? 'indeterminate'
+            : t.getIsAllPageRowsSelected(),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+            t.toggleAllPageRowsSelected(!!value),
+          'aria-label': 'Tout sélectionner',
+          class: 'flex justify-center',
+        })
+      },
+      cell: ({ row }: { row: unknown }) => {
+        const r = row as { getIsSelected: () => boolean; toggleSelected: (v: boolean) => void }
+        const UCheckbox = resolveComponent('UCheckbox')
+        return h(UCheckbox, {
+          modelValue: r.getIsSelected(),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') => r.toggleSelected(!!value),
+          'aria-label': 'Sélectionner la ligne',
+          class: 'flex justify-center',
+        })
+      },
+      class: 'text-center w-8',
     },
-    { immediate: true, deep: true }
-  )
+    { accessorKey: 'label', header: 'Libellé', class: 'text-left' },
+    {
+      accessorKey: 'category',
+      header: 'Catégorie',
+      class: 'text-left',
+      cell: ({
+        row,
+      }: {
+        row: { original: { category?: { id: string; label: string } | null } }
+      }) => {
+        const RouterLink = resolveComponent('RouterLink')
+        const category = row.original.category
+        if (!category) {
+          return h(
+            RouterLink,
+            {
+              class: 'text-primary-600 hover:underline cursor-pointer',
+              to: { path: '/transactions', query: { category: '_none' } },
+            },
+            () => 'Sans catégorie'
+          )
+        }
+        return h(
+          RouterLink,
+          {
+            class: 'text-primary-600 hover:underline cursor-pointer',
+            to: { path: '/transactions', query: { category: category.id } },
+          },
+          () => category.label
+        )
+      },
+    },
+    {
+      accessorKey: 'tags',
+      header: 'Tags',
+      class: 'text-left',
+      cell: ({ row }: { row: { original: { tags: Array<{ id: string; label: string }> } } }) => {
+        const RouterLink = resolveComponent('RouterLink')
+        const tags = row.original.tags
+        if (!tags?.length) {
+          return h(
+            RouterLink,
+            {
+              class: 'text-primary-600 hover:underline cursor-pointer',
+              to: { path: '/transactions', query: { tag: '_none' } },
+            },
+            () => 'Sans tag'
+          )
+        }
+        return tags.map((tag) =>
+          h(
+            RouterLink,
+            {
+              key: tag.id,
+              class:
+                'inline-block bg-gray-200 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium text-primary-600 hover:underline cursor-pointer',
+              to: { path: '/transactions', query: { tag: tag.id } },
+            },
+            () => tag.label
+          )
+        )
+      },
+    },
+    {
+      accessorKey: 'transaction_date',
+      header: 'Date',
+      class: 'text-right',
+      cell: ({ row }: { row: { getValue: (key: string) => string } }) => {
+        const dateStr = row.getValue('transaction_date')
+        if (!dateStr) return '-'
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) return dateStr
+        return d.toLocaleDateString('fr-FR')
+      },
+    },
+    {
+      accessorKey: 'amount',
+      header: 'Montant',
+      class: 'text-right',
+      cell: ({ row }: { row: { getValue: (key: string) => number } }) => {
+        const amount = row.getValue('amount')
+        const color = amount < 0 ? 'text-red-600' : 'text-green-600'
+        return h(
+          'div',
+          { class: `text-right w-full font-medium ${color}` },
+          new Intl.NumberFormat('fr-FR', {
+            style: 'currency',
+            currency: 'EUR',
+          }).format(amount)
+        )
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      class: 'text-center',
+      cell: ({ row }: { row: { original: { id: string } } }) => {
+        const UButton = resolveComponent('UButton')
+        const id = String(row.original.id)
+        return h('div', { class: 'flex items-center justify-center' }, [
+          h(
+            resolveComponent('UButtonGroup'),
+            {},
+            {
+              default: () => [
+                h(UButton, {
+                  size: 'xs',
+                  color: 'info',
+                  icon: 'mdi:pencil',
+                  variant: 'outline',
+                  title: 'Éditer la transaction',
+                  onClick: () => id && router.push(`/transactions/${id}/edit`),
+                }),
+                h(UButton, {
+                  size: 'xs',
+                  color: 'error',
+                  icon: 'mdi:trash-can',
+                  variant: 'outline',
+                  title: 'Supprimer la transaction',
+                  disabled: deleteStatus.value === 'pending' && deletingId.value === id,
+                  onClick: () => deleteTransaction(id),
+                }),
+              ],
+            }
+          ),
+        ])
+      },
+    },
+  ]
 
-  const { mutate: deleteTransaction, status: deleteStatus } = useDeleteTransactionMutation()
+  const tableRows = computed(() => props.transactions)
 
-  function formatAmount(amount: number): string {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  }
-
-  function formatDate(dateStr: string): string {
-    if (!dateStr) return ''
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    const day = String(d.getDate()).padStart(2, '0')
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const year = d.getFullYear()
-    return `${day}/${month}/${year}`
-  }
+  watch(rowSelection, () => {
+    const selected = props.transactions.filter((tx) => rowSelection?.value?.[tx.id])
+    emit('update:selected', selected)
+  })
 </script>
