@@ -63,3 +63,5 @@ Coding standards, domain knowledge, and preferences that AI should follow.
 - Use TanStack Query (Vue Query) for data fetching, caching, and synchronization with Supabase.
 - Follow business logic defined in existing services and queries.
 - Prefer the use of reusable UI components.
+- Avoid writing custom CSS as much as possible: always use Tailwind CSS for styling whenever possible.
+- Use shadcn-vue components for UI whenever possible to ensure consistency and accessibility.
