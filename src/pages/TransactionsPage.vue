@@ -4,7 +4,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import TransactionList from '@/components/TransactionList.vue'
   import TransactionFilterForm from '@/components/TransactionFilterForm.vue'
-  import BulkActionsMenu from '@/components/TransactionBulkActions.vue'
+  import TransactionBulkActions from '@/components/TransactionBulkActions.vue'
   import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
 
@@ -419,7 +419,7 @@
             />
           </Transition>
           <Transition name="fade">
-            <BulkActionsMenu
+            <TransactionBulkActions
               v-if="openPanel === 'bulk'"
               :selected-transactions="selectedTransactions"
               @close="closePanel"

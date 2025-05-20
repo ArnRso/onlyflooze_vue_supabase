@@ -1,70 +1,58 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import HomeView from '@/pages/HomePage.vue'
-import LoginView from '@/pages/LoginPage.vue'
-import RegisterView from '@/pages/RegisterPage.vue'
-import CategoryList from '@/pages/CategoryListPage.vue'
-import CategoryDetailView from '@/pages/CategoryDetailPage.vue'
-import UserView from '@/pages/UserPage.vue'
-import TransactionsView from '@/pages/TransactionsPage.vue'
-import TransactionCreateView from '@/pages/TransactionCreatePage.vue'
-import TransactionEditView from '@/pages/TransactionEditPage.vue'
-import TagsView from '@/pages/TagsPage.vue'
-import AssignCategoryView from '@/pages/AssignCategoryPage.vue'
-import MonthlyRecurringSummaryView from '@/pages/MonthlyRecurringSummaryPage.vue'
+import HomePage from '@/pages/HomePage.vue'
+import LoginPage from '@/pages/LoginPage.vue'
+import RegisterPage from '@/pages/RegisterPage.vue'
+import CategoryListPage from '@/pages/CategoryListPage.vue'
+import CategoryDetailPage from '@/pages/CategoryDetailPage.vue'
+import UserPage from '@/pages/UserPage.vue'
+import TransactionsPage from '@/pages/TransactionsPage.vue'
+import TransactionEditPage from '@/pages/TransactionEditPage.vue'
+import TagsPage from '@/pages/TagsPage.vue'
+import MonthlyRecurringSummaryPage from '@/pages/MonthlyRecurringSummaryPage.vue'
 import { supabase } from '@/supabase'
 
 const routes: Array<RouteRecordRaw> = [
-  { path: '/', name: 'home', component: HomeView, meta: { public: true } },
+  { path: '/', name: 'home', component: HomePage, meta: { public: true } },
   {
     path: '/login',
     name: 'login',
-    component: LoginView,
+    component: LoginPage,
     meta: { public: true },
   },
   {
     path: '/register',
     name: 'register',
-    component: RegisterView,
+    component: RegisterPage,
     meta: { public: true },
   },
-  { path: '/categories', name: 'categories', component: CategoryList },
+  { path: '/categories', name: 'categories', component: CategoryListPage },
   {
     path: '/categories/:id',
     name: 'category-detail',
-    component: CategoryDetailView,
+    component: CategoryDetailPage,
     props: true,
   },
-  { path: '/user', name: 'user', component: UserView },
+  { path: '/user', name: 'user', component: UserPage },
   {
     path: '/transactions',
     name: 'transactions',
-    component: TransactionsView,
-  },
-  {
-    path: '/transactions/new',
-    name: 'transaction-create',
-    component: TransactionCreateView,
+    component: TransactionsPage,
   },
   {
     path: '/transactions/:id/edit',
     name: 'transaction-edit',
-    component: TransactionEditView,
+    component: TransactionEditPage,
     props: true,
   },
   {
     path: '/tags',
     name: 'tags',
-    component: TagsView,
-  },
-  {
-    path: '/assign-category',
-    name: 'assign-category',
-    component: AssignCategoryView,
+    component: TagsPage,
   },
   {
     path: '/monthly-recurring-summary',
     name: 'monthly-recurring-summary',
-    component: MonthlyRecurringSummaryView,
+    component: MonthlyRecurringSummaryPage,
   },
 ]
 
