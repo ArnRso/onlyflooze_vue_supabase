@@ -16,8 +16,12 @@ app.use(VueQueryPlugin, { queryClient })
 router.isReady().then(() => {
   const redirect = sessionStorage.redirect
   delete sessionStorage.redirect
-  if (redirect) {
-    router.replace(redirect)
+  // Si on doit rediriger ET qu'on n'est pas déjà sur la bonne page, on redirige avant de monter l'app
+  if (redirect && router.currentRoute.value.fullPath !== redirect) {
+    router.replace(redirect).then(() => {
+      app.mount('#app')
+    })
+  } else {
+    app.mount('#app')
   }
-  app.mount('#app')
 })
