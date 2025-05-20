@@ -4,10 +4,11 @@
     <meta charset="utf-8" />
     <title>Redirection...</title>
     <script>
-      // Redirige vers index.html en gardant le chemin original
-      const redirectTo = '/' + location.pathname + location.search + location.hash
-      sessionStorage.redirect = redirectTo
-      window.location.replace('/')
+      // Redirige vers index.html en gardant le chemin original, sans double slash
+      let path = location.pathname + location.search + location.hash;
+      if (!path.startsWith('/')) path = '/' + path;
+      sessionStorage.redirect = path;
+      window.location.replace('/');
     </script>
   </head>
   <body></body>
