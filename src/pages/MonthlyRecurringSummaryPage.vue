@@ -285,9 +285,4 @@
   const isLoading = computed(() => isLoadingCats && !recurringCatsResp.value)
 </script>
 
-<style scoped>
-  .monthly-recurring-summary {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-</style>
+<style scoped></style>
