@@ -8,7 +8,6 @@
   const props = defineProps<{ filters: TransactionFilter }>()
   const emit = defineEmits<{
     (e: 'update:filters', filters: TransactionFilter): void
-    (e: 'close'): void
   }>()
 
   // Utilisation d'un state réactif pour UForm
@@ -110,14 +109,6 @@
     <template #header>
       <div class="flex flex-row items-center justify-between">
         <h2 class="text-lg font-bold text-primary">Filtrer les transactions</h2>
-        <UButton
-          aria-label="Fermer"
-          color="gray"
-          icon="i-lucide-x"
-          size="sm"
-          variant="ghost"
-          @click="$emit('close')"
-        />
       </div>
     </template>
     <UForm class="w-full" :state="state" @submit.prevent>
