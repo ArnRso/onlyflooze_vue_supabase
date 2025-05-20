@@ -7,7 +7,8 @@
   import TransactionBulkActions from '@/components/TransactionBulkActions.vue'
   import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
-  import { extractTransactionsFromFile } from '@/services/import/transactionImportService'
+  import { importTransactionsFromFile } from '@/services/import/transactionImportService'
+  import { setTransactionSaveHandlers } from '@/services/import/transactionSaveService'
 
   const page = ref(1)
   const pageSize = ref(50)
@@ -50,8 +51,17 @@
     data: transactionsResponse,
     isLoading,
     error,
-    refetch: refreshPaginatedTransactions,
   } = useTransactionsQuery(page, pageSize, filters, false)
+
+  const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation()
+  const { refetch: refreshPaginatedTransactions } = useTransactionsQuery(
+    page,
+    pageSize,
+    filters,
+    false
+  )
+
+  setTransactionSaveHandlers({ addBulkTransactions, refreshPaginatedTransactions })
 
   // Sécurité : page ne doit jamais être < 1
   watch(page, (val) => {
@@ -84,34 +94,11 @@
   const isImporting = ref(false)
   const importMessage = ref('')
   const importError = ref('')
-  const { mutateAsync: addBulkTransactions } = useAddBulkTransactionsMutation()
 
   const openFileDialog = () => {
     if (fileInputRef.value && !isImporting.value) {
       fileInputRef.value.click()
     }
-  }
-
-  function parseDate(dateStr: string): string | null {
-    if (!dateStr) return null
-    const parts = dateStr.split('/')
-    if (parts.length === 3) {
-      const [day, month, year] = parts
-      if (
-        !isNaN(parseInt(day)) &&
-        !isNaN(parseInt(month)) &&
-        !isNaN(parseInt(year)) &&
-        parseInt(month) >= 1 &&
-        parseInt(month) <= 12 &&
-        parseInt(day) >= 1 &&
-        parseInt(day) <= 31 &&
-        year.length === 4
-      ) {
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-      }
-    }
-    console.warn(`Format de date invalide ignoré: ${dateStr}`)
-    return null
   }
 
   async function handleFileUpload(event: Event) {
@@ -124,30 +111,17 @@
     importError.value = ''
 
     try {
-      const result = await extractTransactionsFromFile(file, parseDate)
+      const result = await importTransactionsFromFile(file)
       if (result.error) {
         importError.value = result.error
-        isImporting.value = false
-        if (fileInputRef.value) fileInputRef.value.value = ''
-        return
-      }
-      const transactionsToCreate = result.transactions
-      const invalidCount = result.invalidCount
-      if (transactionsToCreate.length > 0) {
-        try {
-          const addedTransactions = await addBulkTransactions(transactionsToCreate)
-          importMessage.value = `${addedTransactions.length} transaction(s) ajoutée(s). ${transactionsToCreate.length - addedTransactions.length} transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`
-          refreshPaginatedTransactions()
-        } catch (e: unknown) {
-          importError.value = (e as Error).message || 'Erreur lors de la création des transactions.'
-        }
+      } else if (result.addedCount > 0) {
+        importMessage.value = `${result.addedCount} transaction(s) ajoutée(s). ${result.duplicateCount} transaction(s) déjà existante(s). ${result.invalidCount} ligne(s) invalide(s) ignorée(s).`
       } else {
-        importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`
+        importMessage.value = `Aucune nouvelle transaction à ajouter. ${result.invalidCount} ligne(s) invalide(s) ignorée(s).`
       }
-      isImporting.value = false
-      if (fileInputRef.value) fileInputRef.value.value = ''
     } catch (e: unknown) {
       importError.value = (e as Error).message || 'Une erreur est survenue.'
+    } finally {
       isImporting.value = false
       if (fileInputRef.value) fileInputRef.value.value = ''
     }
@@ -239,7 +213,7 @@
     { deep: true }
   )
 
-  // Watch pour réagir aux changements d'URL (ex: navigation arrière)
+  // Watch pour réagir aux changements d'URL (ex:: navigation arrière)
   watch(
     () => route.query,
     (newQuery) => {
@@ -450,15 +424,5 @@
 
   label[for='csv-upload']:disabled {
     cursor: not-allowed;
-  }
-
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
-  }
-
-  .fade-enter-to,
-  .fade-leave-from {
-    opacity: 1;
   }
 </style>

@@ -2,19 +2,15 @@
 // Parseur CSV pour extraire les transactions à partir d'un texte CSV.
 
 import type { TablesInsert } from '@/types/supabase'
+import { parseDate } from './parseDate'
 
-export type CsvParsedTransaction = TablesInsert<'transaction'>
-
-export interface CsvParseResult {
-  transactions: CsvParsedTransaction[]
+export type CsvParseResult = {
+  transactions: TablesInsert<'transaction'>[]
   invalidCount: number
   error?: string
 }
 
-export function parseCsvTransactions(
-  text: string,
-  parseDate: (dateStr: string) => string | null
-): CsvParseResult {
+export function parseCsvTransactions(text: string): CsvParseResult {
   if (!text) {
     return { transactions: [], invalidCount: 0, error: 'Impossible de lire le fichier.' }
   }
@@ -39,7 +35,7 @@ export function parseCsvTransactions(
         'En-têtes manquants. Assurez-vous que le fichier contient "Date operation", "Libelle", "Debit", "Credit".',
     }
   }
-  const transactions: CsvParsedTransaction[] = []
+  const transactions: TablesInsert<'transaction'>[] = []
   let invalidCount = 0
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(';').map((v) => v.trim().replace(/^"|"$/g, ''))

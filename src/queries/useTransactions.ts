@@ -174,7 +174,7 @@ export function useAddBulkTransactionsMutation() {
         .select()
 
       if (error) throw new Error(error.message)
-      return data as Transaction[]
+      return Array.isArray(data) ? (data as Transaction[]) : []
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
