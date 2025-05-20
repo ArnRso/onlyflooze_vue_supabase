@@ -25,6 +25,7 @@
   function openPanelUnique(panel: 'create' | 'filters' | 'bulk') {
     openPanel.value = panel
   }
+
   function closePanel() {
     openPanel.value = null
   }
@@ -48,19 +49,22 @@
     data: transactionsResponse,
     isLoading,
     error,
-    refetch: refetchPaginatedTransactions,
+    refetch: refreshPaginatedTransactions,
   } = useTransactionsQuery(page, pageSize, filters, false)
 
   // Sécurité : page ne doit jamais être < 1
   watch(page, (val) => {
-    if (val < 1 || isNaN(val)) page.value = 1
-    else refetchPaginatedTransactions() // Ajout : refetch à chaque changement de page
+    if (val < 1 || isNaN(val)) {
+      page.value = 1
+    } else {
+      refreshPaginatedTransactions()
+    }
   })
 
   // Ajout : refetch quand pageSize change
   watch(pageSize, () => {
     page.value = 1 // On revient à la première page si la taille change
-    refetchPaginatedTransactions()
+    refreshPaginatedTransactions()
   })
 
   const transactions = computed(() => transactionsResponse.value?.data ?? [])
@@ -71,7 +75,7 @@
   const deleteError = ref('')
 
   function handleTransactionCreated() {
-    refetchPaginatedTransactions()
+    refreshPaginatedTransactions()
   }
 
   // Pour l'import CSV
@@ -197,7 +201,7 @@
             importMessage.value = `${addedTransactions.length} transaction(s) ajoutée(s). ${
               transactionsToCreate.length - addedTransactions.length
             } transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`
-            refetchPaginatedTransactions()
+            refreshPaginatedTransactions()
           } catch (e: unknown) {
             importError.value =
               (e as Error).message || 'Erreur lors de la création des transactions.'
@@ -235,28 +239,43 @@
 
   // Helpers pour parser/stringifier les filtres
   function filtersToQuery(filters: TransactionFilter): Record<string, string> {
-    const q: Record<string, string> = {}
-    if (filters.label) q.label = filters.label
-    if (filters.dateMin) q.dateMin = filters.dateMin
-    if (filters.dateMax) q.dateMax = filters.dateMax
-    if (filters.amountMin !== null && filters.amountMin !== undefined)
-      q.amountMin = String(filters.amountMin)
-    if (filters.amountMax !== null && filters.amountMax !== undefined)
-      q.amountMax = String(filters.amountMax)
-    if (filters.category) q.category = filters.category
-    if (filters.tag) q.tag = filters.tag
-    return q
+    const query: Record<string, string> = {}
+    if (filters.label) {
+      query.label = filters.label
+    }
+    if (filters.dateMin) {
+      query.dateMin = filters.dateMin
+    }
+    if (filters.dateMax) {
+      query.dateMax = filters.dateMax
+    }
+    if (filters.amountMin !== null && filters.amountMin !== undefined) {
+      query.amountMin = String(filters.amountMin)
+    }
+    if (filters.amountMax !== null && filters.amountMax !== undefined) {
+      query.amountMax = String(filters.amountMax)
+    }
+    if (filters.category) {
+      query.category = filters.category
+    }
+    if (filters.tag) {
+      query.tag = filters.tag
+    }
+    return query
   }
 
-  // Helpers pour parser les query params (pour robustesse)
   function getQueryString(val: unknown): string {
-    if (Array.isArray(val)) return val[0] ?? ''
+    if (Array.isArray(val)) {
+      return val[0] ?? ''
+    }
     return typeof val === 'string' ? val : ''
   }
+
   function getQueryNumber(val: unknown): number | null {
     const s = getQueryString(val)
     return s !== '' ? Number(s) : null
   }
+
   function queryToFilters(query: Record<string, unknown>): {
     filters: TransactionFilter
     page: number
@@ -524,10 +543,12 @@
   .fade-leave-active {
     transition: opacity 0.2s;
   }
+
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
   }
+
   .fade-enter-to,
   .fade-leave-from {
     opacity: 1;

@@ -112,20 +112,6 @@
   type CategoryOption = { label: string; id: string }
   type TagOption = { label: string; id: string }
 
-  function isRefArray<T>(val: unknown): val is { value: T[] } {
-    return (
-      !!val &&
-      typeof val === 'object' &&
-      'value' in val &&
-      Array.isArray((val as { value?: unknown }).value)
-    )
-  }
-  function getArray<T>(maybeRef: unknown): T[] {
-    if (isRefArray<T>(maybeRef)) {
-      return maybeRef.value
-    }
-    return Array.isArray(maybeRef) ? (maybeRef as T[]) : []
-  }
   // S'assure que la valeur sélectionnée est toujours une string
   function ensureValidSelection(model: typeof selectedCategoryId, options: { value: string }[]) {
     if (!options.some((opt) => opt.value === model.value)) {
@@ -134,9 +120,10 @@
   }
 
   const categoryOptions = computed<{ label: string; value: string }[]>(() => {
+    const cats = categories && 'value' in categories ? (categories.value ?? []) : (categories ?? [])
     const opts = [
       { label: 'Aucune', value: '_none' },
-      ...getArray<CategoryOption>(categories).map((cat) => ({
+      ...cats.map((cat: CategoryOption) => ({
         label: cat.label,
         value: cat.id,
       })),
@@ -145,9 +132,10 @@
     return opts
   })
   const tagOptions = computed<{ label: string; value: string }[]>(() => {
+    const tgs = tags && 'value' in tags ? (tags.value ?? []) : (tags ?? [])
     const opts = [
       { label: 'Choisir un tag', value: '_none' },
-      ...getArray<TagOption>(tags).map((tag) => ({
+      ...tgs.map((tag: TagOption) => ({
         label: tag.label,
         value: tag.id,
       })),
