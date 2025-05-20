@@ -112,8 +112,10 @@
 
     try {
       const result = await importTransactionsFromFile(file)
+      importError.value = '' // Réinitialise l'erreur avant d'afficher le message de succès
       if (result.error) {
         importError.value = result.error
+        importMessage.value = ''
       } else if (result.addedCount > 0) {
         importMessage.value = `${result.addedCount} transaction(s) ajoutée(s). ${result.duplicateCount} transaction(s) déjà existante(s). ${result.invalidCount} ligne(s) invalide(s) ignorée(s).`
       } else {
@@ -121,6 +123,7 @@
       }
     } catch (e: unknown) {
       importError.value = (e as Error).message || 'Une erreur est survenue.'
+      importMessage.value = ''
     } finally {
       isImporting.value = false
       if (fileInputRef.value) fileInputRef.value.value = ''
@@ -277,7 +280,7 @@
             <input
               id="csv-upload"
               ref="fileInputRef"
-              accept=".csv"
+              accept=".csv,.ofx"
               class="hidden"
               type="file"
               @change="handleFileUpload"
@@ -337,34 +340,35 @@
               @close="closePanel"
             />
           </Transition>
-          <UAlert v-if="importMessage"
-                  class="mb-4 text-center"
-                  color="success"
-                  variant="soft"
-          >
-            {{ importMessage }}
-          </UAlert>
-          <UAlert v-if="importError"
-                  class="mb-4 text-center"
-                  color="error"
-                  variant="soft"
-          >
-            {{ importError }}
-          </UAlert>
-          <UAlert v-if="error"
-                  class="mb-4 text-center"
-                  color="error"
-                  variant="soft"
-          >
-            {{ error.message }}
-          </UAlert>
-          <UAlert v-if="deleteError"
-                  class="mb-4 text-center"
-                  color="error"
-                  variant="soft"
-          >
-            {{ deleteError }}
-          </UAlert>
+          <UAlert
+            v-if="importMessage"
+            class="mb-4 text-center"
+            color="success"
+            :description="importMessage"
+            title="Import réussi"
+            variant="soft"
+          />
+          <UAlert
+            v-if="importError"
+            class="mb-4 text-center"
+            color="error"
+            :description="importError"
+            variant="soft"
+          />
+          <UAlert
+            v-if="error"
+            class="mb-4 text-center"
+            color="error"
+            :description="error.message"
+            variant="soft"
+          />
+          <UAlert
+            v-if="deleteError"
+            class="mb-4 text-center"
+            color="error"
+            :description="deleteError"
+            variant="soft"
+          />
           <div class="mb-4 mt-6 flex flex-wrap gap-2 justify-between items-center text-sm">
             <UPagination
               v-if="totalPages > 1"
