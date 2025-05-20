@@ -2,13 +2,14 @@
 // Service d'import de transactions, sélectionne le parseur selon le type de fichier
 
 import { parseCsvTransactions } from './csvParser'
+import { parseOfxTransactions } from './ofxParser'
 import {
   addBulkTransactions,
   refreshPaginatedTransactions,
 } from '@/services/import/transactionSaveService'
 import type { TablesInsert } from '@/types/supabase'
 
-export type SupportedFormat = 'csv' // | 'ofx' | 'qfx' (à venir)
+export type SupportedFormat = 'csv' | 'ofx' // | 'qfx' (à venir)
 
 export interface ImportResult {
   transactions: TablesInsert<'transaction'>[]
@@ -26,7 +27,7 @@ export interface ImportAndSaveResult {
 export function detectFileFormat(file: File): SupportedFormat | null {
   const ext = file.name.split('.').pop()?.toLowerCase()
   if (ext === 'csv') return 'csv'
-  // if (ext === 'ofx') return 'ofx'
+  if (ext === 'ofx') return 'ofx'
   // if (ext === 'qfx') return 'qfx'
   return null
 }
@@ -40,7 +41,18 @@ export async function extractTransactionsFromFile(file: File): Promise<ImportRes
   if (format === 'csv') {
     return parseCsvTransactions(text)
   }
-  // if (format === 'ofx') { ... }
+  if (format === 'ofx') {
+    const ofxResult = parseOfxTransactions(text)
+    if (ofxResult.transactions.length > 0) {
+      ofxResult.transactions = ofxResult.transactions.map((t) => ({
+        label: t.label,
+        amount: t.amount,
+        transaction_date: t.transaction_date,
+        category_id: null,
+      }))
+    }
+    return ofxResult
+  }
   // if (format === 'qfx') { ... }
   return { transactions: [], invalidCount: 0, error: 'Format de fichier non supporté.' }
 }
