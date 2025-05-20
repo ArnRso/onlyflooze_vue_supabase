@@ -36,6 +36,33 @@
   const { mutateAsync: addTransaction } = useAddTransactionMutation()
   const { mutateAsync: addTransactionTag } = useAddTransactionTagMutation()
 
+  const categoryOptions = computed(() => [
+    { label: 'Aucune', value: '_none' },
+    ...((categories?.value ?? []) as Array<{ label: string; id: string }>).map((cat) => ({
+      label: cat.label,
+      value: cat.id,
+    })),
+  ])
+  const tagOptions = computed(() => [
+    { label: 'Aucun', value: '_none' },
+    ...((tags?.value ?? []) as Array<{ label: string; id: string }>).map((t) => ({
+      label: t.label,
+      value: t.id,
+    })),
+  ])
+  const categoryModel = computed({
+    get: () => category.value ?? '_none',
+    set: (v: string) => {
+      category.value = v === '_none' ? null : v
+    },
+  })
+  const tagModel = computed({
+    get: () => tag.value ?? '_none',
+    set: (v: string) => {
+      tag.value = v === '_none' ? null : v
+    },
+  })
+
   async function handleSubmit() {
     error.value = ''
     if (!label.value || !date.value || amount.value === null) {
@@ -83,7 +110,7 @@
         />
       </div>
     </template>
-    <UForm class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+    <UForm class="flex flex-col gap-4" :state="{}" @submit.prevent="handleSubmit">
       <UFormField label="Libellé *" name="label">
         <UInput v-model="label"
                 class="w-full"
@@ -101,15 +128,14 @@
                 placeholder="Date"
                 readonly
                 required
-                :value="date.value ? df.format(dateCalendar.value.toDate(getLocalTimeZone())) : ''"
-                @click="open"
+                :value="date ? df.format(dateCalendar?.toDate(getLocalTimeZone())) : ''"
               />
               <button
-                v-if="date.value"
+                v-if="date"
                 aria-label="Effacer la date"
                 class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                 type="button"
-                @click.stop="date.value = ''"
+                @click.stop="date = ''"
               >
                 <span class="i-lucide-x text-base"></span>
               </button>
@@ -132,30 +158,10 @@
       </div>
       <div class="flex flex-col sm:flex-row gap-4">
         <UFormField class="flex-1" label="Catégorie" name="category">
-          <USelect
-            v-model="category"
-            class="w-full"
-            :items="[
-              { label: 'Aucune', value: null },
-              ...((categories ?? []) as Array<{ label: string; id: string }>).map((cat) => ({
-                label: cat.label,
-                value: cat.id,
-              })),
-            ]"
-          />
+          <USelect v-model="categoryModel" class="w-full" :items="categoryOptions" />
         </UFormField>
         <UFormField class="flex-1" label="Tag" name="tag">
-          <USelect
-            v-model="tag"
-            class="w-full"
-            :items="[
-              { label: 'Aucun', value: null },
-              ...((tags ?? []) as Array<{ label: string; id: string }>).map((t) => ({
-                label: t.label,
-                value: t.id,
-              })),
-            ]"
-          />
+          <USelect v-model="tagModel" class="w-full" :items="tagOptions" />
         </UFormField>
       </div>
       <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
