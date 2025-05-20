@@ -11,7 +11,6 @@
     (e: 'close'): void
   }>()
 
-  // Utilisation d'un state réactif pour UForm
   const state = reactive({
     label: props.filters.label,
     dateMin: props.filters.dateMin,
@@ -36,7 +35,6 @@
     { deep: true, immediate: true }
   )
 
-  // Synchronisation descendante
   watch(
     () => ({ ...state }),
     (newState) => {
@@ -49,7 +47,7 @@
   const { data: tags } = useTagsQuery()
 
   const tagOptions = computed(() => [
-    { label: 'Tous', value: '_all' }, // valeur spéciale pour "tous"
+    { label: 'Tous', value: '_all' },
     { label: 'Sans tag', value: '_none' },
     ...(tags?.value ?? []).map((tag: { label: string; id: string }) => ({
       label: tag.label,
@@ -57,7 +55,7 @@
     })),
   ])
   const categoryOptions = computed(() => [
-    { label: 'Toutes', value: '_all' }, // valeur spéciale pour "toutes"
+    { label: 'Toutes', value: '_all' },
     { label: 'Sans catégorie', value: '_none' },
     ...(categories?.value ?? []).map((cat: { label: string; id: string }) => ({
       label: cat.label,
@@ -65,7 +63,6 @@
     })),
   ])
 
-  // Conversion helpers pour CalendarDate <-> string (yyyy-mm-dd)
   function toCalendarDate(str?: string) {
     if (!str) return undefined
     const [y, m, d] = str.split('-').map(Number)
@@ -77,10 +74,8 @@
     return `${cd.year.toString().padStart(4, '0')}-${cd.month.toString().padStart(2, '0')}-${cd.day.toString().padStart(2, '0')}`
   }
 
-  // Formatage date pour affichage dd/mm/yyyy avec Intl.DateTimeFormat
   const df = new Intl.DateTimeFormat('fr-FR')
 
-  // Pour UCalendar, on utilise CalendarDate
   const dateMinCalendar = computed({
     get: () => toCalendarDate(state.dateMin),
     set: (v) => {
@@ -94,7 +89,6 @@
     },
   })
 
-  // Propriétés calculées pour convertir entre null et chaîne vide
   const categoryModel = computed({
     get: () => (state.category === null ? '_all' : state.category),
     set: (v: string) => {
@@ -121,25 +115,26 @@
 </script>
 
 <template>
-  <UCard class="mb-6 px-4 py-3 bg-blue-50 border-blue-200">
+  <UCard class="mb-6 px-4 py-3">
     <template #header>
-      <div class="flex flex-row items-center justify-between mb-2">
-        <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
+      <div class="flex flex-row items-center justify-between">
+        <h2 class="text-lg font-bold text-primary">Recherche & filtres</h2>
         <UButton
           aria-label="Fermer"
-          color="blue"
-          icon="i-heroicons-x-mark"
+          color="gray"
+          icon="i-lucide-x"
+          size="sm"
           variant="ghost"
           @click="emit('close')"
         />
       </div>
     </template>
-    <UForm class="w-full" :state="state" @submit.prevent>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
-        <UFormField label="Libellé" name="label">
-          <UInput v-model="state.label" class="w-full" placeholder="Recherche libellé" />
-        </UFormField>
-        <UFormField label="Date min" name="dateMin">
+    <UForm class="flex flex-col gap-4" :state="state" @submit.prevent>
+      <UFormField label="Libellé" name="label">
+        <UInput v-model="state.label" class="w-full" placeholder="Recherche libellé" />
+      </UFormField>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <UFormField class="flex-1" label="Date min" name="dateMin">
           <UPopover class="w-full">
             <div class="relative w-full">
               <UInput
@@ -151,7 +146,6 @@
                     ? df.format(toCalendarDate(state.dateMin)!.toDate(getLocalTimeZone()))
                     : ''
                 "
-                @click="$event.currentTarget.closest('div').getElementsByTagName('div')[0].click()"
               />
               <button
                 v-if="state.dateMin"
@@ -168,7 +162,7 @@
             </template>
           </UPopover>
         </UFormField>
-        <UFormField label="Date max" name="dateMax">
+        <UFormField class="flex-1" label="Date max" name="dateMax">
           <UPopover class="w-full">
             <div class="relative w-full">
               <UInput
@@ -180,7 +174,6 @@
                     ? df.format(toCalendarDate(state.dateMax)!.toDate(getLocalTimeZone()))
                     : ''
                 "
-                @click="$event.currentTarget.closest('div').getElementsByTagName('div')[0].click()"
               />
               <button
                 v-if="state.dateMax"
@@ -197,7 +190,9 @@
             </template>
           </UPopover>
         </UFormField>
-        <UFormField label="Montant min" name="amountMin">
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <UFormField class="flex-1" label="Montant min" name="amountMin">
           <UInput
             v-model.number="state.amountMin"
             class="w-full"
@@ -206,7 +201,7 @@
             type="number"
           />
         </UFormField>
-        <UFormField label="Montant max" name="amountMax">
+        <UFormField class="flex-1" label="Montant max" name="amountMax">
           <UInput
             v-model.number="state.amountMax"
             class="w-full"
@@ -215,16 +210,16 @@
             type="number"
           />
         </UFormField>
-        <UFormField label="Catégorie" name="category">
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <UFormField class="flex-1" label="Catégorie" name="category">
           <USelect v-model="categoryModel" class="w-full" :items="categoryOptions" />
         </UFormField>
-        <UFormField label="Tag" name="tag">
+        <UFormField class="flex-1" label="Tag" name="tag">
           <USelect v-model="tagModel" class="w-full" :items="tagOptions" />
         </UFormField>
       </div>
-    </UForm>
-    <template #footer>
-      <div class="flex justify-end gap-2 mt-4">
+      <div class="flex justify-end gap-2 mt-2">
         <UButton
           color="primary"
           icon="i-lucide-rotate-ccw"
@@ -235,12 +230,10 @@
           Réinitialiser
         </UButton>
       </div>
-    </template>
+    </UForm>
   </UCard>
 </template>
 
 <style scoped>
-  form > div {
-    min-width: 0;
-  }
+  /* Harmonisé avec TransactionCreatePanel.vue */
 </style>
