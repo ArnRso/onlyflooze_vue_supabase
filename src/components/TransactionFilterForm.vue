@@ -8,6 +8,7 @@
   const props = defineProps<{ filters: TransactionFilter }>()
   const emit = defineEmits<{
     (e: 'update:filters', filters: TransactionFilter): void
+    (e: 'close'): void
   }>()
 
   // Utilisation d'un state réactif pour UForm
@@ -48,7 +49,7 @@
   const { data: tags } = useTagsQuery()
 
   const tagOptions = computed(() => [
-    { label: 'Tous', value: null },
+    { label: 'Tous', value: '' }, // chaîne vide sera traitée comme null
     { label: 'Sans tag', value: '_none' },
     ...(tags?.value ?? []).map((tag: { label: string; id: string }) => ({
       label: tag.label,
@@ -56,7 +57,7 @@
     })),
   ])
   const categoryOptions = computed(() => [
-    { label: 'Toutes', value: null },
+    { label: 'Toutes', value: '' }, // chaîne vide sera traitée comme null
     { label: 'Sans catégorie', value: '_none' },
     ...(categories?.value ?? []).map((cat: { label: string; id: string }) => ({
       label: cat.label,
@@ -93,6 +94,21 @@
     },
   })
 
+  // Propriétés calculées pour convertir entre null et chaîne vide
+  const categoryModel = computed({
+    get: () => (state.category === null ? '' : state.category),
+    set: (v: string) => {
+      state.category = v === '' ? null : v
+    },
+  })
+
+  const tagModel = computed({
+    get: () => (state.tag === null ? '' : state.tag),
+    set: (v: string) => {
+      state.tag = v === '' ? null : v
+    },
+  })
+
   function resetFilters() {
     state.label = ''
     state.dateMin = ''
@@ -105,10 +121,22 @@
 </script>
 
 <template>
-  <UCard class="mb-6 px-4 py-3">
+  <UCard class="mb-6 px-4 py-3 bg-blue-50 border-blue-200">
     <template #header>
-      <div class="flex flex-row items-center justify-between">
-        <h2 class="text-lg font-bold text-primary">Filtrer les transactions</h2>
+      <div class="flex flex-row items-center justify-between mb-2">
+        <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
+        <UButton
+          aria-label="Fermer"
+          color="blue"
+          icon="i-heroicons-x-mark"
+          variant="ghost"
+          @click="
+            () => {
+              console.log('Bouton fermer cliqué dans TransactionFilterForm')
+              emit('close')
+            }
+          "
+        />
       </div>
     </template>
     <UForm class="w-full" :state="state" @submit.prevent>
@@ -124,11 +152,11 @@
                 placeholder="Date min"
                 readonly
                 :value="
-                  state.dateMin
-                    ? df.format(toCalendarDate(state.dateMin).toDate(getLocalTimeZone()))
+                  state.dateMin && toCalendarDate(state.dateMin)
+                    ? df.format(toCalendarDate(state.dateMin)!.toDate(getLocalTimeZone()))
                     : ''
                 "
-                @click="open"
+                @click="$event.currentTarget.closest('div').getElementsByTagName('div')[0].click()"
               />
               <button
                 v-if="state.dateMin"
@@ -153,11 +181,11 @@
                 placeholder="Date max"
                 readonly
                 :value="
-                  state.dateMax
-                    ? df.format(toCalendarDate(state.dateMax).toDate(getLocalTimeZone()))
+                  state.dateMax && toCalendarDate(state.dateMax)
+                    ? df.format(toCalendarDate(state.dateMax)!.toDate(getLocalTimeZone()))
                     : ''
                 "
-                @click="open"
+                @click="$event.currentTarget.closest('div').getElementsByTagName('div')[0].click()"
               />
               <button
                 v-if="state.dateMax"
@@ -193,10 +221,10 @@
           />
         </UFormField>
         <UFormField label="Catégorie" name="category">
-          <USelect v-model="state.category" class="w-full" :items="categoryOptions" />
+          <USelect v-model="categoryModel" class="w-full" :items="categoryOptions" />
         </UFormField>
         <UFormField label="Tag" name="tag">
-          <USelect v-model="state.tag" class="w-full" :items="tagOptions" />
+          <USelect v-model="tagModel" class="w-full" :items="tagOptions" />
         </UFormField>
       </div>
     </UForm>
