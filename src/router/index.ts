@@ -54,6 +54,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'monthly-recurring-summary',
     component: MonthlyRecurringSummaryPage,
   },
+  {
+    path: '/transaction-bulk-categorize',
+    name: 'transaction-bulk-categorize',
+    component: () => import('@/pages/TransactionBulkCategorizePage.vue'),
+  },
 ]
 
 const router = createRouter({

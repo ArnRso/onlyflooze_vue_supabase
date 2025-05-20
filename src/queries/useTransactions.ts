@@ -210,3 +210,21 @@ export function useCategoryTransactionsQuery(categoryId: string) {
     staleTime: 1000 * 60 * 5,
   })
 }
+
+export function useLatestUncategorizedTransactionQuery() {
+  return useQuery<Transaction | null>({
+    queryKey: ['transaction', 'latest-uncategorized'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transaction')
+        .select('*')
+        .is('category_id', null)
+        .order('transaction_date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (error) throw new Error(error.message)
+      return (data as Transaction) || null
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
