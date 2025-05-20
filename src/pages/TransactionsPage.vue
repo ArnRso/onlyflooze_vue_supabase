@@ -22,22 +22,11 @@
 
   const openPanel = ref<null | 'create' | 'filters' | 'bulk'>(null)
 
-  function closePanel() {
-    console.log('closePanel appelé, fermant le panneau:', openPanel.value)
-    // Fermeture immédiate, sans délai
-    openPanel.value = null
+  function openPanelUnique(panel: 'create' | 'filters' | 'bulk') {
+    openPanel.value = panel
   }
-
-  // Nouvelle fonction pour basculer l'état du panneau
-  function togglePanel(panelName: 'create' | 'filters' | 'bulk') {
-    console.log('togglePanel appelé pour', panelName, 'état actuel:', openPanel.value)
-    if (openPanel.value === panelName) {
-      // Si le panneau est déjà ouvert, on le ferme
-      closePanel()
-    } else {
-      // Si le panneau est fermé ou si un autre panneau est ouvert, on ouvre celui-ci
-      openPanel.value = panelName
-    }
+  function closePanel() {
+    openPanel.value = null
   }
 
   const selectedTransactions = ref([]) // À connecter plus tard à la sélection réelle
@@ -355,7 +344,7 @@
               :label="openPanel === 'create' ? 'Masquer création' : 'Créer transaction'"
               size="md"
               variant="outline"
-              @click="togglePanel('create')"
+              @click="openPanel === 'create' ? closePanel() : openPanelUnique('create')"
             />
             <UButton
               block
@@ -389,7 +378,7 @@
               :label="openPanel === 'filters' ? 'Masquer recherche' : 'Recherche & filtres'"
               size="md"
               variant="outline"
-              @click="togglePanel('filters')"
+              @click="openPanel === 'filters' ? closePanel() : openPanelUnique('filters')"
             >
               <template v-if="activeFiltersCount > 0" #trailing>
                 <UBadge class="ml-2" color="primary" variant="soft">
@@ -405,7 +394,7 @@
               :label="openPanel === 'bulk' ? 'Masquer actions lot' : 'Actions en lot'"
               size="md"
               variant="outline"
-              @click="openPanel !== 'bulk' ? (openPanel = 'bulk') : closePanel()"
+              @click="openPanel === 'bulk' ? closePanel() : openPanelUnique('bulk')"
             >
               <template v-if="selectedTransactions.length > 0" #trailing>
                 <UBadge class="ml-2" color="warning" variant="soft">

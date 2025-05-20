@@ -49,7 +49,7 @@
   const { data: tags } = useTagsQuery()
 
   const tagOptions = computed(() => [
-    { label: 'Tous', value: '' }, // chaîne vide sera traitée comme null
+    { label: 'Tous', value: '_all' }, // valeur spéciale pour "tous"
     { label: 'Sans tag', value: '_none' },
     ...(tags?.value ?? []).map((tag: { label: string; id: string }) => ({
       label: tag.label,
@@ -57,7 +57,7 @@
     })),
   ])
   const categoryOptions = computed(() => [
-    { label: 'Toutes', value: '' }, // chaîne vide sera traitée comme null
+    { label: 'Toutes', value: '_all' }, // valeur spéciale pour "toutes"
     { label: 'Sans catégorie', value: '_none' },
     ...(categories?.value ?? []).map((cat: { label: string; id: string }) => ({
       label: cat.label,
@@ -96,16 +96,16 @@
 
   // Propriétés calculées pour convertir entre null et chaîne vide
   const categoryModel = computed({
-    get: () => (state.category === null ? '' : state.category),
+    get: () => (state.category === null ? '_all' : state.category),
     set: (v: string) => {
-      state.category = v === '' ? null : v
+      state.category = v === '_all' ? null : v
     },
   })
 
   const tagModel = computed({
-    get: () => (state.tag === null ? '' : state.tag),
+    get: () => (state.tag === null ? '_all' : state.tag),
     set: (v: string) => {
-      state.tag = v === '' ? null : v
+      state.tag = v === '_all' ? null : v
     },
   })
 
@@ -130,12 +130,7 @@
           color="blue"
           icon="i-heroicons-x-mark"
           variant="ghost"
-          @click="
-            () => {
-              console.log('Bouton fermer cliqué dans TransactionFilterForm')
-              emit('close')
-            }
-          "
+          @click="emit('close')"
         />
       </div>
     </template>
