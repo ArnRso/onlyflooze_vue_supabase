@@ -249,10 +249,10 @@
     if (filters.dateMax) {
       query.dateMax = filters.dateMax
     }
-    if (filters.amountMin !== null && filters.amountMin !== undefined) {
+    if (filters.amountMin !== null) {
       query.amountMin = String(filters.amountMin)
     }
-    if (filters.amountMax !== null && filters.amountMax !== undefined) {
+    if (filters.amountMax !== null) {
       query.amountMax = String(filters.amountMax)
     }
     if (filters.category) {
@@ -531,17 +531,6 @@
 
   label[for='csv-upload']:disabled {
     cursor: not-allowed;
-  }
-
-  .multiselect-tags-wrap {
-    max-width: 320px;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.2s;
   }
 
   .fade-enter-from,
