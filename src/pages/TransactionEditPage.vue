@@ -36,14 +36,14 @@
 
   watch(
     transaction,
-    (tx) => {
-      if (tx) {
-        label.value = tx.label
-        amount.value = tx.amount
-        transaction_date.value = tx.transaction_date
-        category_id.value = tx.category_id || ''
+    (transaction) => {
+      if (transaction) {
+        label.value = transaction.label
+        amount.value = transaction.amount
+        transaction_date.value = transaction.transaction_date
+        category_id.value = transaction.category_id || ''
         selectedCategory.value =
-          categories.value?.find((c: Category) => c.id === tx.category_id) || null
+          categories.value?.find((c: Category) => c.id === transaction.category_id) || null
         selectedTags.value = Array.isArray(transactionTags)
           ? transactionTags
           : (transactionTags?.value ?? [])
@@ -53,8 +53,8 @@
   )
 
   async function handleCategoryCreate(newLabel: string) {
-    const cat = await addCategory({ label: newLabel })
-    pendingCategoryId.value = cat.id
+    const newCategory = await addCategory({ label: newLabel })
+    pendingCategoryId.value = newCategory.id
   }
 
   watch(
