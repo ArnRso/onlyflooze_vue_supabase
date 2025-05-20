@@ -23,7 +23,21 @@
   const openPanel = ref<null | 'create' | 'filters' | 'bulk'>(null)
 
   function closePanel() {
+    console.log('closePanel appelé, fermant le panneau:', openPanel.value)
+    // Fermeture immédiate, sans délai
     openPanel.value = null
+  }
+
+  // Nouvelle fonction pour basculer l'état du panneau
+  function togglePanel(panelName: 'create' | 'filters' | 'bulk') {
+    console.log('togglePanel appelé pour', panelName, 'état actuel:', openPanel.value)
+    if (openPanel.value === panelName) {
+      // Si le panneau est déjà ouvert, on le ferme
+      closePanel()
+    } else {
+      // Si le panneau est fermé ou si un autre panneau est ouvert, on ouvre celui-ci
+      openPanel.value = panelName
+    }
   }
 
   const selectedTransactions = ref([]) // À connecter plus tard à la sélection réelle
@@ -341,7 +355,7 @@
               :label="openPanel === 'create' ? 'Masquer création' : 'Créer transaction'"
               size="md"
               variant="outline"
-              @click="openPanel = openPanel === 'create' ? null : 'create'"
+              @click="togglePanel('create')"
             />
             <UButton
               block
@@ -375,7 +389,7 @@
               :label="openPanel === 'filters' ? 'Masquer recherche' : 'Recherche & filtres'"
               size="md"
               variant="outline"
-              @click="openPanel = openPanel === 'filters' ? null : 'filters'"
+              @click="togglePanel('filters')"
             >
               <template v-if="activeFiltersCount > 0" #trailing>
                 <UBadge class="ml-2" color="primary" variant="soft">
@@ -391,7 +405,7 @@
               :label="openPanel === 'bulk' ? 'Masquer actions lot' : 'Actions en lot'"
               size="md"
               variant="outline"
-              @click="openPanel = openPanel === 'bulk' ? null : 'bulk'"
+              @click="openPanel !== 'bulk' ? (openPanel = 'bulk') : closePanel()"
             >
               <template v-if="selectedTransactions.length > 0" #trailing>
                 <UBadge class="ml-2" color="warning" variant="soft">
@@ -402,32 +416,24 @@
             <span v-if="isImporting" class="text-sm text-gray-600 sm:ml-2">Traitement...</span>
           </div>
           <Transition name="fade">
-            <UCard v-if="openPanel === 'filters'" class="mb-6 bg-blue-50 border-blue-200">
-              <div class="flex flex-row items-center justify-between mb-2">
-                <h2 class="text-lg font-bold text-blue-700">Recherche & filtres</h2>
-                <UButton
-                  aria-label="Fermer"
-                  color="blue"
-                  icon="i-heroicons-x-mark"
-                  variant="ghost"
-                  @click="closePanel"
-                />
-              </div>
-              <TransactionFilterForm v-model:filters="filters" />
-            </UCard>
+            <TransactionCreatePanel
+              v-if="openPanel === 'create'"
+              @close="closePanel"
+              @created="handleTransactionCreated"
+            />
+          </Transition>
+          <Transition name="fade">
+            <TransactionFilterForm
+              v-if="openPanel === 'filters'"
+              v-model:filters="filters"
+              @close="closePanel"
+            />
           </Transition>
           <Transition name="fade">
             <BulkActionsMenu
               v-if="openPanel === 'bulk'"
               :selected-transactions="selectedTransactions"
               @close="closePanel"
-            />
-          </Transition>
-          <Transition name="fade">
-            <TransactionCreatePanel
-              v-if="openPanel === 'create'"
-              @close="closePanel"
-              @created="handleTransactionCreated"
             />
           </Transition>
           <UAlert v-if="importMessage"
