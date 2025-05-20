@@ -109,23 +109,55 @@
   const { mutateAsync: addTag } = useAddTransactionTagMutation()
   const { mutateAsync: removeTag } = useDeleteTransactionTagMutation()
 
-  const categoryOptions = computed(() => [
-    { label: 'Aucune', value: '' },
-    ...((categories ?? []) as Array<{ label: string; id: string }>).map((cat) => ({
-      label: cat.label,
-      value: cat.id,
-    })),
-  ])
-  const tagOptions = computed(() => [
-    { label: 'Choisir un tag', value: '' },
-    ...((tags ?? []) as Array<{ label: string; id: string }>).map((tag) => ({
-      label: tag.label,
-      value: tag.id,
-    })),
-  ])
+  type CategoryOption = { label: string; id: string }
+  type TagOption = { label: string; id: string }
+
+  function isRefArray<T>(val: unknown): val is { value: T[] } {
+    return (
+      !!val &&
+      typeof val === 'object' &&
+      'value' in val &&
+      Array.isArray((val as { value?: unknown }).value)
+    )
+  }
+  function getArray<T>(maybeRef: unknown): T[] {
+    if (isRefArray<T>(maybeRef)) {
+      return maybeRef.value
+    }
+    return Array.isArray(maybeRef) ? (maybeRef as T[]) : []
+  }
+  // S'assure que la valeur sélectionnée est toujours une string
+  function ensureValidSelection(model: typeof selectedCategoryId, options: { value: string }[]) {
+    if (!options.some((opt) => opt.value === model.value)) {
+      model.value = options[0]?.value ?? '_none'
+    }
+  }
+
+  const categoryOptions = computed<{ label: string; value: string }[]>(() => {
+    const opts = [
+      { label: 'Aucune', value: '_none' },
+      ...getArray<CategoryOption>(categories).map((cat) => ({
+        label: cat.label,
+        value: cat.id,
+      })),
+    ]
+    ensureValidSelection(selectedCategoryId, opts)
+    return opts
+  })
+  const tagOptions = computed<{ label: string; value: string }[]>(() => {
+    const opts = [
+      { label: 'Choisir un tag', value: '_none' },
+      ...getArray<TagOption>(tags).map((tag) => ({
+        label: tag.label,
+        value: tag.id,
+      })),
+    ]
+    ensureValidSelection(selectedTagId, opts)
+    return opts
+  })
 
   async function assignCategoryToAll() {
-    if (!selectedCategoryId.value) return
+    if (!selectedCategoryId.value || selectedCategoryId.value === '_none') return
     await Promise.all(
       props.selectedTransactions.map((tx) =>
         updateTransaction({ id: tx.id, updates: { category_id: selectedCategoryId.value } })
@@ -135,7 +167,7 @@
   }
 
   async function addTagToAll() {
-    if (!selectedTagId.value) return
+    if (!selectedTagId.value || selectedTagId.value === '_none') return
     await Promise.all(
       props.selectedTransactions.map((tx) =>
         addTag({ transaction_id: tx.id, tag_id: selectedTagId.value })
@@ -145,7 +177,7 @@
   }
 
   async function removeTagFromAll() {
-    if (!selectedTagId.value) return
+    if (!selectedTagId.value || selectedTagId.value === '_none') return
     await Promise.all(
       props.selectedTransactions.map((tx) =>
         removeTag({ transaction_id: tx.id, tag_id: selectedTagId.value })
