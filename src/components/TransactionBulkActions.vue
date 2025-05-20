@@ -1,15 +1,18 @@
 <template>
-  <div class="mb-6 px-4 py-3 bg-orange-50 rounded-lg shadow-sm border border-orange-200">
-    <div class="flex flex-row items-center justify-between mb-2">
-      <h2 class="text-lg font-bold text-orange-700">Actions en lot</h2>
-      <button
-        aria-label="Fermer"
-        class="text-orange-500 hover:text-orange-700 font-semibold"
-        @click="$emit('close')"
-      >
-        ✕
-      </button>
-    </div>
+  <UCard class="mb-6 px-4 py-3">
+    <template #header>
+      <div class="flex flex-row items-center justify-between">
+        <h2 class="text-lg font-bold text-primary">Actions en lot</h2>
+        <UButton
+          aria-label="Fermer"
+          color="gray"
+          icon="i-lucide-x"
+          size="sm"
+          variant="ghost"
+          @click="$emit('close')"
+        />
+      </div>
+    </template>
     <div v-if="selectedTransactions.length === 0" class="text-gray-500 mb-2">
       Aucune transaction sélectionnée.
     </div>
@@ -17,64 +20,68 @@
       <p class="mb-2">{{ selectedTransactions.length }} transaction(s) sélectionnée(s).</p>
       <form class="flex flex-col gap-4">
         <!-- Attribution catégorie -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <label class="font-medium shrink-0">Catégorie :</label>
-          <select v-model="selectedCategoryId" class="input w-full sm:w-auto grow">
-            <option :value="null">Aucune</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
-          </select>
-          <button
-            class="w-full sm:w-auto bg-indigo-600 text-white px-3 py-1.5 rounded shadow hover:bg-indigo-700"
+        <div class="flex flex-col sm:flex-row gap-4 items-stretch">
+          <UFormField class="flex-1" label="Catégorie">
+            <USelect v-model="selectedCategoryId" class="w-full" :items="categoryOptions" />
+          </UFormField>
+          <UButton
+            class="w-full sm:w-auto"
+            color="primary"
             :disabled="!selectedCategoryId"
+            icon="i-lucide-check"
             type="button"
             @click="assignCategoryToAll"
           >
             Attribuer à tous
-          </button>
+          </UButton>
         </div>
         <!-- Ajout/suppression tag -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <label class="font-medium shrink-0">Tag :</label>
-          <select v-model="selectedTagId" class="input w-full sm:w-auto grow">
-            <option :value="null">Choisir un tag</option>
-            <option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.label }}</option>
-          </select>
+        <div class="flex flex-col sm:flex-row gap-4 items-stretch">
+          <UFormField class="flex-1" label="Tag">
+            <USelect v-model="selectedTagId" class="w-full" :items="tagOptions" />
+          </UFormField>
           <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button
-              class="w-full sm:w-auto bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700"
+            <UButton
+              class="w-full sm:w-auto"
+              color="success"
               :disabled="!selectedTagId"
+              icon="i-lucide-plus"
               type="button"
               @click="addTagToAll"
             >
               Ajouter à tous
-            </button>
-            <button
-              class="w-full sm:w-auto bg-yellow-500 text-white px-3 py-1.5 rounded shadow hover:bg-yellow-600"
+            </UButton>
+            <UButton
+              class="w-full sm:w-auto"
+              color="warning"
               :disabled="!selectedTagId"
+              icon="i-lucide-minus"
               type="button"
               @click="removeTagFromAll"
             >
               Retirer de tous
-            </button>
+            </UButton>
           </div>
         </div>
         <!-- Suppression en masse -->
-        <div class="flex flex-col sm:flex-row items-center gap-2">
-          <button
-            class="w-full sm:w-auto bg-red-600 text-white px-3 py-1.5 rounded shadow hover:bg-red-700"
+        <div class="flex flex-col sm:flex-row items-center gap-4">
+          <UButton
+            class="w-full sm:w-auto"
+            color="danger"
+            icon="i-lucide-trash"
             type="button"
             @click="deleteAll"
           >
             Supprimer toutes les transactions sélectionnées
-          </button>
+          </UButton>
         </div>
       </form>
     </div>
-  </div>
+  </UCard>
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { useCategoriesQuery } from '@/queries/useCategories'
   import { useTagsQuery } from '@/queries/useTags'
   import {
@@ -94,13 +101,28 @@
 
   const { data: categories = [] } = useCategoriesQuery()
   const { data: tags = [] } = useTagsQuery()
-  const selectedCategoryId = ref<string | null>(null)
-  const selectedTagId = ref<string | null>(null)
+  const selectedCategoryId = ref<string>('')
+  const selectedTagId = ref<string>('')
 
   const { mutateAsync: updateTransaction } = useUpdateTransactionMutation()
   const { mutateAsync: deleteTransaction } = useDeleteTransactionMutation()
   const { mutateAsync: addTag } = useAddTransactionTagMutation()
   const { mutateAsync: removeTag } = useDeleteTransactionTagMutation()
+
+  const categoryOptions = computed(() => [
+    { label: 'Aucune', value: '' },
+    ...((categories ?? []) as Array<{ label: string; id: string }>).map((cat) => ({
+      label: cat.label,
+      value: cat.id,
+    })),
+  ])
+  const tagOptions = computed(() => [
+    { label: 'Choisir un tag', value: '' },
+    ...((tags ?? []) as Array<{ label: string; id: string }>).map((tag) => ({
+      label: tag.label,
+      value: tag.id,
+    })),
+  ])
 
   async function assignCategoryToAll() {
     if (!selectedCategoryId.value) return
@@ -116,7 +138,7 @@
     if (!selectedTagId.value) return
     await Promise.all(
       props.selectedTransactions.map((tx) =>
-        addTag({ transaction_id: tx.id, tag_id: selectedTagId.value! })
+        addTag({ transaction_id: tx.id, tag_id: selectedTagId.value })
       )
     )
     emit('close')
@@ -126,7 +148,7 @@
     if (!selectedTagId.value) return
     await Promise.all(
       props.selectedTransactions.map((tx) =>
-        removeTag({ transaction_id: tx.id, tag_id: selectedTagId.value! })
+        removeTag({ transaction_id: tx.id, tag_id: selectedTagId.value })
       )
     )
     emit('close')
@@ -140,9 +162,5 @@
 </script>
 
 <style scoped>
-  .input {
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-  }
+  /* Harmonisé avec TransactionCreatePanel.vue */
 </style>
