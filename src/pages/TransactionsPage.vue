@@ -7,6 +7,7 @@
   import TransactionBulkActions from '@/components/TransactionBulkActions.vue'
   import TransactionCreatePanel from '@/components/TransactionCreatePanel.vue'
   import type { TransactionFilter } from '@/types/TransactionFilter'
+  import { extractTransactionsFromFile } from '@/services/import/transactionImportService'
 
   const page = ref(1)
   const pageSize = ref(50)
@@ -123,114 +124,32 @@
     importError.value = ''
 
     try {
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const text = e.target?.result as string
-        if (!text) {
-          importError.value = 'Impossible de lire le fichier.'
-          isImporting.value = false
-          return
-        }
-
-        const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '')
-        if (lines.length < 2) {
-          importError.value = "Le fichier CSV est vide ou ne contient pas d'en-têtes."
-          isImporting.value = false
-          return
-        }
-
-        // Nettoyer les en-têtes en supprimant les guillemets
-        const headers = lines[0].split(';').map((h) => h.trim().replace(/^"|"$/g, ''))
-        const dateIndex = headers.indexOf('Date operation')
-        const labelIndex = headers.indexOf('Libelle')
-        const debitIndex = headers.indexOf('Debit')
-        const creditIndex = headers.indexOf('Credit')
-
-        if (dateIndex === -1 || labelIndex === -1 || debitIndex === -1 || creditIndex === -1) {
-          importError.value =
-            'En-têtes manquants. Assurez-vous que le fichier contient "Date operation", "Libelle", "Debit", "Credit".'
-          console.error('Headers found:', headers) // Pour le débogage
-          isImporting.value = false
-          return
-        }
-
-        const transactionsToCreate = []
-        let invalidCount = 0
-
-        for (let i = 1; i < lines.length; i++) {
-          // Nettoyer les valeurs en supprimant les guillemets
-          const values = lines[i].split(';').map((v) => v.trim().replace(/^"|"$/g, ''))
-          if (values.length < Math.max(dateIndex, labelIndex, debitIndex, creditIndex) + 1) {
-            console.warn(`Ligne ${i + 1} ignorée: nombre de colonnes incorrect.`)
-            invalidCount++
-            continue
-          }
-
-          const rawDate = values[dateIndex]
-          const label = values[labelIndex]
-          const debit = parseFloat(values[debitIndex].replace(',', '.') || '0')
-          const credit = parseFloat(values[creditIndex].replace(',', '.') || '0')
-
-          if (!label) {
-            console.warn(`Ligne ${i + 1} ignorée: Libellé manquant.`)
-            invalidCount++
-            continue
-          }
-
-          const transaction_date = parseDate(rawDate)
-          if (!transaction_date) {
-            console.warn(`Ligne ${i + 1} ignorée: Date invalide (${rawDate}).`)
-            invalidCount++
-            continue
-          }
-
-          const amount = credit - debit
-
-          transactionsToCreate.push({
-            label,
-            amount,
-            transaction_date,
-            category_id: null,
-          })
-        }
-
-        if (transactionsToCreate.length > 0) {
-          try {
-            // Import en masse avec un seul appel API - les doublons seront gérés par Supabase via upsert
-            const addedTransactions = await addBulkTransactions(transactionsToCreate)
-            importMessage.value = `${addedTransactions.length} transaction(s) ajoutée(s). ${
-              transactionsToCreate.length - addedTransactions.length
-            } transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`
-            refreshPaginatedTransactions()
-          } catch (e: unknown) {
-            importError.value =
-              (e as Error).message || 'Erreur lors de la création des transactions.'
-          }
-        } else {
-          importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`
-        }
-
+      const result = await extractTransactionsFromFile(file, parseDate)
+      if (result.error) {
+        importError.value = result.error
         isImporting.value = false
-        if (fileInputRef.value) {
-          fileInputRef.value.value = ''
-        }
+        if (fileInputRef.value) fileInputRef.value.value = ''
+        return
       }
-
-      reader.onerror = () => {
-        importError.value = 'Erreur lors de la lecture du fichier.'
-        isImporting.value = false
-        if (fileInputRef.value) {
-          fileInputRef.value.value = ''
+      const transactionsToCreate = result.transactions
+      const invalidCount = result.invalidCount
+      if (transactionsToCreate.length > 0) {
+        try {
+          const addedTransactions = await addBulkTransactions(transactionsToCreate)
+          importMessage.value = `${addedTransactions.length} transaction(s) ajoutée(s). ${transactionsToCreate.length - addedTransactions.length} transaction(s) déjà existante(s). ${invalidCount} ligne(s) invalide(s) ignorée(s).`
+          refreshPaginatedTransactions()
+        } catch (e: unknown) {
+          importError.value = (e as Error).message || 'Erreur lors de la création des transactions.'
         }
+      } else {
+        importMessage.value = `Aucune nouvelle transaction à ajouter. ${invalidCount} ligne(s) invalide(s) ignorée(s).`
       }
-
-      reader.readAsText(file, 'UTF-8')
+      isImporting.value = false
+      if (fileInputRef.value) fileInputRef.value.value = ''
     } catch (e: unknown) {
       importError.value = (e as Error).message || 'Une erreur est survenue.'
       isImporting.value = false
-      if (fileInputRef.value) {
-        fileInputRef.value.value = ''
-      }
+      if (fileInputRef.value) fileInputRef.value.value = ''
     }
   }
 
