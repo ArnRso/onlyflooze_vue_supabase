@@ -7,6 +7,11 @@ import 'vue-multiselect/dist/vue-multiselect.css'
 import ui from '@nuxt/ui/vue-plugin'
 
 const app = createApp(App)
+app.use(router)
+app.use(ui)
+// Ajout de TanStack Query
+const queryClient = new QueryClient()
+app.use(VueQueryPlugin, { queryClient })
 
 router.isReady().then(() => {
   const redirect = sessionStorage.redirect
@@ -14,10 +19,5 @@ router.isReady().then(() => {
   if (redirect) {
     router.replace(redirect)
   }
-  app.use(router)
-  app.use(ui)
-  // Ajout de TanStack Query
-  const queryClient = new QueryClient()
-  app.use(VueQueryPlugin, { queryClient })
   app.mount('#app')
 })
