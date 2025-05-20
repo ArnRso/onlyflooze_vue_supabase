@@ -5,10 +5,12 @@
     <title>Redirection...</title>
     <script>
       // Redirige vers index.html en gardant le chemin original, sans double slash
-      let path = location.pathname + location.search + location.hash;
-      if (!path.startsWith('/')) path = '/' + path;
-      sessionStorage.redirect = path;
-      window.location.replace('/');
+      let path = location.pathname + location.search + location.hash
+      if (!path.startsWith('/')) {
+        path = '/' + path
+      }
+      sessionStorage.redirect = path
+      window.location.replace('/')
     </script>
   </head>
   <body></body>
