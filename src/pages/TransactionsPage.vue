@@ -326,9 +326,7 @@
     class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-12 px-4 sm:px-6 lg:px-8"
   >
     <UContainer>
-      <UCard
-        :ui="{ body: { padding: 'p-0 sm:p-0' }, base: 'rounded-xl shadow-md overflow-hidden' }"
-      >
+      <UCard :ui="{ body: 'p-0 sm:p-0', base: 'rounded-xl shadow-md overflow-hidden' }">
         <div class="p-6 sm:p-8">
           <h1 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Transactions</h1>
           <!-- Bandeau de boutons avec Nuxt UI -->
