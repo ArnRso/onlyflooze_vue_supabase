@@ -15,6 +15,7 @@
     Title,
     Tooltip,
   } from 'chart.js'
+  import TransactionList from '@/components/TransactionList.vue'
 
   ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
 
@@ -25,6 +26,14 @@
 
   const category = computed(() => categories.value?.find((c) => c.id === categoryId.value))
   const transactions = computed(() => txResult.value?.data || [])
+
+  const transactionListRows = computed(() => {
+    return transactions.value.map((tx) => ({
+      ...tx,
+      tags: [],
+      category: category.value ?? null,
+    }))
+  })
 
   // Métriques pour la catégorie
   const now = new Date()
@@ -246,17 +255,9 @@
         <div v-else-if="transactions.length === 0" class="text-center text-gray-400">
           Aucune transaction.
         </div>
-        <ul v-else class="divide-y divide-gray-200">
-          <li
-            v-for="tx in transactions"
-            :key="tx.id"
-            class="py-2 flex justify-between items-center"
-          >
-            <span>{{ new Date(tx.transaction_date).toLocaleDateString() }}</span>
-            <span class="flex-1 text-gray-700 mx-4 truncate">{{ tx.label }}</span>
-            <span class="font-mono">{{ formatAmount(tx.amount) }}</span>
-          </li>
-        </ul>
+        <div v-else>
+          <TransactionList :transactions="transactionListRows" />
+        </div>
         <div v-if="error" class="text-red-600 mt-4 text-center">
           {{ error.message }}
         </div>
