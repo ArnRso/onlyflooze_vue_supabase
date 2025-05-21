@@ -61,6 +61,14 @@
       await deleteCategory(id)
     }
   }
+
+  const handleToggleRecurring = (cat: Category) => {
+    if (editId.value === cat.id) {
+      editIsRecurring.value = !editIsRecurring.value
+    } else {
+      updateCategory({ id: cat.id, updates: { is_recurring: !cat.is_recurring } })
+    }
+  }
 </script>
 
 <template>
@@ -131,34 +139,29 @@
               </template>
             </td>
             <td class="px-4 py-2">
-              <template v-if="editId !== cat.id">
+              <label
+                class="flex items-center cursor-pointer select-none"
+                @click="handleToggleRecurring(cat)"
+              >
                 <span
-                  v-if="cat.is_recurring"
-                  class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded"
-                >
-                  Récurrente
-                </span>
-                <span v-else class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                  Ponctuelle
-                </span>
-              </template>
-              <template v-else>
-                <label
-                  class="flex items-center cursor-pointer select-none"
-                  @click="editIsRecurring = !editIsRecurring"
+                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                  :class="
+                    (editId === cat.id ? editIsRecurring : cat.is_recurring)
+                      ? 'bg-indigo-600'
+                      : 'bg-gray-300'
+                  "
                 >
                   <span
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
-                    :class="editIsRecurring ? 'bg-indigo-600' : 'bg-gray-300'"
-                  >
-                    <span
-                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                      :class="editIsRecurring ? 'translate-x-6' : 'translate-x-1'"
-                    ></span>
-                  </span>
-                  <span class="ml-1">Récurrente</span>
-                </label>
-              </template>
+                    class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                    :class="
+                      (editId === cat.id ? editIsRecurring : cat.is_recurring)
+                        ? 'translate-x-6'
+                        : 'translate-x-1'
+                    "
+                  ></span>
+                </span>
+                <span class="ml-1">Récurrente</span>
+              </label>
             </td>
             <td class="px-4 py-2 text-right">
               <template v-if="editId !== cat.id">
