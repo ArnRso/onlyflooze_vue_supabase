@@ -256,7 +256,7 @@
           Aucune transaction.
         </div>
         <div v-else>
-          <TransactionList :transactions="transactionListRows" />
+          <TransactionList :disableSelection="true" :transactions="transactionListRows" />
         </div>
         <div v-if="error" class="text-red-600 mt-4 text-center">
           {{ error.message }}

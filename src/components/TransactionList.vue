@@ -17,10 +17,13 @@
   import { useRouter } from 'vue-router'
   import { useDeleteTransactionMutation } from '@/queries/useTransactions'
 
+  type TransactionListRow = Transaction & { tags: Tag[]; category?: Category | null }
+
   const emit = defineEmits(['update:selected'])
 
   const props = defineProps<{
-    transactions: Array<Transaction & { tags: Tag[]; category?: Category | null }>
+    transactions: TransactionListRow[]
+    disableSelection?: boolean
   }>()
 
   const rowSelection = defineModel<Record<string, boolean>>('rowSelection', { required: false })
@@ -32,38 +35,37 @@
     variables: deletingId,
   } = useDeleteTransactionMutation()
 
-  const columns = [
-    {
-      id: 'select',
-      header: ({ table }: { table: unknown }) => {
-        const t = table as {
-          getIsSomePageRowsSelected: () => boolean
-          getIsAllPageRowsSelected: () => boolean
-          toggleAllPageRowsSelected: (v: boolean) => void
-        }
-        const UCheckbox = resolveComponent('UCheckbox')
-        return h(UCheckbox, {
-          modelValue: t.getIsSomePageRowsSelected()
-            ? 'indeterminate'
-            : t.getIsAllPageRowsSelected(),
-          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-            t.toggleAllPageRowsSelected(!!value),
-          'aria-label': 'Tout sélectionner',
-          class: 'flex justify-center',
-        })
-      },
-      cell: ({ row }: { row: unknown }) => {
-        const r = row as { getIsSelected: () => boolean; toggleSelected: (v: boolean) => void }
-        const UCheckbox = resolveComponent('UCheckbox')
-        return h(UCheckbox, {
-          modelValue: r.getIsSelected(),
-          'onUpdate:modelValue': (value: boolean | 'indeterminate') => r.toggleSelected(!!value),
-          'aria-label': 'Sélectionner la ligne',
-          class: 'flex justify-center',
-        })
-      },
-      class: 'text-center w-8',
+  const selectionColumn = {
+    id: 'select',
+    header: ({ table }: { table: unknown }) => {
+      const t = table as {
+        getIsSomePageRowsSelected: () => boolean
+        getIsAllPageRowsSelected: () => boolean
+        toggleAllPageRowsSelected: (v: boolean) => void
+      }
+      const UCheckbox = resolveComponent('UCheckbox')
+      return h(UCheckbox, {
+        modelValue: t.getIsSomePageRowsSelected() ? 'indeterminate' : t.getIsAllPageRowsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          t.toggleAllPageRowsSelected(!!value),
+        'aria-label': 'Tout sélectionner',
+        class: 'flex justify-center',
+      })
     },
+    cell: ({ row }: { row: unknown }) => {
+      const r = row as { getIsSelected: () => boolean; toggleSelected: (v: boolean) => void }
+      const UCheckbox = resolveComponent('UCheckbox')
+      return h(UCheckbox, {
+        modelValue: r.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => r.toggleSelected(!!value),
+        'aria-label': 'Sélectionner la ligne',
+        class: 'flex justify-center',
+      })
+    },
+    class: 'text-center w-8',
+  }
+
+  const otherColumns = [
     { accessorKey: 'label', header: 'Libellé', class: 'text-left' },
     {
       accessorKey: 'category',
@@ -193,6 +195,10 @@
       },
     },
   ]
+
+  const columns = computed(() => {
+    return props.disableSelection ? otherColumns : [selectionColumn, ...otherColumns]
+  })
 
   const tableRows = computed(() => props.transactions)
 
