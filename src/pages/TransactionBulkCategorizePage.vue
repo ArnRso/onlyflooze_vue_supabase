@@ -57,7 +57,11 @@
               <h3 class="text-lg font-bold mb-4">Catégories</h3>
               <UFormField label="Filtrer les catégories">
                 <div class="flex gap-2 items-center">
-                  <UInput v-model="categoryFilter" placeholder="Filtrer par nom..." />
+                  <UInput
+                    ref="categoryFilterRef"
+                    v-model="categoryFilter"
+                    placeholder="Filtrer par nom..."
+                  />
                   <UButton
                     v-if="selectedCategory"
                     color="primary"
@@ -122,6 +126,7 @@
   const inputLabel = ref('')
   const inputLabelRef = ref<HTMLInputElement | null>(null)
   const categoryFilter = ref('')
+  const categoryFilterRef = ref<{ inputRef: HTMLInputElement | null } | null>(null)
   const selectedCategory = ref<Category | null>(null)
   const isBulkUpdating = ref(false)
 
@@ -137,9 +142,6 @@
     () => latestUncategorized.value,
     (tx) => {
       inputLabel.value = tx?.label ?? ''
-      nextTick(() => {
-        inputLabelRef.value?.focus()
-      })
     },
     { immediate: true }
   )
@@ -183,6 +185,8 @@
     (cats) => {
       if (cats.length === 1) {
         selectedCategory.value = cats[0]
+      } else if (cats.length === 0) {
+        selectedCategory.value = null
       }
     },
     { immediate: true }
@@ -207,7 +211,11 @@
       categoryFilter.value = ''
       selectedCategory.value = null
       nextTick(() => {
-        inputLabelRef.value?.focus()
+        setTimeout(() => {
+          nextTick(() => {
+            categoryFilterRef.value?.inputRef?.focus()
+          })
+        }, 0)
       })
     } finally {
       isBulkUpdating.value = false
