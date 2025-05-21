@@ -71,11 +71,7 @@
       accessorKey: 'category',
       header: 'Catégorie',
       class: 'text-left',
-      cell: ({
-        row,
-      }: {
-        row: { original: { category?: { id: string; label: string } | null } }
-      }) => {
+      cell: ({ row }: { row: { original: TransactionListRow } }) => {
         const RouterLink = resolveComponent('RouterLink')
         const category = row.original.category
         if (!category) {
@@ -102,7 +98,7 @@
       accessorKey: 'tags',
       header: 'Tags',
       class: 'text-left',
-      cell: ({ row }: { row: { original: { tags: Array<{ id: string; label: string }> } } }) => {
+      cell: ({ row }: { row: { original: TransactionListRow } }) => {
         const RouterLink = resolveComponent('RouterLink')
         const tags = row.original.tags
         if (!tags?.length) {
@@ -133,7 +129,11 @@
       accessorKey: 'transaction_date',
       header: 'Date',
       class: 'text-right',
-      cell: ({ row }: { row: { getValue: (key: string) => string } }) => {
+      cell: ({
+        row,
+      }: {
+        row: { getValue: (key: string) => string; original: TransactionListRow }
+      }) => {
         const dateStr = row.getValue('transaction_date')
         if (!dateStr) return '-'
         const d = new Date(dateStr)
@@ -145,7 +145,11 @@
       accessorKey: 'amount',
       header: 'Montant',
       class: 'text-right',
-      cell: ({ row }: { row: { getValue: (key: string) => number } }) => {
+      cell: ({
+        row,
+      }: {
+        row: { getValue: (key: string) => number; original: TransactionListRow }
+      }) => {
         const amount = row.getValue('amount')
         const color = amount < 0 ? 'text-red-600' : 'text-green-600'
         return h(
@@ -162,7 +166,7 @@
       id: 'actions',
       header: 'Actions',
       class: 'text-center',
-      cell: ({ row }: { row: { original: { id: string } } }) => {
+      cell: ({ row }: { row: { original: TransactionListRow } }) => {
         const UButton = resolveComponent('UButton')
         const id = String(row.original.id)
         return h('div', { class: 'flex items-center justify-center' }, [
