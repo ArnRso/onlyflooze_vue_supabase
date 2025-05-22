@@ -36,20 +36,13 @@
                 >
                   Aucune transaction trouvée.
                 </div>
-                <ul
-                  v-else-if="matchingTransactions && matchingTransactions.data"
-                  class="divide-y divide-gray-200"
-                >
-                  <li v-for="tx in matchingTransactions.data" :key="tx.id" class="py-2 px-1">
-                    <span class="font-mono text-sm text-gray-700">{{ tx.transaction_date }}</span>
-                    <span class="ml-2">{{ tx.label }}</span>
-                    <span class="ml-2 text-indigo-700 font-semibold">
-                      {{
-                        tx.amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
-                      }}
-                    </span>
-                  </li>
-                </ul>
+                <div v-else>
+                  <TransactionList
+                    :disableSelection="true"
+                    :disableTags="true"
+                    :transactions="matchingTransactionRows"
+                  />
+                </div>
               </div>
             </div>
             <!-- Colonne droite : catégories -->
@@ -122,6 +115,7 @@
   } from '@/queries/useTransactions'
   import { useCategoriesQuery, useAddCategoryMutation } from '@/queries/useCategories'
   import type { Category } from '@/queries/useCategories'
+  import TransactionList from '@/components/TransactionList.vue'
 
   const inputLabel = ref('')
   const inputLabelRef = ref<HTMLInputElement | null>(null)
@@ -161,6 +155,14 @@
     isLoading: isLoadingMatching,
     error: errorMatching,
   } = useTransactionsQuery(1, 100, labelFilter, false)
+
+  const matchingTransactionRows = computed(() => {
+    return (matchingTransactions.value?.data ?? []).map((tx) => ({
+      ...tx,
+      tags: tx.tags ?? [],
+      category: tx.category ?? null,
+    }))
+  })
 
   // Récupère les catégories filtrées
   const { data: categories, refetch: refetchCategories } = useCategoriesQuery()
