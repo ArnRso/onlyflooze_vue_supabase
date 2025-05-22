@@ -24,6 +24,7 @@
   const props = defineProps<{
     transactions: TransactionListRow[]
     disableSelection?: boolean
+    disableTags?: boolean
   }>()
 
   const rowSelection = defineModel<Record<string, boolean>>('rowSelection', { required: false })
@@ -65,143 +66,146 @@
     class: 'text-center w-8',
   }
 
-  const otherColumns = [
-    { accessorKey: 'label', header: 'Libellé', class: 'text-left' },
-    {
-      accessorKey: 'category',
-      header: 'Catégorie',
-      class: 'text-left',
-      cell: ({ row }: { row: { original: TransactionListRow } }) => {
-        const RouterLink = resolveComponent('RouterLink')
-        const category = row.original.category
-        if (!category) {
+  const otherColumns = computed(() => {
+    const cols = [
+      { accessorKey: 'label', header: 'Libellé', class: 'text-left' },
+      {
+        accessorKey: 'category',
+        header: 'Catégorie',
+        class: 'text-left',
+        cell: ({ row }: { row: { original: TransactionListRow } }) => {
+          const RouterLink = resolveComponent('RouterLink')
+          const category = row.original.category
+          if (!category) {
+            return h(
+              RouterLink,
+              {
+                class: 'text-primary-600 hover:underline cursor-pointer',
+                to: { path: '/transactions', query: { category: '_none' } },
+              },
+              () => 'Sans catégorie'
+            )
+          }
           return h(
             RouterLink,
             {
               class: 'text-primary-600 hover:underline cursor-pointer',
-              to: { path: '/transactions', query: { category: '_none' } },
+              to: { path: '/transactions', query: { category: category.id } },
             },
-            () => 'Sans catégorie'
+            () => category.label
           )
-        }
-        return h(
-          RouterLink,
-          {
-            class: 'text-primary-600 hover:underline cursor-pointer',
-            to: { path: '/transactions', query: { category: category.id } },
-          },
-          () => category.label
-        )
+        },
       },
-    },
-    {
-      accessorKey: 'tags',
-      header: 'Tags',
-      class: 'text-left',
-      cell: ({ row }: { row: { original: TransactionListRow } }) => {
-        const RouterLink = resolveComponent('RouterLink')
-        const tags = row.original.tags
-        if (!tags?.length) {
+      !props.disableTags && {
+        accessorKey: 'tags',
+        header: 'Tags',
+        class: 'text-left',
+        cell: ({ row }: { row: { original: TransactionListRow } }) => {
+          const RouterLink = resolveComponent('RouterLink')
+          const tags = row.original.tags
+          if (!tags?.length) {
+            return h(
+              RouterLink,
+              {
+                class: 'text-primary-600 hover:underline cursor-pointer',
+                to: { path: '/transactions', query: { tag: '_none' } },
+              },
+              () => 'Sans tag'
+            )
+          }
+          return tags.map((tag) =>
+            h(
+              RouterLink,
+              {
+                key: tag.id,
+                class:
+                  'inline-block bg-gray-200 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium text-primary-600 hover:underline cursor-pointer',
+                to: { path: '/transactions', query: { tag: tag.id } },
+              },
+              () => tag.label
+            )
+          )
+        },
+      },
+      {
+        accessorKey: 'transaction_date',
+        header: 'Date',
+        class: 'text-right',
+        cell: ({
+          row,
+        }: {
+          row: { getValue: (key: string) => string; original: TransactionListRow }
+        }) => {
+          const dateStr = row.getValue('transaction_date')
+          if (!dateStr) return '-'
+          const d = new Date(dateStr)
+          if (isNaN(d.getTime())) return dateStr
+          return d.toLocaleDateString('fr-FR')
+        },
+      },
+      {
+        accessorKey: 'amount',
+        header: 'Montant',
+        class: 'text-right',
+        cell: ({
+          row,
+        }: {
+          row: { getValue: (key: string) => number; original: TransactionListRow }
+        }) => {
+          const amount = row.getValue('amount')
+          const color = amount < 0 ? 'text-red-600' : 'text-green-600'
           return h(
-            RouterLink,
-            {
-              class: 'text-primary-600 hover:underline cursor-pointer',
-              to: { path: '/transactions', query: { tag: '_none' } },
-            },
-            () => 'Sans tag'
+            'div',
+            { class: `text-right w-full font-medium ${color}` },
+            new Intl.NumberFormat('fr-FR', {
+              style: 'currency',
+              currency: 'EUR',
+            }).format(amount)
           )
-        }
-        return tags.map((tag) =>
-          h(
-            RouterLink,
-            {
-              key: tag.id,
-              class:
-                'inline-block bg-gray-200 rounded px-2 py-0.5 mr-1 mb-1 text-xs font-medium text-primary-600 hover:underline cursor-pointer',
-              to: { path: '/transactions', query: { tag: tag.id } },
-            },
-            () => tag.label
-          )
-        )
+        },
       },
-    },
-    {
-      accessorKey: 'transaction_date',
-      header: 'Date',
-      class: 'text-right',
-      cell: ({
-        row,
-      }: {
-        row: { getValue: (key: string) => string; original: TransactionListRow }
-      }) => {
-        const dateStr = row.getValue('transaction_date')
-        if (!dateStr) return '-'
-        const d = new Date(dateStr)
-        if (isNaN(d.getTime())) return dateStr
-        return d.toLocaleDateString('fr-FR')
+      {
+        id: 'actions',
+        header: 'Actions',
+        class: 'text-center',
+        cell: ({ row }: { row: { original: TransactionListRow } }) => {
+          const UButton = resolveComponent('UButton')
+          const id = String(row.original.id)
+          return h('div', { class: 'flex items-center justify-center' }, [
+            h(
+              resolveComponent('UButtonGroup'),
+              {},
+              {
+                default: () => [
+                  h(UButton, {
+                    size: 'xs',
+                    color: 'info',
+                    icon: 'mdi:pencil',
+                    variant: 'outline',
+                    title: 'Éditer la transaction',
+                    onClick: () => id && router.push(`/transactions/${id}/edit`),
+                  }),
+                  h(UButton, {
+                    size: 'xs',
+                    color: 'error',
+                    icon: 'mdi:trash-can',
+                    variant: 'outline',
+                    title: 'Supprimer la transaction',
+                    disabled: deleteStatus.value === 'pending' && deletingId.value === id,
+                    onClick: () => deleteTransaction(id),
+                  }),
+                ],
+              }
+            ),
+          ])
+        },
       },
-    },
-    {
-      accessorKey: 'amount',
-      header: 'Montant',
-      class: 'text-right',
-      cell: ({
-        row,
-      }: {
-        row: { getValue: (key: string) => number; original: TransactionListRow }
-      }) => {
-        const amount = row.getValue('amount')
-        const color = amount < 0 ? 'text-red-600' : 'text-green-600'
-        return h(
-          'div',
-          { class: `text-right w-full font-medium ${color}` },
-          new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-          }).format(amount)
-        )
-      },
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      class: 'text-center',
-      cell: ({ row }: { row: { original: TransactionListRow } }) => {
-        const UButton = resolveComponent('UButton')
-        const id = String(row.original.id)
-        return h('div', { class: 'flex items-center justify-center' }, [
-          h(
-            resolveComponent('UButtonGroup'),
-            {},
-            {
-              default: () => [
-                h(UButton, {
-                  size: 'xs',
-                  color: 'info',
-                  icon: 'mdi:pencil',
-                  variant: 'outline',
-                  title: 'Éditer la transaction',
-                  onClick: () => id && router.push(`/transactions/${id}/edit`),
-                }),
-                h(UButton, {
-                  size: 'xs',
-                  color: 'error',
-                  icon: 'mdi:trash-can',
-                  variant: 'outline',
-                  title: 'Supprimer la transaction',
-                  disabled: deleteStatus.value === 'pending' && deletingId.value === id,
-                  onClick: () => deleteTransaction(id),
-                }),
-              ],
-            }
-          ),
-        ])
-      },
-    },
-  ]
+    ]
+    return cols.filter((col): col is Exclude<(typeof cols)[number], false> => Boolean(col))
+  })
 
   const columns = computed(() => {
-    return props.disableSelection ? otherColumns : [selectionColumn, ...otherColumns]
+    return props.disableSelection ? otherColumns.value : [selectionColumn, ...otherColumns.value]
   })
 
   const tableRows = computed(() => props.transactions)
