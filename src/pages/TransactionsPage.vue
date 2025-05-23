@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-  import { useAddBulkTransactionsMutation, useTransactionsQuery } from '@/queries/useTransactions'
+  import {
+    useAddBulkTransactionsMutation,
+    useTransactionsQuery,
+    useUpdateTransactionMutation,
+  } from '@/queries/useTransactions'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import TransactionList from '@/components/TransactionList.vue'
@@ -60,6 +64,7 @@
     filters,
     false
   )
+  const { mutateAsync: updateTransaction } = useUpdateTransactionMutation()
 
   setTransactionSaveHandlers({ addBulkTransactions, refreshPaginatedTransactions })
 
@@ -237,6 +242,20 @@
       }
     }
   )
+
+  // Typage strict pour l'event
+  import type { Transaction, Category } from '@/queries/useTransactions'
+
+  async function handleSuggestCategory({
+    transaction,
+    category,
+  }: {
+    transaction: Transaction
+    category: Category
+  }) {
+    await updateTransaction({ id: transaction.id, updates: { category_id: category.id } })
+    refreshPaginatedTransactions()
+  }
 </script>
 
 <template>
@@ -400,7 +419,9 @@
           <div v-else>
             <div class="overflow-x-auto">
               <TransactionList
+                :show-category-suggestion="true"
                 :transactions="transactions"
+                @suggest-category="handleSuggestCategory"
                 @update:selected="selectedTransactions = $event"
               />
             </div>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { ref, watch, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useTransactionByIdQuery, useUpdateTransactionMutation } from '@/queries/useTransactions'
   import { useCategoriesQuery } from '@/queries/useCategories'
@@ -11,6 +11,8 @@
     useDeleteTransactionTagMutation,
   } from '@/queries/useTransactionTags'
   import { useAddCategoryMutation } from '@/queries/useCategories'
+  import { useAllTransactionsWithCategoryQuery } from '@/queries/useTransactions'
+  import { recommendCategoryForTransaction } from '@/services/categoryRecommendationService'
   import type { Category, Tag } from '@/queries/useTransactions'
 
   const props = defineProps<{ id: string }>()
@@ -24,6 +26,7 @@
   const { data: transactionTags = [] } = useTransactionTagsQuery(props.id)
   const { mutateAsync: addTxTag } = useAddTransactionTagMutation()
   const { mutateAsync: deleteTxTag } = useDeleteTransactionTagMutation()
+  const { data: allTxWithCat } = useAllTransactionsWithCategoryQuery()
 
   const label = ref('')
   const amount = ref(0)
@@ -33,6 +36,23 @@
   const selectedCategory = ref<Category | null>(null)
   const selectedTags = ref<Tag[]>([])
   const pendingCategoryId = ref<string | null>(null)
+
+  const suggestedCategory = computed(() => {
+    if (!transaction.value || !allTxWithCat?.value) return null
+    // On mappe pour ajouter les propriétés attendues par le typage
+    return recommendCategoryForTransaction(
+      { label: label.value },
+      allTxWithCat.value.map((tx) => ({
+        ...tx,
+        amount: 0,
+        category_id: null,
+        created_at: '',
+        id: '',
+        transaction_date: '',
+        user_id: '',
+      }))
+    )
+  })
 
   watch(
     transaction,
@@ -158,6 +178,24 @@
             track-by="id"
             @tag="handleCategoryCreate"
           />
+          <div v-if="suggestedCategory" class="text-xs text-gray-500 mt-1">
+            Suggestion :
+            <span class="font-semibold">{{ suggestedCategory.label }}</span>
+            <span
+              v-if="selectedCategory && selectedCategory.id === suggestedCategory.id"
+              class="ml-2 text-green-600"
+            >
+              (sélectionnée)
+            </span>
+            <button
+              v-else
+              class="ml-2 text-indigo-600 underline"
+              type="button"
+              @click="selectedCategory = suggestedCategory"
+            >
+              Utiliser cette catégorie
+            </button>
+          </div>
         </div>
         <div>
           <label class="block mb-1">Tags</label>

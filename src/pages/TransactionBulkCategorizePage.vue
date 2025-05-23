@@ -64,6 +64,24 @@
                   />
                 </div>
               </UFormField>
+              <div v-if="suggestedCategory" class="w-full mb-2 text-xs text-gray-500">
+                Suggestion :
+                <span class="font-semibold">{{ suggestedCategory.label }}</span>
+                <span
+                  v-if="selectedCategory && selectedCategory.id === suggestedCategory.id"
+                  class="ml-2 text-green-600"
+                >
+                  (sélectionnée)
+                </span>
+                <button
+                  v-else
+                  class="ml-2 text-indigo-600 underline"
+                  type="button"
+                  @click="selectCategory(suggestedCategory)"
+                >
+                  Utiliser cette catégorie
+                </button>
+              </div>
               <div class="flex flex-wrap gap-2 mt-4">
                 <div v-if="filteredCategories.length > 0" class="flex flex-wrap gap-2">
                   <button
@@ -112,8 +130,10 @@
     useLatestUncategorizedTransactionQuery,
     useTransactionsQuery,
     useUpdateTransactionMutation,
+    useAllTransactionsWithCategoryQuery,
   } from '@/queries/useTransactions'
   import { useCategoriesQuery, useAddCategoryMutation } from '@/queries/useCategories'
+  import { recommendCategoryForTransaction } from '@/services/categoryRecommendationService'
   import type { Category } from '@/queries/useCategories'
   import TransactionList from '@/components/TransactionList.vue'
 
@@ -180,6 +200,26 @@
     const filter = categoryFilter.value.trim().toLowerCase()
     if (!filter || !categories?.value) return false
     return categories.value.some((cat) => cat.label.trim().toLowerCase() === filter)
+  })
+
+  // Récupère toutes les transactions avec leur catégorie pour la suggestion
+  const { data: allTxWithCat } = useAllTransactionsWithCategoryQuery()
+
+  // Suggestion de catégorie pour le label courant (fuzzy)
+  const suggestedCategory = computed(() => {
+    if (!inputLabel.value || !allTxWithCat?.value) return null
+    return recommendCategoryForTransaction(
+      { label: inputLabel.value },
+      allTxWithCat.value.map((tx) => ({
+        ...tx,
+        amount: 0,
+        category_id: null,
+        created_at: '',
+        id: '',
+        transaction_date: '',
+        user_id: '',
+      }))
+    )
   })
 
   watch(
