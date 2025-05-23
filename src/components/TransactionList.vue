@@ -15,16 +15,24 @@
   import { defineProps, watch, computed, h, resolveComponent } from 'vue'
   import { defineEmits, defineModel } from 'vue'
   import { useRouter } from 'vue-router'
-  import { useDeleteTransactionMutation } from '@/queries/useTransactions'
+  import {
+    useDeleteTransactionMutation,
+    useAllTransactionsWithCategoryQuery,
+  } from '@/queries/useTransactions'
+  import { recommendCategoryForTransaction } from '@/services/categoryRecommendationService'
 
   type TransactionListRow = Transaction & { tags: Tag[]; category?: Category | null }
 
-  const emit = defineEmits(['update:selected'])
+  const emit = defineEmits(['update:selected', 'suggest-category'])
 
+  const { data: allTxWithCat } = useAllTransactionsWithCategoryQuery()
+
+  // Affichage du bouton suggestion piloté par un props
   const props = defineProps<{
     transactions: TransactionListRow[]
     disableSelection?: boolean
     disableTags?: boolean
+    showCategorySuggestion?: boolean // nouveau props
   }>()
 
   const rowSelection = defineModel<Record<string, boolean>>('rowSelection', { required: false })
@@ -76,6 +84,36 @@
         cell: ({ row }: { row: { original: TransactionListRow } }) => {
           const RouterLink = resolveComponent('RouterLink')
           const category = row.original.category
+          // Suggestion de catégorie si showCategorySuggestion et pas de catégorie
+          if (!category && props.showCategorySuggestion && allTxWithCat?.value) {
+            // Correction typage : on "élargit" le type pour la fonction
+            const suggestion = recommendCategoryForTransaction(
+              { label: row.original.label },
+              allTxWithCat.value as (Transaction & { category?: Category | null })[]
+            )
+            if (suggestion) {
+              return h('div', { class: 'flex items-center gap-2' }, [
+                h(
+                  RouterLink,
+                  {
+                    class: 'text-primary-600 hover:underline cursor-pointer',
+                    to: { path: '/transactions', query: { category: '_none' } },
+                  },
+                  () => 'Sans catégorie'
+                ),
+                h(
+                  'button',
+                  {
+                    class: 'ml-2 text-xs text-indigo-600 underline',
+                    type: 'button',
+                    onClick: () =>
+                      emit('suggest-category', { transaction: row.original, category: suggestion }),
+                  },
+                  'Suggérer : ' + suggestion.label
+                ),
+              ])
+            }
+          }
           if (!category) {
             return h(
               RouterLink,

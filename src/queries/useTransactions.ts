@@ -228,3 +228,25 @@ export function useLatestUncategorizedTransactionQuery() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
+
+// Récupère toutes les transactions avec leur label et leur catégorie (pour la recommandation)
+export function useAllTransactionsWithCategoryQuery() {
+  return useQuery<Array<Pick<Transaction, 'label'> & { category: Category | null }>>({
+    queryKey: ['transactions', 'all-with-category'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transaction')
+        .select('label, category:category_id(*)')
+      if (error) throw new Error(error.message)
+      // Typage explicite pour éviter l'utilisation de any
+      return ((data as unknown[]) || []).map((tx) => {
+        const t = tx as { label: string; category: Category[] | null }
+        return {
+          label: t.label,
+          category: Array.isArray(t.category) ? t.category[0] || null : t.category || null,
+        }
+      })
+    },
+    staleTime: 1000 * 60 * 10,
+  })
+}
