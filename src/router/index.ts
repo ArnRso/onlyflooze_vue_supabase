@@ -1,58 +1,57 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import HomePage from '@/pages/HomePage.vue'
-import LoginPage from '@/pages/LoginPage.vue'
-import RegisterPage from '@/pages/RegisterPage.vue'
-import CategoryListPage from '@/pages/CategoryListPage.vue'
-import CategoryDetailPage from '@/pages/CategoryDetailPage.vue'
-import UserPage from '@/pages/UserPage.vue'
-import TransactionsPage from '@/pages/TransactionsPage.vue'
-import TransactionEditPage from '@/pages/TransactionEditPage.vue'
-import TagsPage from '@/pages/TagsPage.vue'
-import MonthlyRecurringSummaryPage from '@/pages/MonthlyRecurringSummaryPage.vue'
 import { supabase } from '@/supabase'
 
 const routes: Array<RouteRecordRaw> = [
-  { path: '/', name: 'home', component: HomePage, meta: { public: true } },
+  {
+    path: '/',
+    name: 'home',
+    component: () => import('@/pages/HomePage.vue'),
+    meta: { public: true },
+  },
   {
     path: '/login',
     name: 'login',
-    component: LoginPage,
+    component: () => import('@/pages/LoginPage.vue'),
     meta: { public: true },
   },
   {
     path: '/register',
     name: 'register',
-    component: RegisterPage,
+    component: () => import('@/pages/RegisterPage.vue'),
     meta: { public: true },
   },
-  { path: '/categories', name: 'categories', component: CategoryListPage },
+  {
+    path: '/categories',
+    name: 'categories',
+    component: () => import('@/pages/CategoryListPage.vue'),
+  },
   {
     path: '/categories/:id',
     name: 'category-detail',
-    component: CategoryDetailPage,
+    component: () => import('@/pages/CategoryDetailPage.vue'),
     props: true,
   },
-  { path: '/user', name: 'user', component: UserPage },
+  { path: '/user', name: 'user', component: () => import('@/pages/UserPage.vue') },
   {
     path: '/transactions',
     name: 'transactions',
-    component: TransactionsPage,
+    component: () => import('@/pages/TransactionsPage.vue'),
   },
   {
     path: '/transactions/:id/edit',
     name: 'transaction-edit',
-    component: TransactionEditPage,
+    component: () => import('@/pages/TransactionEditPage.vue'),
     props: true,
   },
   {
     path: '/tags',
     name: 'tags',
-    component: TagsPage,
+    component: () => import('@/pages/TagsPage.vue'),
   },
   {
     path: '/monthly-recurring-summary',
     name: 'monthly-recurring-summary',
-    component: MonthlyRecurringSummaryPage,
+    component: () => import('@/pages/MonthlyRecurringSummaryPage.vue'),
   },
   {
     path: '/transaction-bulk-categorize',

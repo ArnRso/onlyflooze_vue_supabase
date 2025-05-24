@@ -12,8 +12,7 @@
 
 <script lang="ts" setup>
   import type { Category, Tag, Transaction } from '@/queries/useTransactions'
-  import { defineProps, watch, computed, h, resolveComponent } from 'vue'
-  import { defineEmits, defineModel } from 'vue'
+  import { watch, computed, h, resolveComponent } from 'vue'
   import { useRouter } from 'vue-router'
   import {
     useDeleteTransactionMutation,
