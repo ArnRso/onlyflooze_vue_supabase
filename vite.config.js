@@ -20,6 +20,15 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         404: fileURLToPath(new URL('./404.html', import.meta.url)),
       },
+      output: {
+        manualChunks: {
+          vue: ['vue'],
+          'vue-router': ['vue-router'],
+          'vue-query': ['@tanstack/vue-query'],
+          'nuxt-ui': ['@nuxt/ui/vue-plugin'],
+        },
+      },
     },
+    chunkSizeWarningLimit: 1500,
   },
 })
